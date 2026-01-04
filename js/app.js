@@ -64,7 +64,13 @@ const DEFAULT_PETS = [
     ], image: "assets/cats/chirpy.jpg" },
     { id: "lila-dog", name: "Lila Dog", type: "dog (wait, I'm a dog!)", score: 0, aliases: [
         "lila", "lila dog", "the dog", "doggo", "pupper", "three legs", "tripod", "senior dog", "old girl", "good girl"
-    ], image: "assets/cats/lila-dog.jpg" }
+    ], image: "assets/cats/lila-dog.jpg" },
+    { id: "birch", name: "Birch", type: "cat", score: 0, aliases: [
+        "birch", "baby birch", "birchy", "the birch", "birch cat", "baby b"
+    ], image: "assets/cats/baby-birch.jpg" },
+    { id: "guy-fiery", name: "Guy Fiery", type: "cat", score: 0, aliases: [
+        "guy", "guy fiery", "fiery", "guy fieri", "fieri", "flavortown", "the guy", "fire guy", "spicy boy"
+    ], image: "assets/cats/guy-fiery.jpg" }
 ];
 
 // ===========================================
