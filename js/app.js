@@ -36,6 +36,7 @@ function escapeHtml(text) {
 // USER DAILY REPORT LIMIT
 // ===========================================
 const DAILY_REPORT_LIMIT = 20; // Max reports per user per day
+const REPORT_COOLDOWN_MINUTES = 15; // Minutes between reports to prevent spam
 
 // Rate limit key is tied to permanent user ID (can't be bypassed by changing name)
 function getRateLimitKey() {
@@ -81,7 +82,7 @@ function incrementReportCount() {
 }
 
 function canSendReport() {
-    return getRemainingReports() > 0;
+    return getRemainingReports() > 0 && !isOnCooldown();
 }
 
 function getNextResetTime() {
@@ -106,6 +107,69 @@ function formatTimeUntilReset() {
     return `${minutes} minutes`;
 }
 
+// ===========================================
+// REPORT COOLDOWN (Anti-Spam)
+// ===========================================
+function getCooldownKey() {
+    const userId = localStorage.getItem('catChatUserId') || 'anonymous';
+    return `reportCooldown_${userId}`;
+}
+
+function getLastReportTime() {
+    const timestamp = localStorage.getItem(getCooldownKey());
+    return timestamp ? parseInt(timestamp, 10) : 0;
+}
+
+function setLastReportTime() {
+    localStorage.setItem(getCooldownKey(), Date.now().toString());
+    startCooldownTimer();
+}
+
+function getCooldownRemaining() {
+    const lastReport = getLastReportTime();
+    if (lastReport === 0) return 0;
+
+    const cooldownMs = REPORT_COOLDOWN_MINUTES * 60 * 1000;
+    const elapsed = Date.now() - lastReport;
+    const remaining = cooldownMs - elapsed;
+
+    return Math.max(0, remaining);
+}
+
+function isOnCooldown() {
+    return getCooldownRemaining() > 0;
+}
+
+function formatCooldownTime() {
+    const remaining = getCooldownRemaining();
+    const minutes = Math.floor(remaining / (1000 * 60));
+    const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+
+    if (minutes > 0) {
+        return `${minutes}m ${seconds}s`;
+    }
+    return `${seconds}s`;
+}
+
+let cooldownInterval = null;
+
+function startCooldownTimer() {
+    if (cooldownInterval) clearInterval(cooldownInterval);
+
+    cooldownInterval = setInterval(() => {
+        if (!isOnCooldown()) {
+            clearInterval(cooldownInterval);
+            cooldownInterval = null;
+        }
+        updateReportCounter();
+    }, 1000);
+}
+
+// Check cooldown on page load
+if (isOnCooldown()) {
+    startCooldownTimer();
+}
+
 function updateReportCounter() {
     const counter = document.getElementById('report-counter');
     const submitBtn = document.querySelector('#chat-form button[type="submit"]');
@@ -113,10 +177,18 @@ function updateReportCounter() {
 
     if (counter) {
         const remaining = getRemainingReports();
-        counter.textContent = `${remaining}/${DAILY_REPORT_LIMIT} reports left today`;
-        counter.className = remaining <= 5 ? 'report-counter low' : 'report-counter';
+        const onCooldown = isOnCooldown();
 
-        // Disable input and button when out of reports
+        // Show cooldown timer if on cooldown, otherwise show daily remaining
+        if (onCooldown) {
+            counter.textContent = `Cooldown: ${formatCooldownTime()} (${remaining} reports left)`;
+            counter.className = 'report-counter cooldown';
+        } else {
+            counter.textContent = `${remaining}/${DAILY_REPORT_LIMIT} reports left today`;
+            counter.className = remaining <= 5 ? 'report-counter low' : 'report-counter';
+        }
+
+        // Disable input and button when out of reports OR on cooldown
         if (remaining <= 0) {
             if (submitBtn) {
                 submitBtn.disabled = true;
@@ -127,6 +199,15 @@ function updateReportCounter() {
                 messageInput.placeholder = `No reports left! Resets in ${formatTimeUntilReset()}`;
             }
             counter.classList.add('exhausted');
+        } else if (onCooldown) {
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.classList.add('disabled');
+            }
+            if (messageInput) {
+                messageInput.disabled = true;
+                messageInput.placeholder = `On cooldown! Wait ${formatCooldownTime()}...`;
+            }
         } else {
             if (submitBtn) {
                 submitBtn.disabled = false;
@@ -150,11 +231,25 @@ const RATE_LIMIT_RESPONSES = [
     "Nice try, but you've hit the report ceiling! Even Smokey Joe takes breaks (mostly to nap). See you in {time}!"
 ];
 
+const COOLDOWN_RESPONSES = [
+    "Easy there, agent! HQ needs {time} to process your intel. Grab a coffee!",
+    "Slow down, speedster! You've got a {time} cooldown. Even Lila the three-legged rocket takes breaks!",
+    "HOLD YOUR HORSES! {time} cooldown between reports. Meow-Meow suspects you're trying to spam her reputation!",
+    "Whoa! {time} break required between reports. Use this time to observe more pet behavior!",
+    "Intel cooldown active: {time} remaining. Quality over quantity, agent!",
+    "Report queued! Wait {time} before your next submission. Smokey Joe is judging your impatience."
+];
+
 function getRandomRateLimitResponse() {
     const response = RATE_LIMIT_RESPONSES[Math.floor(Math.random() * RATE_LIMIT_RESPONSES.length)];
     return response
         .replace('{time}', formatTimeUntilReset())
         .replace('{limit}', DAILY_REPORT_LIMIT);
+}
+
+function getRandomCooldownResponse() {
+    const response = COOLDOWN_RESPONSES[Math.floor(Math.random() * COOLDOWN_RESPONSES.length)];
+    return response.replace('{time}', formatCooldownTime());
 }
 
 // ===========================================
@@ -1083,8 +1178,14 @@ chatForm.addEventListener('submit', async (e) => {
     const message = messageInput.value.trim();
     if (!message) return;
 
-    // Check daily report limit
-    if (!canSendReport()) {
+    // Check cooldown first, then daily report limit
+    if (isOnCooldown()) {
+        messageInput.value = '';
+        addMessage(getRandomCooldownResponse(), 'addy');
+        return;
+    }
+
+    if (getRemainingReports() <= 0) {
         messageInput.value = '';
         addMessage(getRandomRateLimitResponse(), 'addy');
         return;
@@ -1097,8 +1198,9 @@ chatForm.addEventListener('submit', async (e) => {
         return;
     }
 
-    // Increment report count for this user
+    // Increment report count for this user and start cooldown
     incrementReportCount();
+    setLastReportTime();
 
     addMessage(message, 'user');
     messageInput.value = '';

@@ -435,6 +435,12 @@ section h2::before {
     animation: pulse-warning 1.5s ease-in-out infinite;
 }
 
+.report-counter.cooldown {
+    color: #f59e0b;
+    font-weight: 700;
+    animation: pulse-warning 1s ease-in-out infinite;
+}
+
 @keyframes pulse-warning {
     0%, 100% { opacity: 0.8; }
     50% { opacity: 1; }
