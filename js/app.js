@@ -53,70 +53,69 @@ const SURVIVABILITY = {
 // Initial pet data
 // ===========================================
 const DEFAULT_PETS = [
-    { id: "meow-meow", name: "Meow-Meow", type: "cat", score: 0, emoji: "😺", aliases: [
+    { id: "meow-meow", name: "Meow-Meow", type: "cat", score: 0, aliases: [
         "meow meow", "meowmeow", "the meow", "big meow", "meow girl", "meow cat", "meowy", "mm", "mew mew", "mew"
     ], image: "assets/cats/meow-meow.jpg" },
-    { id: "smokey-joe", name: "Smokey Joe", type: "cat", score: 0, emoji: "😸", aliases: [
+    { id: "smokey-joe", name: "Smokey Joe", type: "cat", score: 0, aliases: [
         "joe", "smokey", "smokey joe", "smoke", "the joe", "big joe", "joey", "smoky", "gray one", "grey one", "the gray", "the grey"
     ], image: "assets/cats/smokey-joe.jpg" },
-    { id: "chirpy", name: "Chirpy", type: "cat", score: 0, emoji: "😻", aliases: [
+    { id: "chirpy", name: "Chirpy", type: "cat", score: 0, aliases: [
         "chirp", "chirps", "chirpie", "chirpy cat", "the chirp", "tabby", "stripy", "striped one"
     ], image: "assets/cats/chirpy.jpg" }
 ];
 
 // ===========================================
-// Chatbot responses - Addy has OPINIONS
+// Chatbot responses - Addy has OPINIONS (no emojis - game style)
 // ===========================================
 const RESPONSES = {
     greetings: [
-        "Yo! Ready to talk about cats? Just don't get me started on Meow-Meow... 🙄",
-        "Hey! Which cat we roasting today? I mean... discussing? 😏",
-        "Welcome! I'm contractually obligated to be nice to all cats. Except one. You know which one. 😹"
+        "Yo! Ready to talk about cats? Just don't get me started on Meow-Meow...",
+        "Hey! Which cat we roasting today? I mean... discussing?",
+        "Welcome! I'm contractually obligated to be nice to all cats. Except one. You know which one."
     ],
     positive: [
-        "Ooh, {cat}! Finally, someone with taste! ✨",
-        "{cat} appreciation! Love to see it! 🌟",
-        "YES! {cat} supremacy! This is the content I'm here for! 😸",
-        "{cat}! A cat of culture! Unlike SOME cats who just lay around all day... 👀"
+        "Ooh, {cat}! Finally, someone with taste!",
+        "{cat} appreciation! Love to see it!",
+        "YES! {cat} supremacy! This is the content I'm here for!",
+        "{cat}! A cat of culture! Unlike SOME cats who just lay around all day..."
     ],
     negative: [
-        "LMAOOO {cat} getting exposed! 💀",
-        "Oh no you didn't! {cat} catching strays! 😂",
-        "Dang, {cat} really living rent free in your head huh 😹",
-        "Tell me how you really feel about {cat}! Don't hold back! 🔥"
+        "LMAOOO {cat} getting exposed!",
+        "Oh no you didn't! {cat} catching strays!",
+        "Dang, {cat} really living rent free in your head huh",
+        "Tell me how you really feel about {cat}! Don't hold back!"
     ],
     neutral: [
-        "Ah, {cat}! Interesting choice... go on 👀",
+        "Ah, {cat}! Interesting choice... go on",
         "{cat} huh? I have thoughts. Many thoughts. What's yours?",
-        "Oh we're talking about {cat} now? *grabs popcorn* 🍿"
+        "Oh we're talking about {cat} now? *grabs popcorn*"
     ],
-    // Special responses for Meow-Meow
     meowMeowPositive: [
-        "Meow-Meow?? You're being nice to HER? She literally just sleeps and eats! 😭",
-        "I mean... she's cute I guess. In a 'spherical object' kind of way 🔮",
-        "Meow-Meow has her charms... like being an excellent doorstop 😂",
-        "Okay okay, Meow-Meow isn't THAT bad. She's just... gravitationally challenged 🌍"
+        "Meow-Meow?? You're being nice to HER? She literally just sleeps and eats!",
+        "I mean... she's cute I guess. In a 'spherical object' kind of way.",
+        "Meow-Meow has her charms... like being an excellent doorstop.",
+        "Okay okay, Meow-Meow isn't THAT bad. She's just... gravitationally challenged."
     ],
     meowMeowNegative: [
-        "FINALLY someone speaking TRUTH about Meow-Meow! 🙌",
-        "I've been saying this for YEARS! Meow-Meow is basically a furry bowling ball! 🎳",
-        "Meow-Meow heard you and she doesn't care. She's too busy napping. As usual. 😴",
-        "The accuracy! Meow-Meow's survival strategy is just 'be too round to catch' 💀"
+        "FINALLY someone speaking TRUTH about Meow-Meow!",
+        "I've been saying this for YEARS! Meow-Meow is basically a furry bowling ball!",
+        "Meow-Meow heard you and she doesn't care. She's too busy napping. As usual.",
+        "The accuracy! Meow-Meow's survival strategy is just 'be too round to catch'."
     ],
     meowMeowNeutral: [
-        "Meow-Meow... *sighs* ...where do I even begin with that absolute unit 😮‍💨",
-        "Ah yes, Meow-Meow. The cat who thinks 'exercise' is a type of food 🍽️",
-        "Meow-Meow! Fun fact: she has never voluntarily moved faster than 0.5 mph 🐌"
+        "Meow-Meow... *sighs* ...where do I even begin with that absolute unit.",
+        "Ah yes, Meow-Meow. The cat who thinks 'exercise' is a type of food.",
+        "Meow-Meow! Fun fact: she has never voluntarily moved faster than 0.5 mph."
     ],
     noCatMentioned: [
-        "Uh, which cat? I need names! Unless you're talking about Meow-Meow, I can roast her anytime 😏",
-        "Be specific! We got Smokey Joe (legend), Chirpy (icon), and Meow-Meow (the round one) 🐱",
-        "Name a cat! Any cat! ...Actually, name Smokey Joe or Chirpy. They deserve the love 😂"
+        "Uh, which cat? I need names! Unless you're talking about Meow-Meow, I can roast her anytime.",
+        "Be specific! We got Smokey Joe [legend], Chirpy [icon], and Meow-Meow [the round one].",
+        "Name a cat! Any cat! ...Actually, name Smokey Joe or Chirpy. They deserve the love."
     ],
     generic: [
-        "Give me your hottest cat takes! Don't be shy! 🔥",
-        "Rate the cats! I'll start: Meow-Meow gets a solid... participation trophy 🏆",
-        "What's your cat tier list? And yes, it's okay to put Meow-Meow at the bottom. I do. 📊"
+        "Give me your hottest cat takes! Don't be shy!",
+        "Rate the cats! I'll start: Meow-Meow gets a solid... participation trophy.",
+        "What's your cat tier list? And yes, it's okay to put Meow-Meow at the bottom. I do."
     ]
 };
 
@@ -257,8 +256,8 @@ function renderLeaderboard() {
             <div class="rank-badge">${index + 1}</div>
             <div class="pet-avatar">
                 ${pet.image
-                    ? `<img src="${pet.image}" alt="${pet.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="pet-emoji-fallback" style="display:none">${pet.emoji || '🐱'}</span>`
-                    : `<span class="pet-emoji-fallback">${pet.emoji || '🐱'}</span>`
+                    ? `<img src="${pet.image}" alt="${pet.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="pet-pixel-fallback" style="display:none"></span>`
+                    : `<span class="pet-pixel-fallback"></span>`
                 }
             </div>
             <div class="pet-info">
@@ -439,8 +438,13 @@ function addMessage(text, sender) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${sender}`;
 
+    // Use pixel avatars instead of emojis
+    const avatarContent = sender === 'addy'
+        ? '<span class="pixel-avatar addy-avatar"></span>'
+        : '<span class="pixel-avatar user-avatar"></span>';
+
     messageDiv.innerHTML = `
-        <span class="avatar">${sender === 'addy' ? '😺' : '😊'}</span>
+        ${avatarContent}
         <div class="bubble"><p>${text}</p></div>
     `;
     chatMessages.appendChild(messageDiv);
@@ -507,11 +511,11 @@ bgMusic.volume = 0.3; // Set volume to 30%
 musicToggle.addEventListener('click', () => {
     if (isMusicPlaying) {
         bgMusic.pause();
-        musicToggle.textContent = '🔇';
+        musicToggle.textContent = 'OFF';
         musicToggle.classList.remove('playing');
     } else {
         bgMusic.play();
-        musicToggle.textContent = '🎵';
+        musicToggle.textContent = 'ON';
         musicToggle.classList.add('playing');
     }
     isMusicPlaying = !isMusicPlaying;
