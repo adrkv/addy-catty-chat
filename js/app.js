@@ -1035,12 +1035,62 @@ function initTabs() {
 
             if (tabId === 'veterans-tab') {
                 renderVeterans();
+                // Clear search when switching tabs
+                document.getElementById('veterans-search').value = '';
             }
             if (tabId === 'pets-tab') {
                 renderPetBios();
+                // Clear search when switching tabs
+                document.getElementById('pets-search').value = '';
             }
         });
     });
+}
+
+// ===========================================
+// Search Functionality
+// ===========================================
+function initSearch() {
+    const petsSearch = document.getElementById('pets-search');
+    const veteransSearch = document.getElementById('veterans-search');
+
+    if (petsSearch) {
+        petsSearch.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            const cards = document.querySelectorAll('.pet-bio-card');
+
+            cards.forEach(card => {
+                const name = card.querySelector('.pet-bio-name')?.textContent.toLowerCase() || '';
+                const type = card.querySelector('.pet-bio-type')?.textContent.toLowerCase() || '';
+                const bio = card.querySelector('.pet-bio-description')?.textContent.toLowerCase() || '';
+
+                if (name.includes(query) || type.includes(query) || bio.includes(query)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    }
+
+    if (veteransSearch) {
+        veteransSearch.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            const cards = document.querySelectorAll('.veteran-card');
+
+            cards.forEach(card => {
+                const name = card.querySelector('.veteran-name')?.textContent.toLowerCase() || '';
+                const type = card.querySelector('.veteran-type')?.textContent.toLowerCase() || '';
+                const memorial = card.querySelector('.veteran-memorial')?.textContent.toLowerCase() || '';
+
+                if (name.includes(query) || type.includes(query) || memorial.includes(query)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    }
 }
 
 // ===========================================
@@ -1149,6 +1199,7 @@ initFirebase();
 initPixelCats();
 addSittingCats();
 initTabs();
+initSearch();
 renderVeterans();
 
 // Initialize pet requests after Firebase is ready
