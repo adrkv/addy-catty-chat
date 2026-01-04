@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Addy Catty Catty Cat Chat</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Addy Catty Catty Cat Chat</h1>
+            <p class="subtitle">Chat with Addy about the cats!</p>
+        </header>
+
+        <main>
+            <!-- Leaderboard Section -->
+            <section class="leaderboard">
+                <h2>Leaderboard</h2>
+                <div class="leaderboard-list" id="leaderboard">
+                    <div class="loading">Loading rankings...</div>
+                </div>
+                <p class="last-updated" id="last-updated"></p>
+            </section>
+
+            <!-- Chat Section -->
+            <section class="chat">
+                <h2>Chat with Addy</h2>
+                <div class="chat-container">
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="message addy">
+                            <span class="avatar">😺</span>
+                            <div class="bubble">
+                                <p>Hey there! I'm Addy! Ask me about the cats or just say hi! Which kitty is your favorite?</p>
+                            </div>
+                        </div>
+                    </div>
+                    <form class="chat-input" id="chat-form">
+                        <input type="text" id="message-input" placeholder="Type your message..." autocomplete="off" required>
+                        <button type="submit">Send</button>
+                    </form>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Made with love for cats everywhere</p>
+        </footer>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
