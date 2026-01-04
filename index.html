@@ -88,13 +88,18 @@
                 <div id="cattyverse-tab" class="tab-content">
                     <div class="cattyverse-intro">
                         <h3>Welcome to the Catty-verse</h3>
-                        <p>Daily dispatches from Addy, your undercover reporter in the pet underworld. Based on real field intel from agents like you!</p>
+                        <p>Weird, wild dispatches from Addy - your unhinged reporter deep undercover in the pet underworld. The stories are absurd. The drama is real. Based on YOUR field intel!</p>
                     </div>
                     <div class="cattyverse-story" id="cattyverse-story">
                         <div class="story-loading">
                             <span class="loading-spinner"></span>
-                            <p>Addy is compiling today's report...</p>
+                            <p>Addy is fabricating... er, compiling a report...</p>
                         </div>
+                    </div>
+                    <div class="cattyverse-controls">
+                        <button class="generate-story-btn" id="generate-story-btn" onclick="requestNewStory()">
+                            Generate New Dispatch
+                        </button>
                     </div>
                     <div class="cattyverse-archive" id="cattyverse-archive">
                         <h4>Previous Dispatches</h4>
@@ -181,6 +186,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
-    <script src="js/app.js?v=1.2.0"></script>
+    <script src="js/app.js?v=1.3.0"></script>
 </body>
 </html>

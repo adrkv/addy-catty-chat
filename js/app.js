@@ -1998,33 +1998,26 @@ function initCattyVerse() {
     if (db) {
         storiesRef = db.ref('cattyverse');
 
-        // Listen for today's story
-        const today = new Date().toISOString().split('T')[0];
-        storiesRef.child(today).on('value', (snapshot) => {
-            const story = snapshot.val();
-            if (story) {
-                renderTodayStory(story);
-            } else {
-                // No story for today - try to generate one
-                checkAndGenerateStory();
-            }
-        });
-
-        // Load archive of previous stories
-        storiesRef.orderByChild('date').limitToLast(7).on('value', (snapshot) => {
+        // Listen for all stories, show most recent
+        storiesRef.orderByChild('timestamp').limitToLast(10).on('value', (snapshot) => {
             const stories = [];
             snapshot.forEach((child) => {
-                const story = child.val();
-                if (story.date !== today) {
-                    stories.push(story);
-                }
+                stories.push(child.val());
             });
-            renderStoryArchive(stories.reverse());
+
+            if (stories.length > 0) {
+                // Sort by timestamp descending, show newest
+                stories.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                renderLatestStory(stories[0]);
+                renderStoryArchive(stories.slice(1));
+            } else {
+                showStoryPlaceholder('No dispatches yet! Click the button to generate one.');
+            }
         });
     }
 }
 
-function renderTodayStory(story) {
+function renderLatestStory(story) {
     const container = document.getElementById('cattyverse-story');
     if (!container) return;
 
@@ -2035,13 +2028,13 @@ function renderTodayStory(story) {
     container.innerHTML = `
         <div class="story-card today">
             <div class="story-header">
-                <span class="story-badge">TODAY'S DISPATCH</span>
+                <span class="story-badge">LATEST DISPATCH</span>
                 <span class="story-date">${safeDate}</span>
             </div>
             <h3 class="story-title">${safeTitle}</h3>
             <div class="story-content">${safeContent}</div>
             <div class="story-footer">
-                <span class="story-author">- Addy, Undercover Reporter</span>
+                <span class="story-author">- Addy, Unhinged Undercover Reporter</span>
             </div>
         </div>
     `;
@@ -2077,16 +2070,7 @@ async function checkAndGenerateStory() {
         return;
     }
 
-    const today = new Date().toISOString().split('T')[0];
-
-    // Check if we already tried generating today (prevent spam)
-    const lastAttempt = localStorage.getItem('cattyverse_last_attempt');
-    if (lastAttempt === today) {
-        showStoryPlaceholder();
-        return;
-    }
-
-    // Fetch recent field reports to base story on
+    // Fetch all field reports to base story on
     const recentReports = await getRecentReports();
 
     if (recentReports.length < 3) {
@@ -2094,21 +2078,76 @@ async function checkAndGenerateStory() {
         return;
     }
 
-    localStorage.setItem('cattyverse_last_attempt', today);
-
     try {
+        showStoryLoading();
         const story = await generateCattyVerseStory(recentReports);
         if (story && storiesRef) {
-            storiesRef.child(today).set({
+            const storyId = Date.now().toString();
+            storiesRef.child(storyId).set({
                 ...story,
-                date: today,
+                id: storyId,
+                date: new Date().toLocaleDateString(),
                 timestamp: Date.now()
             });
         }
     } catch (error) {
         console.error('[Catty-verse] Story generation failed:', error);
-        showStoryPlaceholder('Story generation in progress... check back soon!');
+        showStoryPlaceholder('Addy got distracted by a laser pointer... try again!');
     }
+}
+
+// Rate limit for story generation (1 per minute per user)
+let lastStoryRequest = 0;
+const STORY_COOLDOWN = 60000; // 1 minute
+
+async function requestNewStory() {
+    const now = Date.now();
+    const timeLeft = Math.ceil((STORY_COOLDOWN - (now - lastStoryRequest)) / 1000);
+
+    if (now - lastStoryRequest < STORY_COOLDOWN) {
+        alert(`Addy needs ${timeLeft} seconds to recover from the last dispatch. The pet underworld is exhausting!`);
+        return;
+    }
+
+    lastStoryRequest = now;
+    const btn = document.getElementById('generate-story-btn');
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Generating...';
+    }
+
+    await checkAndGenerateStory();
+
+    if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Generate New Dispatch';
+    }
+}
+
+// Make function available globally
+window.requestNewStory = requestNewStory;
+
+function showStoryLoading() {
+    const container = document.getElementById('cattyverse-story');
+    if (!container) return;
+
+    const loadingMessages = [
+        "Addy is investigating a suspicious cardboard box...",
+        "Intercepting encrypted meows...",
+        "Bribing sources with premium treats...",
+        "Decoding Meow-Meow's secret plans...",
+        "Consulting with RP's ghost...",
+        "Dodging Chirpy's angry swipes...",
+        "Following Smokey Joe's mysterious trail..."
+    ];
+    const randomMsg = loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
+
+    container.innerHTML = `
+        <div class="story-loading">
+            <span class="loading-spinner"></span>
+            <p>${randomMsg}</p>
+        </div>
+    `;
 }
 
 async function getRecentReports() {
@@ -2139,28 +2178,48 @@ async function generateCattyVerseStory(reports) {
     const reportSummary = reports.map(r => `${r.pet}: "${r.text}"`).join('\n');
 
     const characterGuide = Object.entries(CATTY_VERSE_CHARACTERS)
-        .map(([id, char]) => `${id}: ${char.role} - ${char.personality}`)
+        .map(([id, char]) => `${id}: ${char.role} - ${char.personality}. Quirks: ${char.quirks}`)
         .join('\n');
 
-    const prompt = `You are Addy, an undercover reporter in the pet underworld called the "Catty-verse". Write a SHORT, FUNNY fictional news dispatch (150-250 words) based on these real field reports:
+    // Random story styles for variety
+    const storyStyles = [
+        "a conspiracy theory news report where everything connects in absurd ways",
+        "a dramatic soap opera with ridiculous plot twists",
+        "a nature documentary narrated by someone losing their mind",
+        "a noir detective story but the detective is clearly unhinged",
+        "a breaking news report where the reporter keeps getting distracted",
+        "an exposé that reveals increasingly ridiculous 'secrets'",
+        "a sports commentary but for mundane pet activities",
+        "a cooking show review but about pet food heists",
+        "a true crime podcast recap but the crimes are stealing treats",
+        "a reality TV show confessional with dramatic music cues"
+    ];
+    const randomStyle = storyStyles[Math.floor(Math.random() * storyStyles.length)];
 
-RECENT INTEL:
+    const prompt = `You are Addy, a COMPLETELY UNHINGED undercover reporter in the pet underworld called the "Catty-verse". Write a SHORT, ABSURDLY FUNNY fictional dispatch (150-200 words).
+
+STYLE FOR THIS DISPATCH: ${randomStyle}
+
+FIELD INTEL TO INCORPORATE:
 ${reportSummary}
 
-CHARACTER GUIDE:
+CHARACTERS (use their quirks!):
 ${characterGuide}
 
-RULES:
-1. Meow-Meow is ALWAYS the secret villain/mastermind behind everything
-2. Write like a noir detective story mixed with comedy
-3. RP (a deceased dog) can make brief cameo appearances as a ghost/angel giving advice
-4. Base the plot loosely on the actual reports but make it dramatic/funny
-5. Include at least 3 different pets from the reports
-6. End with a cliffhanger or funny twist
-7. Keep it family-friendly but edgy
+CRITICAL RULES:
+1. Meow-Meow is ALWAYS secretly behind everything evil. She's basically a cat mafia boss who never moves.
+2. Be WEIRD. Be ABSURD. Make bizarre logical leaps. Connect unrelated things.
+3. RP (deceased dog) appears as a glowing ghost giving cryptic wisdom like "the kibble remembers"
+4. Lila is fast BUT deeply melancholic - she wins races but cries inside
+5. Include at least ONE completely made-up "fact" presented as truth
+6. End with something unhinged - a conspiracy, a cliffhanger, or a fourth-wall break
+7. Use dramatic descriptions for mundane things ("The hairball incident of Tuesday... we don't speak of it")
+8. Chirpy should threaten violence at least once
+9. Reference "the incident" without ever explaining what it was
+10. Include a fake quote from a pet that's deeply philosophical or deeply stupid
 
 FORMAT:
-Return JSON: {"title": "Catchy headline", "content": "The story text with paragraphs separated by \\n\\n"}`;
+Return JSON: {"title": "Clickbait-style absurd headline", "content": "Story with \\n\\n between paragraphs"}`;
 
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${CONFIG.gemini.model}:generateContent?key=${CONFIG.gemini.apiKey}`, {
         method: 'POST',
@@ -2193,15 +2252,15 @@ Return JSON: {"title": "Catchy headline", "content": "The story text with paragr
     return JSON.parse(jsonMatch[0]);
 }
 
-function showStoryPlaceholder(message = 'Today\'s dispatch is being prepared...') {
+function showStoryPlaceholder(message = 'No dispatches yet!') {
     const container = document.getElementById('cattyverse-story');
     if (!container) return;
 
     container.innerHTML = `
         <div class="story-placeholder">
-            <div class="placeholder-icon">📰</div>
+            <div class="placeholder-icon">🕵️</div>
             <p>${escapeHtml(message)}</p>
-            <p class="placeholder-hint">Stories are generated daily based on YOUR field reports!</p>
+            <p class="placeholder-hint">Hit that button to unleash Addy's unhinged reporting!</p>
         </div>
     `;
 }

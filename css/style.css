@@ -2459,6 +2459,44 @@ header .user-info span {
     color: #1a1a2e !important;
 }
 
+/* Generate Story Button */
+.cattyverse-controls {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.generate-story-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.7rem;
+    padding: 15px 30px;
+    background: linear-gradient(135deg, #e94560 0%, #ff6b9d 100%);
+    color: white;
+    border: 3px solid #1a1a2e;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 0 #1a1a2e;
+    text-transform: uppercase;
+}
+
+.generate-story-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 #1a1a2e;
+    background: linear-gradient(135deg, #ff6b9d 0%, #e94560 100%);
+}
+
+.generate-story-btn:active:not(:disabled) {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #1a1a2e;
+}
+
+.generate-story-btn:disabled {
+    background: #666;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
 /* Mobile responsive for Catty-verse */
 @media (max-width: 600px) {
     .story-card {
@@ -2476,5 +2514,10 @@ header .user-info span {
 
     .cattyverse-intro h3 {
         font-size: 0.75rem;
+    }
+
+    .generate-story-btn {
+        font-size: 0.6rem;
+        padding: 12px 20px;
     }
 }
