@@ -163,8 +163,29 @@ section h2::before {
     color: var(--text-light);
 }
 
-.pet-emoji {
-    font-size: 2.5rem;
+.pet-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #fff5f8 0%, #ffe4ec 100%);
+    flex-shrink: 0;
+}
+
+.pet-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.pet-emoji, .pet-emoji-fallback {
+    font-size: 2.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .pet-info {
@@ -443,6 +464,7 @@ footer p::after {
 
 .cat-select {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 12px;
     padding: 12px;
@@ -470,6 +492,24 @@ footer p::after {
 .cat-select select:focus {
     outline: none;
     border-color: var(--primary);
+}
+
+.detection-status {
+    width: 100%;
+    text-align: center;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--primary);
+    background: linear-gradient(135deg, #fff5f8 0%, #ffe4ec 100%);
+    border-radius: 8px;
+    margin-top: 8px;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 /* Gallery */

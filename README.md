@@ -7,8 +7,10 @@ A fun real-time leaderboard and chat website where users chat about cats and upl
 - **Live Leaderboard**: Real-time score updates across all users
 - **Auto-Scoring**: Mention a cat → they get points!
 - **Image Uploads**: Share cat pics for bonus points
+- **Auto Cat Detection**: AI-powered identification of which cat is in your photo!
 - **Photo Gallery**: Recent uploads displayed for everyone
 - **Chat with Addy**: Fun chatbot responses
+- **Global Chat**: See what everyone is saying about the cats
 
 ## Quick Setup
 
@@ -41,7 +43,14 @@ A fun real-time leaderboard and chat website where users chat about cats and upl
 2. Sign up for free
 3. Copy your API key
 
-### 5. Add Config to Code
+### 5. (Optional) Get Hugging Face API Key for Auto Cat Detection
+
+1. Go to [https://huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
+2. Sign up for free
+3. Create a new access token (read access is enough)
+4. This enables automatic cat identification from uploaded photos!
+
+### 6. Add Config to Code
 
 Edit `js/app.js` and fill in your credentials:
 
@@ -57,12 +66,13 @@ const CONFIG = {
         appId: "your-app-id"
     },
     imgbbApiKey: "your-imgbb-api-key",
-    pointsPerMention: 1,
-    pointsPerImage: 3
+    huggingFaceApiKey: "your-huggingface-api-key", // Optional: enables auto cat detection
+    basePoints: 1,
+    imagePoints: 3
 };
 ```
 
-### 6. Deploy to GitHub Pages
+### 7. Deploy to GitHub Pages
 
 1. Push to GitHub
 2. Go to repo Settings → Pages
