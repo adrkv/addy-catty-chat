@@ -2223,8 +2223,29 @@ header .user-info span {
 }
 
 /* ===========================================
-   CATTY-VERSE TAB
+   CATTY-VERSE SECTION
    =========================================== */
+.cattyverse-section {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 3px solid var(--secondary);
+    margin-top: 24px;
+}
+
+.cattyverse-section h2 {
+    color: var(--secondary);
+}
+
+.cattyverse-section h2::before {
+    color: var(--secondary);
+}
+
+.cattyverse-subtitle {
+    color: #aaa;
+    font-size: 0.95rem;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
 .cattyverse-intro {
     text-align: center;
     padding: 15px;
@@ -2360,9 +2381,13 @@ header .user-info span {
 .cattyverse-archive h4 {
     font-family: 'Press Start 2P', monospace;
     font-size: 0.7rem;
-    color: var(--text-light);
+    color: #888;
     margin-bottom: 15px;
     text-transform: uppercase;
+}
+
+.cattyverse-section .cattyverse-archive h4 {
+    color: #aaa;
 }
 
 .archive-list {

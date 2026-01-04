@@ -61,7 +61,6 @@
                 <div class="leaderboard-tabs">
                     <button class="tab-btn active" data-tab="leaderboard-tab">Live Leaderboard</button>
                     <button class="tab-btn pets-tab-btn" data-tab="pets-tab">Meet the Pets</button>
-                    <button class="tab-btn cattyverse-tab-btn" data-tab="cattyverse-tab">The Catty-verse</button>
                     <button class="tab-btn veterans-tab-btn" data-tab="veterans-tab">Meet the Veterans</button>
                 </div>
 
@@ -82,23 +81,6 @@
                         <input type="text" id="pets-search" placeholder="Search pets..." autocomplete="off">
                     </div>
                     <div class="pets-bio-list" id="pets-bio-list">
-                    </div>
-                </div>
-
-                <div id="cattyverse-tab" class="tab-content">
-                    <div class="cattyverse-intro">
-                        <h3>Welcome to the Catty-verse</h3>
-                        <p>Dispatches from the pet underworld. The stories are absurd. The drama is real. Based on YOUR field intel!</p>
-                    </div>
-                    <div class="cattyverse-story" id="cattyverse-story">
-                        <div class="story-loading">
-                            <span class="loading-spinner"></span>
-                            <p>Loading dispatches...</p>
-                        </div>
-                    </div>
-                    <div class="cattyverse-archive" id="cattyverse-archive">
-                        <h4>Previous Dispatches</h4>
-                        <div class="archive-list" id="archive-list"></div>
                     </div>
                 </div>
 
@@ -142,6 +124,22 @@
             <p class="total-reports-counter" id="total-reports-counter"></p>
             <div class="global-chat-log" id="global-chat-log">
                 <div class="loading">Loading field reports...</div>
+            </div>
+        </section>
+
+        <!-- Catty-verse Section -->
+        <section class="cattyverse-section">
+            <h2>The Catty-verse</h2>
+            <p class="cattyverse-subtitle">Dispatches from the pet underworld. The stories are absurd. The drama is real.</p>
+            <div class="cattyverse-story" id="cattyverse-story">
+                <div class="story-loading">
+                    <span class="loading-spinner"></span>
+                    <p>Loading dispatches...</p>
+                </div>
+            </div>
+            <div class="cattyverse-archive" id="cattyverse-archive">
+                <h4>Previous Dispatches</h4>
+                <div class="archive-list" id="archive-list"></div>
             </div>
         </section>
 
