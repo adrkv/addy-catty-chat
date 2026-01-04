@@ -11,8 +11,170 @@ const CONFIG = {
         messagingSenderId: "604591070600",
         appId: "1:604591070600:web:9e7a95a1e6c4b20a0cae3d"
     },
-    basePoints: 1
+    basePoints: 1,
+    // Gemini AI Configuration (free tier: 60 req/min, 1500/day)
+    gemini: {
+        apiKey: "AIzaSyC1BWcg_Xv38N5C33vfJ9SuQimpgPkeMLQ",
+        model: "gemini-2.5-flash",
+        enabled: true // Set to false to disable AI and use keyword fallback only
+    }
 };
+
+// ===========================================
+// AI RATE LIMITING & FALLBACK TRACKING
+// ===========================================
+const AI_STATE = {
+    requestCount: 0,
+    lastResetTime: Date.now(),
+    rateLimitHit: false,
+    rateLimitResetTime: null,
+    maxRequestsPerMinute: 55, // Stay under 60/min limit
+    maxRequestsPerDay: 1400   // Stay under 1500/day limit
+};
+
+// ===========================================
+// CONTENT MODERATION - Block hate speech
+// ===========================================
+const BLOCKED_PATTERNS = [
+    // Racial slurs (encoded to avoid plain text)
+    /\bn[i1l][g9][g9]([ae3]r?|[a4]h?|[a4]s?)?\b/i,
+    /\bk[i1]k[e3]\b/i,
+    /\bsp[i1]c[ks]?\b/i,
+    /\bch[i1]nk\b/i,
+    /\bgooks?\b/i,
+    /\bw[e3]tb[a4]cks?\b/i,
+    /\bcoons?\b/i,
+    /\br[a4]gh[e3][a4]ds?\b/i,
+    // Homophobic/transphobic slurs
+    /\bf[a4][g9][g9]?([o0]ts?|s)?\b/i,
+    /\btr[a4]nn(y|ies)\b/i,
+    /\bd[yi]k[e3]s?\b/i,
+    // Sexist slurs
+    /\bc[u*]nt\b/i,
+    /\bwh[o0]r[e3]s?\b/i,
+    /\bsl[u*]ts?\b/i,
+    /\bb[i1]tch[e3]?s?\b/i,
+    // Religious hate
+    /\bk[a4]f[i1]rs?\b/i,
+    // General hate speech patterns
+    /\bhitler\b/i,
+    /\bnaz[i1]s?\b/i,
+    /\bh[e3][i1]l\s*h[i1]tl[e3]r\b/i,
+    /\bwh[i1]t[e3]\s*(suprem|power)/i,
+    /\bgas\s*the\b/i,
+    /\bkill\s*(all|the)\s*(jews?|blacks?|whites?|asians?|muslims?|gays?)/i,
+    /\b(jews?|blacks?|whites?|asians?|muslims?|gays?)\s*should\s*die\b/i
+];
+
+function containsHateSpeech(text) {
+    const lowerText = text.toLowerCase();
+    for (const pattern of BLOCKED_PATTERNS) {
+        if (pattern.test(lowerText)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// ===========================================
+// GEMINI AI INTEGRATION WITH FALLBACK
+// ===========================================
+async function processWithAI(message, existingPets) {
+    // Check if AI is enabled and API key is set
+    if (!CONFIG.gemini.enabled || !CONFIG.gemini.apiKey) {
+        return null; // Use fallback
+    }
+
+    // Check rate limits
+    const now = Date.now();
+    const minuteAgo = now - 60000;
+
+    // Reset counter if a minute has passed
+    if (AI_STATE.lastResetTime < minuteAgo) {
+        AI_STATE.requestCount = 0;
+        AI_STATE.lastResetTime = now;
+    }
+
+    // Check if we've hit rate limits
+    if (AI_STATE.rateLimitHit && AI_STATE.rateLimitResetTime > now) {
+        console.log('[AI] Rate limit active, using fallback');
+        return null;
+    }
+
+    if (AI_STATE.requestCount >= AI_STATE.maxRequestsPerMinute) {
+        console.log('[AI] Approaching rate limit, using fallback');
+        return null;
+    }
+
+    // Build compact pet context (only IDs and key aliases)
+    const petContext = existingPets.map(p =>
+        `${p.id}(${p.aliases.slice(0, 3).join('/')})`
+    ).join(',');
+
+    const systemPrompt = `Addy=sarcastic pet analyst. Pets:${petContext}. Traits:meow-meow=lazy,lila-dog=3-leg fast,smokey-joe=smelly,guy-fiery=sick,birch=chaotic,chirpy=angry. MUST use exact pet-id in response. JSON:{"petsMentioned":["exact-pet-id"],"sentiment":"positive/negative/neutral","points":<-3to3>,"response":"<10 words sarcastic>"}`;
+
+    try {
+        AI_STATE.requestCount++;
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${CONFIG.gemini.model}:generateContent?key=${CONFIG.gemini.apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [
+                        { text: systemPrompt },
+                        { text: `User message: "${message}"` }
+                    ]
+                }],
+                generationConfig: {
+                    temperature: 0.7,
+                    maxOutputTokens: 1024
+                }
+            })
+        });
+
+        if (response.status === 429) {
+            // Rate limited - set backoff
+            AI_STATE.rateLimitHit = true;
+            AI_STATE.rateLimitResetTime = Date.now() + 60000; // Wait 1 minute
+            console.log('[AI] Rate limit hit, switching to fallback for 1 minute');
+            return null;
+        }
+
+        if (!response.ok) {
+            console.log('[AI] API error, using fallback:', response.status);
+            return null;
+        }
+
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (!text) {
+            console.log('[AI] Empty response, using fallback');
+            return null;
+        }
+
+        // Parse JSON from response (handle markdown code blocks)
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+            console.log('[AI] Could not parse JSON, using fallback');
+            return null;
+        }
+
+        const aiResult = JSON.parse(jsonMatch[0]);
+        console.log('[AI] Successfully processed message:', aiResult);
+        return aiResult;
+
+    } catch (error) {
+        console.log('[AI] Error, using fallback:', error.message);
+        return null;
+    }
+}
+
+// Get pet objects from AI-detected IDs
+function getPetsFromIds(petIds, allPets) {
+    return petIds.map(id => allPets.find(p => p.id === id)).filter(Boolean);
+}
 
 // ===========================================
 // SECRET SURVIVABILITY SCORING
@@ -113,7 +275,7 @@ const PET_BIOS = {
 // ===========================================
 const DEFAULT_PETS = [
     { id: "meow-meow", name: "Meow-Meow", type: "cat", score: 0, aliases: [
-        "meow meow", "meowmeow", "the meow", "big meow", "meow girl", "meow cat", "meowy", "mm", "mew mew", "mew"
+        "meow meow", "meowmeow", "the meow", "big meow", "meow girl", "meow cat", "meowy", "mm", "mew mew", "mew", "m2", "bm"
     ], image: "assets/cats/meow-meow.jpg" },
     { id: "smokey-joe", name: "Smokey Joe", type: "cat", score: 0, aliases: [
         "joe", "smokey", "smokey joe", "smoke", "the joe", "big joe", "joey", "smoky", "gray one", "grey one", "the gray", "the grey"
@@ -122,7 +284,7 @@ const DEFAULT_PETS = [
         "chirp", "chirps", "chirpie", "chirpy cat", "the chirp", "tabby", "stripy", "striped one"
     ], image: "assets/cats/chirpy.jpg" },
     { id: "lila-dog", name: "Lila Dog", type: "dog (wait, I'm a dog!)", score: 0, aliases: [
-        "lila", "lila dog", "the dog", "doggo", "pupper", "three legs", "tripod", "senior dog", "old girl", "good girl"
+        "lila", "lila dog", "the dog", "doggo", "pupper", "three legs", "tripod", "senior dog", "old girl", "good girl", "ld"
     ], image: "assets/cats/lila-dog.jpg" },
     { id: "birch", name: "Birch", type: "cat", score: 0, aliases: [
         "birch", "baby birch", "birchy", "the birch", "birch cat", "baby b"
@@ -575,186 +737,247 @@ const chatMessages = document.getElementById('chat-messages');
 const chatForm = document.getElementById('chat-form');
 const messageInput = document.getElementById('message-input');
 
-chatForm.addEventListener('submit', (e) => {
+chatForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const message = messageInput.value.trim();
     if (!message) return;
 
+    // Block hate speech
+    if (containsHateSpeech(message)) {
+        messageInput.value = '';
+        addMessage("I can't process that message. Please keep it respectful.", 'addy');
+        return;
+    }
+
     addMessage(message, 'user');
+    messageInput.value = '';
 
-    const mentionedCats = detectCats(message);
-    const { points, sentiment } = analyzeSurvivability(message);
+    // Try AI processing first, with fallback to keyword-based system
+    const aiResult = await processWithAI(message, petsData);
 
-    const catNames = mentionedCats.length > 0 ? mentionedCats.map(p => p.name).join(', ') : null;
-    saveGlobalMessage(message, catNames);
+    if (aiResult) {
+        // === AI-POWERED RESPONSE ===
+        console.log('[AI] Using AI response');
 
-    // Check if RP (veteran) is mentioned
-    const rpMentioned = /\brp\b|r\.p\.|rest in peace/i.test(message);
-
-    setTimeout(() => {
-        // Special handling for RP mentions
-        if (rpMentioned) {
-            addMessage(randomFrom(RESPONSES.rpMentioned), 'addy');
-            messageInput.value = '';
+        // Handle RP mentions
+        if (aiResult.isRPMention) {
+            addMessage(aiResult.response, 'addy');
             return;
         }
 
-        // Check if user is asking a question instead of reporting
-        const isQuestion = /^(did|does|is|are|was|were|has|have|can|could|would|will|do|should|what|when|where|why|how)\b.+\??\s*$/i.test(message.trim());
+        // Get mentioned pets and update scores
+        const mentionedPets = getPetsFromIds(aiResult.petsMentioned || [], petsData);
+        const catNames = mentionedPets.length > 0 ? mentionedPets.map(p => p.name).join(', ') : null;
+        saveGlobalMessage(message, catNames);
 
-        if (mentionedCats.length > 0) {
-            // If it's a question about a pet, redirect them to report instead
-            if (isQuestion) {
-                const catNamesStr = mentionedCats.map(p => p.name).join(' and ');
-                const response = randomFrom(RESPONSES.questionAsked).replace('{cat}', catNamesStr);
-                addMessage(response, 'addy');
-                messageInput.value = '';
-                return;
-            }
-
-            mentionedCats.forEach(pet => {
-                // Base points from user's message (sentiment) - THIS IS THE PRIMARY DRIVER
-                let petPoints = points;
+        // Apply points if pets were mentioned and it's not a question
+        if (mentionedPets.length > 0 && !aiResult.isQuestion) {
+            mentionedPets.forEach(pet => {
+                let petPoints = aiResult.points || 1;
                 const bio = PET_BIOS[pet.id];
 
-                // ===========================================
-                // PERSONALITY-BASED MODIFIERS
-                // Each pet's unique traits affect their score!
-                // ===========================================
-
+                // Apply personality modifiers (keep the secret scoring!)
                 if (bio) {
-                    // Apply the pet's base rank modifier (from strengths)
                     petPoints += bio.rankModifier || 0;
-
-                    // Apply weakness penalties
-                    if (bio.smellyPenalty) petPoints += bio.smellyPenalty; // Smokey Joe's smell
-                    if (bio.celebrationPenalty) petPoints += bio.celebrationPenalty; // Lila's overcelebrating
-                    if (bio.angerPenalty) petPoints += bio.angerPenalty; // Chirpy's anger issues
-                    if (bio.messyPenalty) petPoints += bio.messyPenalty; // Birch's messiness
-                    if (bio.healthBonus) petPoints += bio.healthBonus; // Guy Fiery's fighting spirit
-                    if (bio.corruptionModifier) petPoints += bio.corruptionModifier; // Meow-Meow's corruption backfires
+                    if (bio.smellyPenalty) petPoints += bio.smellyPenalty;
+                    if (bio.celebrationPenalty) petPoints += bio.celebrationPenalty;
+                    if (bio.angerPenalty) petPoints += bio.angerPenalty;
+                    if (bio.messyPenalty) petPoints += bio.messyPenalty;
+                    if (bio.healthBonus) petPoints += bio.healthBonus;
+                    if (bio.corruptionModifier) petPoints += bio.corruptionModifier;
                 }
 
-                // Special case handlers for extreme traits
-                if (pet.id === 'smokey-joe') {
-                    // Smokey Joe: Fast and strong, but the smell issue
-                    // Net effect: +1 (legend) -1 (smell) = 0, plus user sentiment
-                }
-                if (pet.id === 'lila-dog') {
-                    // Lila: Speed demon! +2 for speed, -1 for overcelebrating = +1 net
-                }
-                if (pet.id === 'chirpy') {
-                    // Chirpy: Sympathy +1, anger -1 = 0 net, but sympathy word detection helps
-                }
-                if (pet.id === 'birch') {
-                    // Birch: No bonus, -2 for messiness/trouble = -2 net (she's a handful!)
-                }
+                // Guy Fiery health cap
                 if (pet.id === 'guy-fiery') {
-                    // Guy Fiery: -2 health issues, +1 fighting spirit = -1 net
-                    // Cat AIDS and worms really hurt his rankings
-                    petPoints = Math.max(petPoints, Math.ceil(points * 0.6)); // Health caps his potential
-                }
-                if (pet.id === 'meow-meow') {
-                    // Meow-Meow: 0 modifier, -1 corruption backfire = -1 net
-                    // She can only win through corrupting others (user manipulation!)
-                    // No algorithmic help - she has to earn it through... persuasion
+                    petPoints = Math.max(petPoints, Math.ceil((aiResult.points || 1) * 0.6));
                 }
 
-                // Ensure minimum 1 point for any positive mention
-                if (points > 0) {
+                // Ensure minimum 1 point for positive mentions
+                if ((aiResult.points || 0) > 0) {
                     petPoints = Math.max(petPoints, 1);
                 }
 
                 addPoints(pet.id, petPoints);
             });
+        }
 
-            const catNamesStr = mentionedCats.map(p => p.name).join(' and ');
-            const isMeowMeow = mentionedCats.some(p => p.id === 'meow-meow');
-            const isLila = mentionedCats.some(p => p.id === 'lila-dog');
-            const isGuyFiery = mentionedCats.some(p => p.id === 'guy-fiery');
-            const isBirch = mentionedCats.some(p => p.id === 'birch');
-            const isSmokeyJoe = mentionedCats.some(p => p.id === 'smokey-joe');
-            const isChirpy = mentionedCats.some(p => p.id === 'chirpy');
+        // Use AI-generated response
+        addMessage(aiResult.response, 'addy');
 
-            let responsePool;
-            // Special responses for Meow-Meow
-            if (isMeowMeow && mentionedCats.length === 1) {
-                if (sentiment === 'negative') {
-                    responsePool = RESPONSES.meowMeowNegative;
-                } else if (sentiment === 'positive') {
-                    responsePool = RESPONSES.meowMeowPositive;
-                } else {
-                    responsePool = RESPONSES.meowMeowNeutral;
-                }
-            // Special responses for Lila
-            } else if (isLila && mentionedCats.length === 1) {
-                if (sentiment === 'negative') {
-                    responsePool = RESPONSES.lilaNegative;
-                } else if (sentiment === 'positive') {
-                    responsePool = RESPONSES.lilaPositive;
-                } else {
-                    responsePool = RESPONSES.lilaNeutral;
-                }
-            // Special responses for Guy Fiery
-            } else if (isGuyFiery && mentionedCats.length === 1) {
-                if (sentiment === 'negative') {
-                    responsePool = RESPONSES.guyFieryNegative;
-                } else if (sentiment === 'positive') {
-                    responsePool = RESPONSES.guyFieryPositive;
-                } else {
-                    responsePool = RESPONSES.guyFieryNeutral;
-                }
-            // Special responses for Birch
-            } else if (isBirch && mentionedCats.length === 1) {
-                if (sentiment === 'negative') {
-                    responsePool = RESPONSES.birchNegative;
-                } else if (sentiment === 'positive') {
-                    responsePool = RESPONSES.birchPositive;
-                } else {
-                    responsePool = RESPONSES.birchNeutral;
-                }
-            // Special responses for Smokey Joe
-            } else if (isSmokeyJoe && mentionedCats.length === 1) {
-                if (sentiment === 'negative') {
-                    responsePool = RESPONSES.smokeyJoeNegative;
-                } else if (sentiment === 'positive') {
-                    responsePool = RESPONSES.smokeyJoePositive;
-                } else {
-                    responsePool = RESPONSES.smokeyJoeNeutral;
-                }
-            // Special responses for Chirpy
-            } else if (isChirpy && mentionedCats.length === 1) {
-                if (sentiment === 'negative') {
-                    responsePool = RESPONSES.chirpyNegative;
-                } else if (sentiment === 'positive') {
-                    responsePool = RESPONSES.chirpyPositive;
-                } else {
-                    responsePool = RESPONSES.chirpyNeutral;
-                }
-            } else {
-                if (sentiment === 'negative') {
-                    responsePool = RESPONSES.negative;
-                } else if (sentiment === 'positive') {
-                    responsePool = RESPONSES.positive;
-                } else {
-                    responsePool = RESPONSES.neutral;
-                }
+    } else {
+        // === FALLBACK: Keyword-based system ===
+        console.log('[Fallback] Using keyword-based response');
+
+        const mentionedCats = detectCats(message);
+        const { points, sentiment } = analyzeSurvivability(message);
+
+        const catNames = mentionedCats.length > 0 ? mentionedCats.map(p => p.name).join(', ') : null;
+        saveGlobalMessage(message, catNames);
+
+        // Check if RP (veteran) is mentioned
+        const rpMentioned = /\brp\b|r\.p\.|rest in peace/i.test(message);
+
+        setTimeout(() => {
+            // Special handling for RP mentions
+            if (rpMentioned) {
+                addMessage(randomFrom(RESPONSES.rpMentioned), 'addy');
+                return;
             }
 
-            const response = randomFrom(responsePool).replace('{cat}', catNamesStr);
-            addMessage(response, 'addy');
-        } else if (/^(hi|hello|hey|hiya|yo|sup)\b/i.test(message)) {
-            addMessage(randomFrom(RESPONSES.greetings), 'addy');
-        } else if (isQuestion) {
-            // Question without mentioning a pet
-            addMessage(randomFrom(RESPONSES.questionNoCat), 'addy');
-        } else {
-            addMessage(randomFrom(RESPONSES.noCatMentioned), 'addy');
-        }
-    }, 500);
+            // Check if user is asking a question instead of reporting
+            const isQuestion = /^(did|does|is|are|was|were|has|have|can|could|would|will|do|should|what|when|where|why|how)\b.+\??\s*$/i.test(message.trim());
 
-    messageInput.value = '';
+            if (mentionedCats.length > 0) {
+                // If it's a question about a pet, redirect them to report instead
+                if (isQuestion) {
+                    const catNamesStr = mentionedCats.map(p => p.name).join(' and ');
+                    const response = randomFrom(RESPONSES.questionAsked).replace('{cat}', catNamesStr);
+                    addMessage(response, 'addy');
+                    return;
+                }
+
+                mentionedCats.forEach(pet => {
+                    // Base points from user's message (sentiment) - THIS IS THE PRIMARY DRIVER
+                    let petPoints = points;
+                    const bio = PET_BIOS[pet.id];
+
+                    // ===========================================
+                    // PERSONALITY-BASED MODIFIERS
+                    // Each pet's unique traits affect their score!
+                    // ===========================================
+
+                    if (bio) {
+                        // Apply the pet's base rank modifier (from strengths)
+                        petPoints += bio.rankModifier || 0;
+
+                        // Apply weakness penalties
+                        if (bio.smellyPenalty) petPoints += bio.smellyPenalty; // Smokey Joe's smell
+                        if (bio.celebrationPenalty) petPoints += bio.celebrationPenalty; // Lila's overcelebrating
+                        if (bio.angerPenalty) petPoints += bio.angerPenalty; // Chirpy's anger issues
+                        if (bio.messyPenalty) petPoints += bio.messyPenalty; // Birch's messiness
+                        if (bio.healthBonus) petPoints += bio.healthBonus; // Guy Fiery's fighting spirit
+                        if (bio.corruptionModifier) petPoints += bio.corruptionModifier; // Meow-Meow's corruption backfires
+                    }
+
+                    // Special case handlers for extreme traits
+                    if (pet.id === 'smokey-joe') {
+                        // Smokey Joe: Fast and strong, but the smell issue
+                        // Net effect: +1 (legend) -1 (smell) = 0, plus user sentiment
+                    }
+                    if (pet.id === 'lila-dog') {
+                        // Lila: Speed demon! +2 for speed, -1 for overcelebrating = +1 net
+                    }
+                    if (pet.id === 'chirpy') {
+                        // Chirpy: Sympathy +1, anger -1 = 0 net, but sympathy word detection helps
+                    }
+                    if (pet.id === 'birch') {
+                        // Birch: No bonus, -2 for messiness/trouble = -2 net (she's a handful!)
+                    }
+                    if (pet.id === 'guy-fiery') {
+                        // Guy Fiery: -2 health issues, +1 fighting spirit = -1 net
+                        // Cat AIDS and worms really hurt his rankings
+                        petPoints = Math.max(petPoints, Math.ceil(points * 0.6)); // Health caps his potential
+                    }
+                    if (pet.id === 'meow-meow') {
+                        // Meow-Meow: 0 modifier, -1 corruption backfire = -1 net
+                        // She can only win through corrupting others (user manipulation!)
+                        // No algorithmic help - she has to earn it through... persuasion
+                    }
+
+                    // Ensure minimum 1 point for any positive mention
+                    if (points > 0) {
+                        petPoints = Math.max(petPoints, 1);
+                    }
+
+                    addPoints(pet.id, petPoints);
+                });
+
+                const catNamesStr = mentionedCats.map(p => p.name).join(' and ');
+                const isMeowMeow = mentionedCats.some(p => p.id === 'meow-meow');
+                const isLila = mentionedCats.some(p => p.id === 'lila-dog');
+                const isGuyFiery = mentionedCats.some(p => p.id === 'guy-fiery');
+                const isBirch = mentionedCats.some(p => p.id === 'birch');
+                const isSmokeyJoe = mentionedCats.some(p => p.id === 'smokey-joe');
+                const isChirpy = mentionedCats.some(p => p.id === 'chirpy');
+
+                let responsePool;
+                // Special responses for Meow-Meow
+                if (isMeowMeow && mentionedCats.length === 1) {
+                    if (sentiment === 'negative') {
+                        responsePool = RESPONSES.meowMeowNegative;
+                    } else if (sentiment === 'positive') {
+                        responsePool = RESPONSES.meowMeowPositive;
+                    } else {
+                        responsePool = RESPONSES.meowMeowNeutral;
+                    }
+                // Special responses for Lila
+                } else if (isLila && mentionedCats.length === 1) {
+                    if (sentiment === 'negative') {
+                        responsePool = RESPONSES.lilaNegative;
+                    } else if (sentiment === 'positive') {
+                        responsePool = RESPONSES.lilaPositive;
+                    } else {
+                        responsePool = RESPONSES.lilaNeutral;
+                    }
+                // Special responses for Guy Fiery
+                } else if (isGuyFiery && mentionedCats.length === 1) {
+                    if (sentiment === 'negative') {
+                        responsePool = RESPONSES.guyFieryNegative;
+                    } else if (sentiment === 'positive') {
+                        responsePool = RESPONSES.guyFieryPositive;
+                    } else {
+                        responsePool = RESPONSES.guyFieryNeutral;
+                    }
+                // Special responses for Birch
+                } else if (isBirch && mentionedCats.length === 1) {
+                    if (sentiment === 'negative') {
+                        responsePool = RESPONSES.birchNegative;
+                    } else if (sentiment === 'positive') {
+                        responsePool = RESPONSES.birchPositive;
+                    } else {
+                        responsePool = RESPONSES.birchNeutral;
+                    }
+                // Special responses for Smokey Joe
+                } else if (isSmokeyJoe && mentionedCats.length === 1) {
+                    if (sentiment === 'negative') {
+                        responsePool = RESPONSES.smokeyJoeNegative;
+                    } else if (sentiment === 'positive') {
+                        responsePool = RESPONSES.smokeyJoePositive;
+                    } else {
+                        responsePool = RESPONSES.smokeyJoeNeutral;
+                    }
+                // Special responses for Chirpy
+                } else if (isChirpy && mentionedCats.length === 1) {
+                    if (sentiment === 'negative') {
+                        responsePool = RESPONSES.chirpyNegative;
+                    } else if (sentiment === 'positive') {
+                        responsePool = RESPONSES.chirpyPositive;
+                    } else {
+                        responsePool = RESPONSES.chirpyNeutral;
+                    }
+                } else {
+                    if (sentiment === 'negative') {
+                        responsePool = RESPONSES.negative;
+                    } else if (sentiment === 'positive') {
+                        responsePool = RESPONSES.positive;
+                    } else {
+                        responsePool = RESPONSES.neutral;
+                    }
+                }
+
+                const response = randomFrom(responsePool).replace('{cat}', catNamesStr);
+                addMessage(response, 'addy');
+            } else if (/^(hi|hello|hey|hiya|yo|sup)\b/i.test(message)) {
+                addMessage(randomFrom(RESPONSES.greetings), 'addy');
+            } else if (isQuestion) {
+                // Question without mentioning a pet
+                addMessage(randomFrom(RESPONSES.questionNoCat), 'addy');
+            } else {
+                addMessage(randomFrom(RESPONSES.noCatMentioned), 'addy');
+            }
+        }, 500);
+    }
 });
 
 function addMessage(text, sender) {
@@ -806,6 +1029,9 @@ function renderGlobalChat(messages) {
 
 function saveGlobalMessage(text, catMentioned = null) {
     if (!messagesRef || !currentUser) return;
+
+    // Skip saving messages from test users
+    if (currentUser.toLowerCase() === 'test') return;
 
     messagesRef.push({
         username: currentUser,
