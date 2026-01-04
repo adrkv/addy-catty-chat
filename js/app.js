@@ -2034,7 +2034,7 @@ function renderLatestStory(story) {
             <h3 class="story-title">${safeTitle}</h3>
             <div class="story-content">${safeContent}</div>
             <div class="story-footer">
-                <span class="story-author">- Addy, Unhinged Undercover Reporter</span>
+                <span class="story-author">- Addy</span>
             </div>
         </div>
     `;
@@ -2258,9 +2258,9 @@ function showStoryPlaceholder(message = 'No dispatches yet!') {
 
     container.innerHTML = `
         <div class="story-placeholder">
-            <div class="placeholder-icon">🕵️</div>
+            <div class="placeholder-icon">📰</div>
             <p>${escapeHtml(message)}</p>
-            <p class="placeholder-hint">Hit that button to unleash Addy's unhinged reporting!</p>
+            <p class="placeholder-hint">Check back soon for new dispatches!</p>
         </div>
     `;
 }
