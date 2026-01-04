@@ -61,7 +61,10 @@ const DEFAULT_PETS = [
     ], image: "assets/cats/smokey-joe.jpg" },
     { id: "chirpy", name: "Chirpy", type: "cat", score: 0, aliases: [
         "chirp", "chirps", "chirpie", "chirpy cat", "the chirp", "tabby", "stripy", "striped one"
-    ], image: "assets/cats/chirpy.jpg" }
+    ], image: "assets/cats/chirpy.jpg" },
+    { id: "lila-dog", name: "Lila Dog", type: "dog (wait, I'm a dog!)", score: 0, aliases: [
+        "lila", "lila dog", "the dog", "doggo", "pupper", "three legs", "tripod", "senior dog", "old girl", "good girl"
+    ], image: "assets/cats/lila-dog.jpg" }
 ];
 
 // ===========================================
@@ -107,10 +110,28 @@ const RESPONSES = {
         "Ah yes, Meow-Meow. The cat who thinks 'exercise' is a type of food.",
         "Meow-Meow! Fun fact: she has never voluntarily moved faster than 0.5 mph."
     ],
+    lilaPositive: [
+        "Lila! She's technically a DOG but honestly? Still more athletic than Meow-Meow.",
+        "Yes! Lila appreciation! Three legs and she STILL outperforms Meow-Meow!",
+        "Lila the legend! A senior tripod who moves faster than Meow-Meow on her best day!",
+        "Lila! Proof that you only need 3 legs to be better than a 4-legged cat who won't use any of them."
+    ],
+    lilaNegative: [
+        "Hey now, Lila's doing her best! She's got 3 legs and more determination than Meow-Meow has ever shown!",
+        "Lila slander? She's a SENIOR dog with THREE LEGS and she's still in this competition!",
+        "Bold of you to come for Lila when Meow-Meow exists. At least Lila TRIES to move.",
+        "Lila heard that and she's not mad. She's too busy being a better athlete than Meow-Meow."
+    ],
+    lilaNeutral: [
+        "Ah Lila! The goodest girl! ...wait, why is a dog in a cat chat? You know what, she's earned it.",
+        "Lila Dog! Three legs, all heart, and honestly more energy than Meow-Meow on her laziest day.",
+        "Lila! Fun fact: she's missing a leg but still has more mobility than our resident potato cat.",
+        "The tripod queen herself! Lila may be a senior dog but she's got more fight than some cats I know..."
+    ],
     noCatMentioned: [
-        "Uh, which cat? I need names! Unless you're talking about Meow-Meow, I can roast her anytime.",
-        "Be specific! We got Smokey Joe [legend], Chirpy [icon], and Meow-Meow [the round one].",
-        "Name a cat! Any cat! ...Actually, name Smokey Joe or Chirpy. They deserve the love."
+        "Uh, which one? I need names! Unless you're talking about Meow-Meow, I can roast her anytime.",
+        "Be specific! We got Smokey Joe [legend], Chirpy [icon], Lila [the tripod dog], and Meow-Meow [the round one].",
+        "Name someone! We got 3 cats and 1 very determined three-legged dog. All better options than Meow-Meow tbh."
     ],
     generic: [
         "Give me your hottest cat takes! Don't be shy!",
@@ -403,6 +424,7 @@ chatForm.addEventListener('submit', (e) => {
             const isMeowMeow = mentionedCats.some(p => p.id === 'meow-meow');
 
             let responsePool;
+            const isLila = mentionedCats.some(p => p.id === 'lila-dog');
             // Special responses for Meow-Meow
             if (isMeowMeow && mentionedCats.length === 1) {
                 if (sentiment === 'negative') {
@@ -411,6 +433,15 @@ chatForm.addEventListener('submit', (e) => {
                     responsePool = RESPONSES.meowMeowPositive;
                 } else {
                     responsePool = RESPONSES.meowMeowNeutral;
+                }
+            // Special responses for Lila
+            } else if (isLila && mentionedCats.length === 1) {
+                if (sentiment === 'negative') {
+                    responsePool = RESPONSES.lilaNegative;
+                } else if (sentiment === 'positive') {
+                    responsePool = RESPONSES.lilaPositive;
+                } else {
+                    responsePool = RESPONSES.lilaNeutral;
                 }
             } else {
                 if (sentiment === 'negative') {
