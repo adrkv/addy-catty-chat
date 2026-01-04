@@ -1402,3 +1402,190 @@ header .user-info span {
         left: -6px;
     }
 }
+
+/* ===========================================
+   TABS & VETERANS SECTION
+   =========================================== */
+
+.leaderboard-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 12px 16px;
+    background: #f0f0f0;
+    border: 3px solid #555;
+    border-radius: 4px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.55rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-light);
+}
+
+.tab-btn:hover {
+    background: #e0e0e0;
+}
+
+.tab-btn.active {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    border-color: #333;
+}
+
+.tab-btn.veterans-tab-btn {
+    background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+}
+
+.tab-btn.veterans-tab-btn.active {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Veterans Section */
+.veterans-intro {
+    text-align: center;
+    padding: 16px;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #f8f5ff 0%, #ede9fe 100%);
+    border-radius: 4px;
+    border: 2px solid #8b5cf6;
+}
+
+.veterans-intro p {
+    color: #6b21a8;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.veterans-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.veteran-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+    border-radius: 4px;
+    border: 3px solid #8b5cf6;
+    position: relative;
+    overflow: hidden;
+}
+
+.veteran-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #ffd700, #8b5cf6, #ffd700);
+}
+
+.veteran-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+    border: 3px solid #8b5cf6;
+    background: linear-gradient(135deg, #f3e8ff 0%, #ede9fe 100%);
+}
+
+.veteran-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.veteran-halo {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30px;
+    height: 12px;
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4a 100%);
+    border-radius: 50%;
+    border: 2px solid #b8860b;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.veteran-info {
+    flex: 1;
+}
+
+.veteran-name {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 1rem;
+    color: #6b21a8;
+    margin-bottom: 4px;
+}
+
+.veteran-type {
+    font-size: 0.85rem;
+    color: #8b5cf6;
+    margin-bottom: 8px;
+}
+
+.veteran-memorial {
+    font-size: 0.9rem;
+    color: var(--text-dark);
+    font-style: italic;
+    line-height: 1.4;
+}
+
+.veteran-score {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.7rem;
+    color: #ffd700;
+    text-shadow: 1px 1px 0 #8b5cf6;
+    text-align: center;
+}
+
+/* Mobile adjustments for tabs */
+@media (max-width: 480px) {
+    .leaderboard-tabs {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .tab-btn {
+        font-size: 0.5rem;
+        padding: 10px 12px;
+    }
+
+    .veteran-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 16px;
+    }
+
+    .veteran-avatar {
+        width: 70px;
+        height: 70px;
+    }
+
+    .veteran-name {
+        font-size: 0.85rem;
+    }
+
+    .veteran-memorial {
+        font-size: 0.85rem;
+    }
+}

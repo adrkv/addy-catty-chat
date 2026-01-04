@@ -74,6 +74,15 @@ const DEFAULT_PETS = [
 ];
 
 // ===========================================
+// Veterans - Forever in our hearts
+// ===========================================
+const VETERANS = [
+    { id: "rp", name: "RP", type: "cat (Forever Loved)", score: 9999, aliases: [
+        "rp", "r.p.", "r p", "rest in peace", "the legend"
+    ], image: "assets/cats/rp.jpg", memorial: "A true legend. Forever respected. Always remembered." }
+];
+
+// ===========================================
 // Chatbot responses - Addy has OPINIONS (no emojis - game style)
 // ===========================================
 const RESPONSES = {
@@ -117,22 +126,29 @@ const RESPONSES = {
         "Meow-Meow! Fun fact: she has never voluntarily moved faster than 0.5 mph."
     ],
     lilaPositive: [
-        "Lila! She's technically a DOG but honestly? Still more athletic than Meow-Meow.",
-        "Yes! Lila appreciation! Three legs and she STILL outperforms Meow-Meow!",
-        "Lila the legend! A senior tripod who moves faster than Meow-Meow on her best day!",
-        "Lila! Proof that you only need 3 legs to be better than a 4-legged cat who won't use any of them."
+        "Lila! Three legs and she's STILL the fastest one here! An absolute speed demon!",
+        "Yes! Lila appreciation! This tripod ZOOMS! She'd lap Meow-Meow three times before that cat even woke up!",
+        "Lila the ROCKET! Senior dog? More like senior SPRINTER! Three legs, zero slowdown!",
+        "Lila! Living proof that you only need 3 legs to be faster than everyone else with 4!",
+        "The speed queen herself! Lila runs so fast you'd think she has EXTRA legs, not fewer!"
     ],
     lilaNegative: [
-        "Hey now, Lila's doing her best! She's got 3 legs and more determination than Meow-Meow has ever shown!",
-        "Lila slander? She's a SENIOR dog with THREE LEGS and she's still in this competition!",
-        "Bold of you to come for Lila when Meow-Meow exists. At least Lila TRIES to move.",
-        "Lila heard that and she's not mad. She's too busy being a better athlete than Meow-Meow."
+        "Excuse me?! Lila is a THREE-LEGGED SPEED MACHINE! She could outrun you ANY day!",
+        "Lila slander? She's a senior tripod who runs FASTER than most four-legged animals! Put some respect on her name!",
+        "Bold words for someone who's never seen Lila zoom. Three legs and she's STILL top tier!",
+        "Lila heard that while sprinting past. She doesn't have time for haters - she's too fast!"
     ],
     lilaNeutral: [
-        "Ah Lila! The goodest girl! ...wait, why is a dog in a cat chat? You know what, she's earned it.",
-        "Lila Dog! Three legs, all heart, and honestly more energy than Meow-Meow on her laziest day.",
-        "Lila! Fun fact: she's missing a leg but still has more mobility than our resident potato cat.",
-        "The tripod queen herself! Lila may be a senior dog but she's got more fight than some cats I know..."
+        "Ah Lila! The three-legged speed demon! ...wait, why is a dog in a cat chat? Because she EARNED it by being faster than all of them!",
+        "Lila Dog! Three legs, turbocharged! She makes Meow-Meow look like a statue. Which... Meow-Meow basically is.",
+        "Lila! Fun fact: she's missing a leg and STILL outruns every cat here. Absolute legend.",
+        "The tripod speedster! Lila may be a senior dog but she's got more zoom than the entire roster combined!"
+    ],
+    rpMentioned: [
+        "RP... *moment of respectful silence* ...a true legend. Forever in our hearts.",
+        "You mentioned RP. That's a name we always honor here. A real one.",
+        "RP... the GOAT. Always respected. Check out the Veterans tab to pay respects.",
+        "RP! An absolute legend. Gone but NEVER forgotten. True royalty."
     ],
     noCatMentioned: [
         "Uh, which one? I need names! Unless you're talking about Meow-Meow, I can roast her anytime.",
@@ -420,10 +436,25 @@ chatForm.addEventListener('submit', (e) => {
     const catNames = mentionedCats.length > 0 ? mentionedCats.map(p => p.name).join(', ') : null;
     saveGlobalMessage(message, catNames);
 
+    // Check if RP (veteran) is mentioned
+    const rpMentioned = /\brp\b|r\.p\.|rest in peace/i.test(message);
+
     setTimeout(() => {
+        // Special handling for RP mentions
+        if (rpMentioned) {
+            addMessage(randomFrom(RESPONSES.rpMentioned), 'addy');
+            messageInput.value = '';
+            return;
+        }
+
         if (mentionedCats.length > 0) {
             mentionedCats.forEach(pet => {
-                addPoints(pet.id, points);
+                // Lila gets a speed bonus - she's a three-legged rocket!
+                let petPoints = points;
+                if (pet.id === 'lila-dog') {
+                    petPoints = Math.max(points + 2, 3); // Lila always gets at least 3 points, plus a +2 bonus
+                }
+                addPoints(pet.id, petPoints);
             });
 
             const catNamesStr = mentionedCats.map(p => p.name).join(' and ');
@@ -677,9 +708,56 @@ function addSittingCats() {
 }
 
 // ===========================================
+// Veterans Tab
+// ===========================================
+function renderVeterans() {
+    const container = document.getElementById('veterans-list');
+    if (!container) return;
+
+    container.innerHTML = VETERANS.map(vet => `
+        <div class="veteran-card">
+            <div class="veteran-avatar">
+                <img src="${vet.image}" alt="${vet.name}" onerror="this.style.display='none'">
+                <div class="veteran-halo"></div>
+            </div>
+            <div class="veteran-info">
+                <div class="veteran-name">${vet.name}</div>
+                <div class="veteran-type">${vet.type}</div>
+                <div class="veteran-memorial">${vet.memorial}</div>
+            </div>
+            <div class="veteran-score">Forever #1</div>
+        </div>
+    `).join('');
+}
+
+// Tab switching
+function initTabs() {
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tabId = btn.dataset.tab;
+
+            tabButtons.forEach(b => b.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+
+            btn.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+
+            if (tabId === 'veterans-tab') {
+                renderVeterans();
+            }
+        });
+    });
+}
+
+// ===========================================
 // Initialize
 // ===========================================
 checkUsername();
 initFirebase();
 initPixelCats();
 addSittingCats();
+initTabs();
+renderVeterans();
