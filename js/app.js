@@ -1994,41 +1994,63 @@ const CATTY_VERSE_CHARACTERS = {
 
 let storiesRef = null;
 
+let allStories = [];
+let currentStoryIndex = 0;
+
 function initCattyVerse() {
     if (db) {
         storiesRef = db.ref('cattyverse');
 
         // Listen for all stories, show most recent
         storiesRef.orderByChild('timestamp').limitToLast(10).on('value', (snapshot) => {
-            const stories = [];
+            allStories = [];
             snapshot.forEach((child) => {
-                stories.push(child.val());
+                allStories.push({ key: child.key, ...child.val() });
             });
 
-            if (stories.length > 0) {
+            if (allStories.length > 0) {
                 // Sort by timestamp descending, show newest
-                stories.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-                renderLatestStory(stories[0]);
-                renderStoryArchive(stories.slice(1));
+                allStories.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                currentStoryIndex = 0;
+                renderStories();
             } else {
-                showStoryPlaceholder('No dispatches yet! Click the button to generate one.');
+                showStoryPlaceholder('No dispatches yet!');
             }
         });
     }
 }
 
-function renderLatestStory(story) {
+function renderStories() {
+    renderFeaturedStory(allStories[currentStoryIndex]);
+    renderStoryArchive(allStories.filter((_, i) => i !== currentStoryIndex));
+}
+
+function selectStory(storyKey) {
+    const index = allStories.findIndex(s => s.key === storyKey);
+    if (index !== -1) {
+        currentStoryIndex = index;
+        renderStories();
+        // Scroll to top of story
+        document.getElementById('cattyverse-story')?.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+// Make function available globally
+window.selectStory = selectStory;
+
+function renderFeaturedStory(story) {
     const container = document.getElementById('cattyverse-story');
     if (!container) return;
 
     const safeTitle = escapeHtml(story.title || 'Untitled Dispatch');
     const safeContent = escapeHtml(story.content || '').replace(/\n/g, '<br>');
     const safeDate = escapeHtml(story.date || 'Unknown date');
+    const isNewest = allStories.length > 0 && story.key === allStories[0].key;
 
     container.innerHTML = `
-        <div class="story-card today">
+        <div class="story-card featured">
             <div class="story-header">
-                <span class="story-badge">LATEST DISPATCH</span>
+                <span class="story-badge">${isNewest ? 'LATEST DISPATCH' : 'DISPATCH'}</span>
                 <span class="story-date">${safeDate}</span>
             </div>
             <h3 class="story-title">${safeTitle}</h3>
@@ -2045,20 +2067,22 @@ function renderStoryArchive(stories) {
     if (!container) return;
 
     if (stories.length === 0) {
-        container.innerHTML = '<p class="no-stories">No previous dispatches yet. Check back tomorrow!</p>';
+        container.innerHTML = '<p class="no-stories">No other dispatches.</p>';
         return;
     }
 
     container.innerHTML = stories.map(story => {
         const safeTitle = escapeHtml(story.title || 'Untitled');
         const safeDate = escapeHtml(story.date || '');
-        const safeExcerpt = escapeHtml((story.content || '').substring(0, 150) + '...');
+        const safeExcerpt = escapeHtml((story.content || '').substring(0, 100) + '...');
+        const safeKey = escapeHtml(story.key || '');
 
         return `
-            <div class="archive-card" onclick="expandArchiveStory('${safeDate}')">
+            <div class="archive-card" onclick="selectStory('${safeKey}')">
                 <span class="archive-date">${safeDate}</span>
                 <span class="archive-title">${safeTitle}</span>
                 <p class="archive-excerpt">${safeExcerpt}</p>
+                <span class="archive-read-more">Click to read</span>
             </div>
         `;
     }).join('');

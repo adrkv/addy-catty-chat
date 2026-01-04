@@ -2258,7 +2258,8 @@ header .user-info span {
     box-shadow: 0 4px 20px rgba(233, 69, 96, 0.3);
 }
 
-.story-card.today {
+.story-card.today,
+.story-card.featured {
     border-color: var(--secondary);
     box-shadow: 0 4px 20px rgba(255, 217, 61, 0.3);
 }
@@ -2404,6 +2405,20 @@ header .user-info span {
     font-size: 0.8rem;
     color: var(--text-light);
     line-height: 1.4;
+}
+
+.archive-read-more {
+    font-size: 0.7rem;
+    color: var(--primary);
+    font-weight: 600;
+    margin-top: 8px;
+    display: block;
+    opacity: 0.8;
+}
+
+.archive-card:hover .archive-read-more {
+    opacity: 1;
+    text-decoration: underline;
 }
 
 .no-stories {
