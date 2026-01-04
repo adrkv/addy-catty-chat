@@ -418,6 +418,28 @@ section h2::before {
     transform: scale(0.98);
 }
 
+/* Report Counter */
+.report-counter {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--text-light);
+    padding: 8px;
+    margin-top: 5px;
+    font-family: 'Nunito', sans-serif;
+    opacity: 0.8;
+}
+
+.report-counter.low {
+    color: var(--primary);
+    font-weight: 700;
+    animation: pulse-warning 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-warning {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
+}
+
 /* Footer */
 footer {
     text-align: center;

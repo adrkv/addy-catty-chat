@@ -21,6 +21,99 @@ const CONFIG = {
 };
 
 // ===========================================
+// USER DAILY REPORT LIMIT
+// ===========================================
+const DAILY_REPORT_LIMIT = 20; // Max reports per user per day
+
+function getUserReportData() {
+    const data = localStorage.getItem('reportLimitData');
+    if (!data) return { count: 0, date: new Date().toDateString() };
+    return JSON.parse(data);
+}
+
+function saveUserReportData(data) {
+    localStorage.setItem('reportLimitData', JSON.stringify(data));
+}
+
+function getRemainingReports() {
+    const data = getUserReportData();
+    const today = new Date().toDateString();
+
+    // Reset if it's a new day
+    if (data.date !== today) {
+        saveUserReportData({ count: 0, date: today });
+        return DAILY_REPORT_LIMIT;
+    }
+
+    return Math.max(0, DAILY_REPORT_LIMIT - data.count);
+}
+
+function incrementReportCount() {
+    const data = getUserReportData();
+    const today = new Date().toDateString();
+
+    // Reset if it's a new day
+    if (data.date !== today) {
+        saveUserReportData({ count: 1, date: today });
+    } else {
+        saveUserReportData({ count: data.count + 1, date: today });
+    }
+
+    updateReportCounter();
+}
+
+function canSendReport() {
+    return getRemainingReports() > 0;
+}
+
+function getNextResetTime() {
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    return tomorrow;
+}
+
+function formatTimeUntilReset() {
+    const now = new Date();
+    const reset = getNextResetTime();
+    const diff = reset - now;
+
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (hours > 0) {
+        return `${hours}h ${minutes}m`;
+    }
+    return `${minutes} minutes`;
+}
+
+function updateReportCounter() {
+    const counter = document.getElementById('report-counter');
+    if (counter) {
+        const remaining = getRemainingReports();
+        counter.textContent = `${remaining}/${DAILY_REPORT_LIMIT} reports left today`;
+        counter.className = remaining <= 5 ? 'report-counter low' : 'report-counter';
+    }
+}
+
+const RATE_LIMIT_RESPONSES = [
+    "Whoa there, speedy! You've hit your daily intel quota. HQ needs to process all this data! Come back in {time}.",
+    "Agent, you've filed {limit} reports today! Even our fastest analysts need a break. Reset in {time}.",
+    "HOLD UP! You've maxed out your daily clearance level. The filing cabinet is FULL. Try again in {time}.",
+    "Listen, I appreciate the enthusiasm, but {limit} reports is the daily max. Meow-Meow probably bribed you to spam us anyway. Reset: {time}.",
+    "Intel overload! You've used all {limit} daily reports. Go touch grass and come back in {time}.",
+    "Nice try, but you've hit the report ceiling! Even Smokey Joe takes breaks (mostly to nap). See you in {time}!"
+];
+
+function getRandomRateLimitResponse() {
+    const response = RATE_LIMIT_RESPONSES[Math.floor(Math.random() * RATE_LIMIT_RESPONSES.length)];
+    return response
+        .replace('{time}', formatTimeUntilReset())
+        .replace('{limit}', DAILY_REPORT_LIMIT);
+}
+
+// ===========================================
 // AI RATE LIMITING & FALLBACK TRACKING
 // ===========================================
 const AI_STATE = {
@@ -743,12 +836,22 @@ chatForm.addEventListener('submit', async (e) => {
     const message = messageInput.value.trim();
     if (!message) return;
 
+    // Check daily report limit
+    if (!canSendReport()) {
+        messageInput.value = '';
+        addMessage(getRandomRateLimitResponse(), 'addy');
+        return;
+    }
+
     // Block hate speech
     if (containsHateSpeech(message)) {
         messageInput.value = '';
         addMessage("I can't process that message. Please keep it respectful.", 'addy');
         return;
     }
+
+    // Increment report count for this user
+    incrementReportCount();
 
     addMessage(message, 'user');
     messageInput.value = '';
@@ -1486,6 +1589,7 @@ window.votePetRequest = votePetRequest;
 // Initialize
 // ===========================================
 checkUsername();
+updateReportCounter(); // Initialize daily report counter
 initFirebase();
 initPixelCats();
 addSittingCats();
