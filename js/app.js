@@ -518,7 +518,118 @@ musicToggle.addEventListener('click', () => {
 });
 
 // ===========================================
+// Pixel Cats Background
+// ===========================================
+const pixelCats = [];
+const catEmojis = ['🐱', '🐈', '😺', '😸', '🐈‍⬛', '😻'];
+const catColors = ['orange', 'gray', 'black', 'tuxedo', 'tabby'];
+
+function createPixelCat() {
+    const container = document.getElementById('pixel-cats');
+    if (!container) return;
+
+    const cat = document.createElement('div');
+    cat.className = `pixel-cat ${catColors[Math.floor(Math.random() * catColors.length)]}`;
+    cat.textContent = catEmojis[Math.floor(Math.random() * catEmojis.length)];
+
+    // Random starting position
+    const startX = Math.random() * window.innerWidth;
+    const startY = Math.random() * window.innerHeight;
+
+    cat.style.left = startX + 'px';
+    cat.style.top = startY + 'px';
+    cat.style.opacity = '0.6';
+    cat.style.fontSize = (18 + Math.random() * 12) + 'px';
+
+    container.appendChild(cat);
+
+    // Cat state
+    const catState = {
+        element: cat,
+        x: startX,
+        y: startY,
+        targetX: startX,
+        targetY: startY,
+        speed: 0.3 + Math.random() * 0.5,
+        direction: Math.random() > 0.5 ? 1 : -1,
+        pauseUntil: 0,
+        state: 'walking' // walking, sitting, sleeping
+    };
+
+    pixelCats.push(catState);
+}
+
+function updatePixelCats() {
+    const now = Date.now();
+
+    pixelCats.forEach(cat => {
+        // Check if cat is pausing
+        if (now < cat.pauseUntil) {
+            return;
+        }
+
+        // Randomly change behavior
+        if (Math.random() < 0.005) {
+            const behaviors = ['walking', 'sitting', 'sleeping'];
+            cat.state = behaviors[Math.floor(Math.random() * behaviors.length)];
+
+            if (cat.state === 'sitting') {
+                cat.element.textContent = '🐱';
+                cat.pauseUntil = now + 2000 + Math.random() * 3000;
+            } else if (cat.state === 'sleeping') {
+                cat.element.textContent = '😴';
+                cat.pauseUntil = now + 3000 + Math.random() * 5000;
+            } else {
+                cat.element.textContent = catEmojis[Math.floor(Math.random() * catEmojis.length)];
+            }
+        }
+
+        if (cat.state !== 'walking') return;
+
+        // Pick new target occasionally
+        if (Math.random() < 0.01) {
+            cat.targetX = Math.random() * (window.innerWidth - 50);
+            cat.targetY = Math.random() * (window.innerHeight - 50);
+        }
+
+        // Move towards target
+        const dx = cat.targetX - cat.x;
+        const dy = cat.targetY - cat.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist > 5) {
+            cat.x += (dx / dist) * cat.speed;
+            cat.y += (dy / dist) * cat.speed;
+
+            // Flip cat based on direction
+            if (dx > 0) {
+                cat.element.classList.remove('flipped');
+            } else {
+                cat.element.classList.add('flipped');
+            }
+        }
+
+        cat.element.style.left = cat.x + 'px';
+        cat.element.style.top = cat.y + 'px';
+    });
+
+    requestAnimationFrame(updatePixelCats);
+}
+
+function initPixelCats() {
+    // Create 6-8 cats
+    const numCats = 6 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < numCats; i++) {
+        setTimeout(() => createPixelCat(), i * 500);
+    }
+
+    // Start animation loop
+    setTimeout(updatePixelCats, 1000);
+}
+
+// ===========================================
 // Initialize
 // ===========================================
 checkUsername();
 initFirebase();
+initPixelCats();
