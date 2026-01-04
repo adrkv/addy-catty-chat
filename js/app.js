@@ -262,6 +262,21 @@ const RESPONSES = {
         "Rankings need updating! Fun fact: Meow-Meow's last recorded movement was 3 days ago. She blinked. Revolutionary.",
         "Field reporter! Chirpy's anger levels are at an all-time high today. She hissed at a WALL. What's happening on your end?"
     ],
+    questionAsked: [
+        "Whoa whoa, YOU'RE the field agent here! I'm stuck at HQ! Did you SEE {cat} do something? Report what you witnessed!",
+        "Agent, I can't see anything from HQ - Meow-Meow is blocking my window. Probably on purpose. Tell ME what {cat} did!",
+        "Hold up - you're asking ME? I've got Birch knocking stuff over here, I can't monitor everyone! What did YOU observe about {cat}?",
+        "I'm the analyst, you're the reporter! If {cat} did something, YOU tell ME! That's how intel works!",
+        "Did {cat} do what now? I wasn't there! You're my eyes in the field, agent. Report what you saw!",
+        "Look, Smokey Joe's smell is currently impairing my senses. I can't investigate anything. What did {cat} do? TELL me!"
+    ],
+    questionNoCat: [
+        "Wait, you're asking ME questions? I'm trapped at HQ with Meow-Meow judging me silently. YOU'RE the field agent - report what you saw!",
+        "Agent, this isn't an interrogation of ME! I need YOU to tell me what's happening out there. Birch just broke something, I'm busy!",
+        "Hold up - I ask the questions here! Well, actually I don't. I just process reports. So... give me a report! What happened?",
+        "You're the one in the field! I'm here trying to stop Chirpy from dropping my files. Tell me what you observed!",
+        "I can't answer that - Lila's victory dance is distracting me. Just tell me what you witnessed and I'll update the rankings!"
+    ],
     smokeyJoePositive: [
         "Excellent Smokey Joe intel! Speed and strength confirmed. Though my other reports mention... the smell situation.",
         "Great report on Smokey Joe! He's a legend in my files. Fast, strong, athletic - just wish the smell data was better.",
@@ -585,7 +600,19 @@ chatForm.addEventListener('submit', (e) => {
             return;
         }
 
+        // Check if user is asking a question instead of reporting
+        const isQuestion = /^(did|does|is|are|was|were|has|have|can|could|would|will|do|should|what|when|where|why|how)\b.+\??\s*$/i.test(message.trim());
+
         if (mentionedCats.length > 0) {
+            // If it's a question about a pet, redirect them to report instead
+            if (isQuestion) {
+                const catNamesStr = mentionedCats.map(p => p.name).join(' and ');
+                const response = randomFrom(RESPONSES.questionAsked).replace('{cat}', catNamesStr);
+                addMessage(response, 'addy');
+                messageInput.value = '';
+                return;
+            }
+
             mentionedCats.forEach(pet => {
                 // Base points from user's message (sentiment) - THIS IS THE PRIMARY DRIVER
                 let petPoints = points;
@@ -719,6 +746,9 @@ chatForm.addEventListener('submit', (e) => {
             addMessage(response, 'addy');
         } else if (/^(hi|hello|hey|hiya|yo|sup)\b/i.test(message)) {
             addMessage(randomFrom(RESPONSES.greetings), 'addy');
+        } else if (isQuestion) {
+            // Question without mentioning a pet
+            addMessage(randomFrom(RESPONSES.questionNoCat), 'addy');
         } else {
             addMessage(randomFrom(RESPONSES.noCatMentioned), 'addy');
         }
