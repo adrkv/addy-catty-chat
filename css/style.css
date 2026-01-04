@@ -2260,28 +2260,6 @@ header .user-info span {
     font-style: italic;
 }
 
-.cattyverse-intro {
-    text-align: center;
-    padding: 15px;
-    background: linear-gradient(135deg, #2d3436 0%, #636e72 100%);
-    border-radius: 8px;
-    margin-bottom: 20px;
-    border: 2px solid #1a1a2e;
-}
-
-.cattyverse-intro h3 {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 0.9rem;
-    color: var(--secondary);
-    margin-bottom: 10px;
-    text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
-}
-
-.cattyverse-intro p {
-    color: #ddd;
-    font-size: 0.9rem;
-    line-height: 1.5;
-}
 
 /* Story Card */
 .story-card {
