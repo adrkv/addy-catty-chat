@@ -77,7 +77,7 @@ const DEFAULT_PETS = [
 // Veterans - Forever in our hearts
 // ===========================================
 const VETERANS = [
-    { id: "rp", name: "RP", type: "cat (Forever Loved)", score: 9999, aliases: [
+    { id: "rp", name: "RP", type: "dog (Forever Loved)", score: 9999, aliases: [
         "rp", "r.p.", "r p", "rest in peace", "the legend"
     ], image: "assets/cats/rp.jpg", memorial: "A true legend. Forever respected. Always remembered." }
 ];
