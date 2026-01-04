@@ -25,14 +25,20 @@ const CONFIG = {
 // ===========================================
 const DAILY_REPORT_LIMIT = 20; // Max reports per user per day
 
+// Rate limit key is tied to permanent user ID (can't be bypassed by changing name)
+function getRateLimitKey() {
+    const userId = localStorage.getItem('catChatUserId') || 'anonymous';
+    return `reportLimit_${userId}`;
+}
+
 function getUserReportData() {
-    const data = localStorage.getItem('reportLimitData');
+    const data = localStorage.getItem(getRateLimitKey());
     if (!data) return { count: 0, date: new Date().toDateString() };
     return JSON.parse(data);
 }
 
 function saveUserReportData(data) {
-    localStorage.setItem('reportLimitData', JSON.stringify(data));
+    localStorage.setItem(getRateLimitKey(), JSON.stringify(data));
 }
 
 function getRemainingReports() {
@@ -587,6 +593,19 @@ const usernameModal = document.getElementById('username-modal');
 const usernameForm = document.getElementById('username-form');
 const usernameInput = document.getElementById('username-input');
 
+// Generate a unique persistent user ID (can't be changed - prevents fraud)
+function getUserId() {
+    let userId = localStorage.getItem('catChatUserId');
+    if (!userId) {
+        userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('catChatUserId', userId);
+    }
+    return userId;
+}
+
+// Get the user ID on load (this is permanent)
+const permanentUserId = getUserId();
+
 function checkUsername() {
     const savedUser = localStorage.getItem('catChatUsername');
     if (savedUser) {
@@ -609,12 +628,29 @@ usernameForm.addEventListener('submit', (e) => {
 
 function showUserInfo() {
     const header = document.querySelector('header');
-    const existingInfo = header.querySelector('.user-info');
+    let existingInfo = header.querySelector('.user-info');
+
     if (!existingInfo) {
-        const userInfo = document.createElement('div');
-        userInfo.className = 'user-info';
-        userInfo.innerHTML = `<span>Agent:</span><span class="current-user-badge">${currentUser}</span>`;
-        header.appendChild(userInfo);
+        existingInfo = document.createElement('div');
+        existingInfo.className = 'user-info';
+        header.appendChild(existingInfo);
+    }
+
+    existingInfo.innerHTML = `
+        <span>Agent:</span>
+        <span class="current-user-badge">${currentUser}</span>
+        <button class="edit-name-btn" onclick="editUsername()" title="Change codename">✎</button>
+    `;
+}
+
+function editUsername() {
+    const newName = prompt('Enter your new agent codename:', currentUser);
+    if (newName && newName.trim().length >= 2 && newName.trim().length <= 20) {
+        currentUser = newName.trim();
+        localStorage.setItem('catChatUsername', currentUser);
+        showUserInfo();
+    } else if (newName !== null) {
+        alert('Codename must be 2-20 characters!');
     }
 }
 

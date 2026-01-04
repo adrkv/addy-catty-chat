@@ -913,6 +913,20 @@ header .user-info span {
     color: var(--text-light);
 }
 
+.edit-name-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 4px 8px;
+    opacity: 0.6;
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.edit-name-btn:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
 
 /* Version Number */
 .version {
