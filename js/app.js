@@ -1143,15 +1143,23 @@ const TOTAL_REPORTS_MESSAGES = [
     "HQ has processed {count} intel reports. You agents are RELENTLESS!",
     "{count} reports filed and counting! Meow-Meow's corruption can't hide forever.",
     "Wow, {count} field reports! The cats can't escape our surveillance network!",
-    "{count} pieces of intel collected. Smokey Joe's smell has been documented {count} times.",
+    "{count} pieces of intel collected. Smokey Joe's smell is well documented.",
     "Our agents have submitted {count} reports. The rankings have never been more accurate!",
     "{count} reports logged! That's a lot of cat gossip. Keep it coming!",
     "Intel database: {count} reports strong. Birch has been blamed for chaos in most of them."
 ];
 
+function roundToNice(num) {
+    // Round down to a nice number and add "+"
+    if (num < 10) return num + "+";
+    if (num < 100) return Math.floor(num / 10) * 10 + "+";
+    if (num < 1000) return Math.floor(num / 50) * 50 + "+";
+    return Math.floor(num / 100) * 100 + "+";
+}
+
 function getRandomTotalReportsMessage(count) {
     const msg = TOTAL_REPORTS_MESSAGES[Math.floor(Math.random() * TOTAL_REPORTS_MESSAGES.length)];
-    return msg.replace(/{count}/g, count.toLocaleString());
+    return msg.replace(/{count}/g, roundToNice(count));
 }
 
 function updateTotalReportsCounter(count) {
