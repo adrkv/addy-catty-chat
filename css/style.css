@@ -824,3 +824,352 @@ header .user-info span {
     opacity: 0.7;
     margin-top: 8px;
 }
+
+/* ===========================================
+   MOBILE STYLES
+   =========================================== */
+
+/* Tablets and small screens */
+@media (max-width: 768px) {
+    .container {
+        padding: 12px;
+    }
+
+    header {
+        padding: 20px 0;
+    }
+
+    header h1 {
+        font-size: 1.8rem;
+    }
+
+    .subtitle {
+        font-size: 0.95rem;
+        padding: 0 10px;
+    }
+
+    section {
+        padding: 16px;
+        border-radius: 20px;
+    }
+
+    section h2 {
+        font-size: 1.2rem;
+    }
+
+    .chat-container {
+        height: 400px;
+    }
+
+    .chat-messages {
+        padding: 12px;
+    }
+
+    .message .bubble {
+        padding: 10px 14px;
+        font-size: 0.95rem;
+    }
+
+    .message .avatar {
+        width: 35px;
+        height: 35px;
+        font-size: 1.3rem;
+    }
+
+    .pet-card {
+        padding: 12px;
+    }
+
+    .pet-avatar {
+        width: 50px;
+        height: 50px;
+    }
+
+    .pet-name {
+        font-size: 1rem;
+    }
+
+    .pet-score {
+        font-size: 1.3rem;
+    }
+
+    .global-chat-log {
+        max-height: 300px;
+        padding: 12px;
+    }
+
+    .global-message {
+        padding: 10px 12px;
+    }
+}
+
+/* Mobile phones */
+@media (max-width: 480px) {
+    .container {
+        padding: 8px;
+    }
+
+    header {
+        padding: 15px 0;
+    }
+
+    header h1 {
+        font-size: 1.5rem;
+        line-height: 1.3;
+    }
+
+    .subtitle {
+        font-size: 0.85rem;
+    }
+
+    header .user-info {
+        flex-wrap: wrap;
+        font-size: 0.85rem;
+    }
+
+    section {
+        padding: 14px;
+        border-radius: 16px;
+        margin-bottom: 12px;
+    }
+
+    section h2 {
+        font-size: 1.1rem;
+        margin-bottom: 14px;
+    }
+
+    /* Chat adjustments */
+    .chat-container {
+        height: 350px;
+    }
+
+    .chat-messages {
+        padding: 10px;
+        gap: 12px;
+    }
+
+    .message {
+        max-width: 90%;
+        gap: 8px;
+    }
+
+    .message .avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 1.2rem;
+    }
+
+    .message .bubble {
+        padding: 10px 12px;
+        font-size: 0.9rem;
+        border-radius: 14px;
+    }
+
+    .message .bubble p {
+        line-height: 1.4;
+    }
+
+    /* Chat input */
+    .chat-input {
+        gap: 8px;
+    }
+
+    .chat-input input {
+        padding: 12px 16px;
+        font-size: 16px; /* Prevents iOS zoom on focus */
+        border-radius: 25px;
+    }
+
+    .chat-input button {
+        padding: 12px 20px;
+        font-size: 0.9rem;
+        border-radius: 25px;
+    }
+
+    /* Leaderboard adjustments */
+    .pet-card {
+        padding: 10px 12px;
+        gap: 10px;
+    }
+
+    .rank-badge {
+        width: 26px;
+        height: 26px;
+        font-size: 0.85rem;
+    }
+
+    .pet-avatar {
+        width: 45px;
+        height: 45px;
+    }
+
+    .pet-emoji, .pet-emoji-fallback {
+        font-size: 1.8rem;
+    }
+
+    .pet-info {
+        min-width: 0;
+    }
+
+    .pet-name {
+        font-size: 0.95rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .pet-type {
+        font-size: 0.75rem;
+    }
+
+    .pet-score {
+        font-size: 1.2rem;
+        min-width: 40px;
+        text-align: right;
+    }
+
+    /* Global chat adjustments */
+    .global-chat-log {
+        max-height: 250px;
+        padding: 10px;
+        gap: 10px;
+    }
+
+    .global-message {
+        padding: 10px;
+        gap: 10px;
+    }
+
+    .global-message .user-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 0.8rem;
+    }
+
+    .global-message .message-header {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .global-message .username {
+        font-size: 0.85rem;
+    }
+
+    .global-message .timestamp {
+        font-size: 0.7rem;
+    }
+
+    .global-message .message-text {
+        font-size: 0.9rem;
+    }
+
+    .cat-badge {
+        font-size: 0.7rem;
+        padding: 2px 6px;
+    }
+
+    /* Music toggle */
+    .music-toggle {
+        width: 45px;
+        height: 45px;
+        font-size: 1.3rem;
+        bottom: 15px;
+        right: 15px;
+    }
+
+    /* Footer */
+    footer {
+        padding: 15px 0;
+    }
+
+    footer p {
+        font-size: 0.85rem;
+    }
+
+    .version {
+        font-size: 0.7rem;
+    }
+
+    /* Username modal */
+    .modal-content {
+        margin: 20px;
+        padding: 24px 20px;
+        border-radius: 20px;
+    }
+
+    .modal-content h2 {
+        font-size: 1.4rem;
+    }
+
+    .modal-content p {
+        font-size: 0.95rem;
+    }
+
+    #username-input {
+        padding: 14px 18px;
+        font-size: 16px; /* Prevents iOS zoom */
+    }
+
+    #username-form button {
+        padding: 14px 24px;
+        font-size: 1rem;
+    }
+}
+
+/* Extra small phones */
+@media (max-width: 360px) {
+    header h1 {
+        font-size: 1.3rem;
+    }
+
+    .subtitle {
+        font-size: 0.8rem;
+    }
+
+    .chat-container {
+        height: 300px;
+    }
+
+    .pet-avatar {
+        width: 40px;
+        height: 40px;
+    }
+
+    .pet-emoji, .pet-emoji-fallback {
+        font-size: 1.5rem;
+    }
+}
+
+/* iOS specific fixes */
+@supports (-webkit-touch-callout: none) {
+    /* Prevent text size adjustment on orientation change */
+    body {
+        -webkit-text-size-adjust: 100%;
+    }
+
+    /* Better tap targets */
+    .chat-input button,
+    .music-toggle,
+    #username-form button {
+        min-height: 44px;
+    }
+
+    /* Fix for iOS input zoom */
+    input[type="text"] {
+        font-size: 16px;
+    }
+}
+
+/* Safe area for notched phones */
+@supports (padding: max(0px)) {
+    .container {
+        padding-left: max(12px, env(safe-area-inset-left));
+        padding-right: max(12px, env(safe-area-inset-right));
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
+    }
+
+    .music-toggle {
+        bottom: max(15px, env(safe-area-inset-bottom));
+        right: max(15px, env(safe-area-inset-right));
+    }
+}
