@@ -1909,3 +1909,53 @@ setTimeout(() => {
         requestForm.addEventListener('submit', submitPetRequest);
     }
 }, 1000);
+
+// ===========================================
+// AUTO-UPDATE: Check for new versions
+// ===========================================
+const APP_VERSION_KEY = 'catChatAppVersion';
+const VERSION_CHECK_INTERVAL = 60000; // Check every 60 seconds
+
+async function checkForUpdates() {
+    try {
+        // Add cache-busting timestamp to prevent browser caching
+        const response = await fetch(`version.json?t=${Date.now()}`, {
+            cache: 'no-store'
+        });
+
+        if (!response.ok) return;
+
+        const data = await response.json();
+        const serverVersion = data.version;
+        const storedVersion = localStorage.getItem(APP_VERSION_KEY);
+
+        if (!storedVersion) {
+            // First visit - store current version
+            localStorage.setItem(APP_VERSION_KEY, serverVersion);
+            console.log('[Version] Initial version stored:', serverVersion);
+        } else if (storedVersion !== serverVersion) {
+            // New version detected!
+            console.log('[Version] Update detected:', storedVersion, '->', serverVersion);
+            localStorage.setItem(APP_VERSION_KEY, serverVersion);
+
+            // Hard refresh to get latest files
+            window.location.reload(true);
+        }
+    } catch (error) {
+        // Silently fail - version check is non-critical
+        console.log('[Version] Check failed:', error.message);
+    }
+}
+
+// Check for updates on page load (after short delay to not block rendering)
+setTimeout(checkForUpdates, 3000);
+
+// Periodic version checks
+setInterval(checkForUpdates, VERSION_CHECK_INTERVAL);
+
+// Also check when tab becomes visible (user returns to tab)
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+        checkForUpdates();
+    }
+});
