@@ -46,42 +46,18 @@
                         <div class="message addy">
                             <span class="avatar">😺</span>
                             <div class="bubble">
-                                <p>Hey there! I'm Addy! Talk about your favorite cats or share a picture! Every mention boosts their score!</p>
+                                <p>Hey there! I'm Addy! Talk about your favorite cats! Every mention boosts their score!</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Image Upload Area -->
-                    <div class="image-upload-area" id="image-upload-area">
-                        <div class="upload-preview" id="upload-preview" style="display: none;">
-                            <img id="preview-image" src="" alt="Preview">
-                            <button type="button" class="remove-image" id="remove-image">&times;</button>
-                        </div>
-                        <div class="cat-select" id="cat-select" style="display: none;">
-                            <label>Which cat is this?</label>
-                            <select id="image-cat">
-                                <option value="">Select a cat...</option>
-                            </select>
-                        </div>
-                    </div>
-
                     <form class="chat-input" id="chat-form">
-                        <label class="upload-btn" title="Upload cat picture">
-                            <input type="file" id="image-input" accept="image/*" hidden>
-                            📷
-                        </label>
                         <input type="text" id="message-input" placeholder="Type your message..." autocomplete="off">
                         <button type="submit">Send</button>
                     </form>
                 </div>
             </section>
         </main>
-
-        <!-- Recent Images Gallery -->
-        <section class="gallery" id="gallery-section" style="display: none;">
-            <h2>Recent Cat Pics</h2>
-            <div class="gallery-grid" id="gallery"></div>
-        </section>
 
         <!-- Global Chat Log -->
         <section class="global-chat">
