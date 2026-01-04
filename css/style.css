@@ -2226,24 +2226,38 @@ header .user-info span {
    CATTY-VERSE SECTION
    =========================================== */
 .cattyverse-section {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-    border: 3px solid var(--secondary);
+    background: linear-gradient(135deg, #fef9f3 0%, #fdf6ed 100%);
+    border: 3px solid #d4a574;
     margin-top: 24px;
+    position: relative;
+}
+
+.cattyverse-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4a574' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    pointer-events: none;
+    border-radius: 5px;
 }
 
 .cattyverse-section h2 {
-    color: var(--secondary);
+    color: #8b5a2b;
 }
 
 .cattyverse-section h2::before {
-    color: var(--secondary);
+    color: #d4a574;
 }
 
 .cattyverse-subtitle {
-    color: #aaa;
+    color: #7a6855;
     font-size: 0.95rem;
     margin-bottom: 20px;
     text-align: center;
+    font-style: italic;
 }
 
 .cattyverse-intro {
@@ -2271,18 +2285,19 @@ header .user-info span {
 
 /* Story Card */
 .story-card {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    background: linear-gradient(135deg, #fffcf7 0%, #faf5eb 100%);
     border-radius: 12px;
     padding: 24px;
     margin-bottom: 20px;
-    border: 3px solid #e94560;
-    box-shadow: 0 4px 20px rgba(233, 69, 96, 0.3);
+    border: 2px solid #e8d5c4;
+    box-shadow: 0 4px 15px rgba(139, 90, 43, 0.1);
+    position: relative;
 }
 
 .story-card.today,
 .story-card.featured {
-    border-color: var(--secondary);
-    box-shadow: 0 4px 20px rgba(255, 217, 61, 0.3);
+    border-color: #d4a574;
+    box-shadow: 0 4px 15px rgba(212, 165, 116, 0.2);
 }
 
 .story-header {
@@ -2294,41 +2309,34 @@ header .user-info span {
 
 .story-badge {
     font-family: 'Press Start 2P', monospace;
-    font-size: 0.6rem;
-    background: var(--secondary);
-    color: #1a1a2e;
+    font-size: 0.55rem;
+    background: linear-gradient(135deg, #d4a574 0%, #c49660 100%);
+    color: #fff;
     padding: 5px 10px;
     border-radius: 4px;
-    animation: badge-pulse 2s ease-in-out infinite;
-}
-
-@keyframes badge-pulse {
-    0%, 100% { box-shadow: 0 0 5px var(--secondary); }
-    50% { box-shadow: 0 0 15px var(--secondary); }
 }
 
 .story-date {
     font-size: 0.8rem;
-    color: #888;
+    color: #a08060;
 }
 
 .story-title {
     font-family: 'Press Start 2P', monospace;
-    font-size: 0.85rem;
-    color: #fff;
+    font-size: 0.8rem;
+    color: #5d4037;
     margin-bottom: 15px;
     line-height: 1.6;
-    text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
 }
 
 .story-content {
-    color: #ddd;
+    color: #4a4a4a;
     font-size: 0.95rem;
-    line-height: 1.8;
+    line-height: 1.9;
     padding: 15px;
-    background: rgba(255,255,255,0.05);
+    background: rgba(212, 165, 116, 0.08);
     border-radius: 8px;
-    border-left: 4px solid var(--primary);
+    border-left: 4px solid #d4a574;
 }
 
 .story-footer {
@@ -2338,7 +2346,7 @@ header .user-info span {
 
 .story-author {
     font-style: italic;
-    color: var(--primary);
+    color: #8b5a2b;
     font-size: 0.9rem;
 }
 
@@ -2346,30 +2354,24 @@ header .user-info span {
 .story-placeholder {
     text-align: center;
     padding: 40px 20px;
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    background: linear-gradient(135deg, #fffcf7 0%, #faf5eb 100%);
     border-radius: 12px;
-    border: 2px dashed #444;
+    border: 2px dashed #d4a574;
 }
 
 .placeholder-icon {
     font-size: 3rem;
     margin-bottom: 15px;
-    animation: float 3s ease-in-out infinite;
-}
-
-@keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
 }
 
 .story-placeholder p {
-    color: #aaa;
+    color: #7a6855;
     font-size: 1rem;
     margin-bottom: 10px;
 }
 
 .placeholder-hint {
-    color: #666;
+    color: #a08060;
     font-size: 0.85rem;
 }
 
@@ -2380,14 +2382,10 @@ header .user-info span {
 
 .cattyverse-archive h4 {
     font-family: 'Press Start 2P', monospace;
-    font-size: 0.7rem;
-    color: #888;
+    font-size: 0.65rem;
+    color: #8b5a2b;
     margin-bottom: 15px;
     text-transform: uppercase;
-}
-
-.cattyverse-section .cattyverse-archive h4 {
-    color: #aaa;
 }
 
 .archive-list {
@@ -2397,30 +2395,30 @@ header .user-info span {
 }
 
 .archive-card {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    background: linear-gradient(135deg, #fffcf7 0%, #faf5eb 100%);
     border-radius: 8px;
     padding: 15px;
     cursor: pointer;
     transition: all 0.2s ease;
-    border: 2px solid transparent;
+    border: 2px solid #e8d5c4;
 }
 
 .archive-card:hover {
-    border-color: var(--primary);
+    border-color: #d4a574;
     transform: translateX(5px);
-    box-shadow: 0 2px 10px var(--shadow);
+    box-shadow: 0 2px 10px rgba(212, 165, 116, 0.2);
 }
 
 .archive-date {
     font-size: 0.75rem;
-    color: var(--text-light);
+    color: #a08060;
     display: block;
     margin-bottom: 5px;
 }
 
 .archive-title {
     font-weight: 700;
-    color: var(--text-dark);
+    color: #5d4037;
     font-size: 0.9rem;
     display: block;
     margin-bottom: 5px;
@@ -2428,27 +2426,26 @@ header .user-info span {
 
 .archive-excerpt {
     font-size: 0.8rem;
-    color: var(--text-light);
+    color: #7a6855;
     line-height: 1.4;
 }
 
 .archive-read-more {
     font-size: 0.7rem;
-    color: var(--primary);
+    color: #d4a574;
     font-weight: 600;
     margin-top: 8px;
     display: block;
-    opacity: 0.8;
 }
 
 .archive-card:hover .archive-read-more {
-    opacity: 1;
+    color: #8b5a2b;
     text-decoration: underline;
 }
 
 .no-stories {
     text-align: center;
-    color: var(--text-light);
+    color: #a08060;
     font-style: italic;
     padding: 20px;
 }
@@ -2465,8 +2462,8 @@ header .user-info span {
 .loading-spinner {
     width: 40px;
     height: 40px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid var(--primary);
+    border: 4px solid #e8d5c4;
+    border-top: 4px solid #d4a574;
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-bottom: 15px;
@@ -2478,63 +2475,8 @@ header .user-info span {
 }
 
 .story-loading p {
-    color: var(--text-light);
+    color: #7a6855;
     font-size: 0.9rem;
-}
-
-/* Catty-verse tab button styling */
-.cattyverse-tab-btn {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
-    color: var(--secondary) !important;
-    border: 2px solid var(--secondary) !important;
-}
-
-.cattyverse-tab-btn:hover {
-    background: linear-gradient(135deg, #16213e 0%, #0f3460 100%) !important;
-    box-shadow: 0 0 10px rgba(255, 217, 61, 0.5) !important;
-}
-
-.cattyverse-tab-btn.active {
-    background: var(--secondary) !important;
-    color: #1a1a2e !important;
-}
-
-/* Generate Story Button */
-.cattyverse-controls {
-    display: flex;
-    justify-content: center;
-    margin: 20px 0;
-}
-
-.generate-story-btn {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 0.7rem;
-    padding: 15px 30px;
-    background: linear-gradient(135deg, #e94560 0%, #ff6b9d 100%);
-    color: white;
-    border: 3px solid #1a1a2e;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 0 #1a1a2e;
-    text-transform: uppercase;
-}
-
-.generate-story-btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 0 #1a1a2e;
-    background: linear-gradient(135deg, #ff6b9d 0%, #e94560 100%);
-}
-
-.generate-story-btn:active:not(:disabled) {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 #1a1a2e;
-}
-
-.generate-story-btn:disabled {
-    background: #666;
-    cursor: not-allowed;
-    opacity: 0.7;
 }
 
 /* Mobile responsive for Catty-verse */
