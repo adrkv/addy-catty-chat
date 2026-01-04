@@ -667,6 +667,12 @@ function initFirebase() {
             }
         });
 
+        // Listen for total reports count
+        db.ref('stats/totalReports').on('value', (snapshot) => {
+            const count = snapshot.val() || 0;
+            updateTotalReportsCounter(count);
+        });
+
         // Connection state
         db.ref('.info/connected').on('value', (snap) => {
             updateConnectionStatus(snap.val());
@@ -1132,6 +1138,29 @@ function renderGlobalChat(messages) {
 
 const MAX_MESSAGES = 30; // Keep only last 30 messages to stay in free tier
 
+// Funny messages for total reports counter
+const TOTAL_REPORTS_MESSAGES = [
+    "HQ has processed {count} intel reports. You agents are RELENTLESS!",
+    "{count} reports filed and counting! Meow-Meow's corruption can't hide forever.",
+    "Wow, {count} field reports! The cats can't escape our surveillance network!",
+    "{count} pieces of intel collected. Smokey Joe's smell has been documented {count} times.",
+    "Our agents have submitted {count} reports. The rankings have never been more accurate!",
+    "{count} reports logged! That's a lot of cat gossip. Keep it coming!",
+    "Intel database: {count} reports strong. Birch has been blamed for chaos in most of them."
+];
+
+function getRandomTotalReportsMessage(count) {
+    const msg = TOTAL_REPORTS_MESSAGES[Math.floor(Math.random() * TOTAL_REPORTS_MESSAGES.length)];
+    return msg.replace(/{count}/g, count.toLocaleString());
+}
+
+function updateTotalReportsCounter(count) {
+    const counter = document.getElementById('total-reports-counter');
+    if (counter && count > 0) {
+        counter.textContent = getRandomTotalReportsMessage(count);
+    }
+}
+
 function saveGlobalMessage(text, catMentioned = null) {
     if (!messagesRef || !currentUser) return;
 
@@ -1144,6 +1173,10 @@ function saveGlobalMessage(text, catMentioned = null) {
         catMentioned: catMentioned,
         timestamp: Date.now()
     });
+
+    // Increment total reports counter
+    const statsRef = firebase.database().ref('stats/totalReports');
+    statsRef.transaction((current) => (current || 0) + 1);
 
     // Auto-cleanup: remove old messages beyond limit
     cleanupOldMessages();
