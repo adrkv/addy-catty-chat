@@ -1997,6 +1997,9 @@ let storiesRef = null;
 let allStories = [];
 let currentStoryIndex = 0;
 
+// Auto-generate a new story every 3 days
+const STORY_GENERATION_INTERVAL = 3 * 24 * 60 * 60 * 1000; // 3 days in ms
+
 function initCattyVerse() {
     if (db) {
         storiesRef = db.ref('cattyverse');
@@ -2013,10 +2016,76 @@ function initCattyVerse() {
                 allStories.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
                 currentStoryIndex = 0;
                 renderStories();
+
+                // Check if we should auto-generate a new story
+                checkAutoGenerateStory();
             } else {
                 showStoryPlaceholder('No dispatches yet!');
+                // Try to generate the first story
+                checkAutoGenerateStory();
             }
         });
+    }
+}
+
+async function checkAutoGenerateStory() {
+    // Only attempt once per session
+    if (window._storyGenerationAttempted) return;
+
+    const now = Date.now();
+    const lastStoryTime = allStories.length > 0 ? (allStories[0].timestamp || 0) : 0;
+    const timeSinceLastStory = now - lastStoryTime;
+
+    // Check if enough time has passed since last story
+    if (timeSinceLastStory < STORY_GENERATION_INTERVAL && allStories.length > 0) {
+        console.log('[Catty-verse] Story is recent enough, skipping generation');
+        return;
+    }
+
+    // Check if we already tried today (prevent multiple attempts)
+    const today = new Date().toDateString();
+    const lastAttemptDate = localStorage.getItem('cattyverse_last_gen_date');
+    if (lastAttemptDate === today) {
+        console.log('[Catty-verse] Already attempted generation today');
+        return;
+    }
+
+    window._storyGenerationAttempted = true;
+    localStorage.setItem('cattyverse_last_gen_date', today);
+
+    console.log('[Catty-verse] Auto-generating new story based on field reports...');
+    await generateStoryFromReports();
+}
+
+async function generateStoryFromReports() {
+    if (!CONFIG.gemini.enabledForStories || !CONFIG.gemini.apiKey) {
+        console.log('[Catty-verse] Story generation disabled');
+        return;
+    }
+
+    // Fetch real field reports from Firebase
+    const reports = await getRecentReports();
+
+    if (reports.length < 5) {
+        console.log('[Catty-verse] Not enough field reports yet:', reports.length);
+        return;
+    }
+
+    try {
+        const story = await generateCattyVerseStory(reports);
+        if (story && storiesRef) {
+            const storyId = Date.now().toString();
+            await storiesRef.child(storyId).set({
+                ...story,
+                id: storyId,
+                date: new Date().toLocaleDateString(),
+                timestamp: Date.now(),
+                basedOnReports: reports.length
+            });
+            console.log('[Catty-verse] New story generated and saved!');
+        }
+    } catch (error) {
+        console.error('[Catty-verse] Auto-generation failed:', error);
     }
 }
 
@@ -2088,91 +2157,6 @@ function renderStoryArchive(stories) {
     }).join('');
 }
 
-async function checkAndGenerateStory() {
-    if (!CONFIG.gemini.enabledForStories || !CONFIG.gemini.apiKey) {
-        showStoryPlaceholder();
-        return;
-    }
-
-    // Fetch all field reports to base story on
-    const recentReports = await getRecentReports();
-
-    if (recentReports.length < 3) {
-        showStoryPlaceholder('Not enough field reports yet. Submit more intel!');
-        return;
-    }
-
-    try {
-        showStoryLoading();
-        const story = await generateCattyVerseStory(recentReports);
-        if (story && storiesRef) {
-            const storyId = Date.now().toString();
-            storiesRef.child(storyId).set({
-                ...story,
-                id: storyId,
-                date: new Date().toLocaleDateString(),
-                timestamp: Date.now()
-            });
-        }
-    } catch (error) {
-        console.error('[Catty-verse] Story generation failed:', error);
-        showStoryPlaceholder('Addy got distracted by a laser pointer... try again!');
-    }
-}
-
-// Rate limit for story generation (1 per minute per user)
-let lastStoryRequest = 0;
-const STORY_COOLDOWN = 60000; // 1 minute
-
-async function requestNewStory() {
-    const now = Date.now();
-    const timeLeft = Math.ceil((STORY_COOLDOWN - (now - lastStoryRequest)) / 1000);
-
-    if (now - lastStoryRequest < STORY_COOLDOWN) {
-        alert(`Addy needs ${timeLeft} seconds to recover from the last dispatch. The pet underworld is exhausting!`);
-        return;
-    }
-
-    lastStoryRequest = now;
-    const btn = document.getElementById('generate-story-btn');
-    if (btn) {
-        btn.disabled = true;
-        btn.textContent = 'Generating...';
-    }
-
-    await checkAndGenerateStory();
-
-    if (btn) {
-        btn.disabled = false;
-        btn.textContent = 'Generate New Dispatch';
-    }
-}
-
-// Make function available globally
-window.requestNewStory = requestNewStory;
-
-function showStoryLoading() {
-    const container = document.getElementById('cattyverse-story');
-    if (!container) return;
-
-    const loadingMessages = [
-        "Addy is investigating a suspicious cardboard box...",
-        "Intercepting encrypted meows...",
-        "Bribing sources with premium treats...",
-        "Decoding Meow-Meow's secret plans...",
-        "Consulting with RP's ghost...",
-        "Dodging Chirpy's angry swipes...",
-        "Following Smokey Joe's mysterious trail..."
-    ];
-    const randomMsg = loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
-
-    container.innerHTML = `
-        <div class="story-loading">
-            <span class="loading-spinner"></span>
-            <p>${randomMsg}</p>
-        </div>
-    `;
-}
 
 async function getRecentReports() {
     return new Promise((resolve) => {
@@ -2181,15 +2165,16 @@ async function getRecentReports() {
             return;
         }
 
-        messagesRef.orderByChild('timestamp').limitToLast(50).once('value', (snapshot) => {
+        // Get last 100 reports to have good material for stories
+        messagesRef.orderByChild('timestamp').limitToLast(100).once('value', (snapshot) => {
             const reports = [];
             snapshot.forEach((child) => {
                 const msg = child.val();
-                if (msg.catMentioned) {
+                if (msg.catMentioned && msg.text) {
                     reports.push({
                         pet: msg.catMentioned,
                         text: msg.text,
-                        user: msg.username
+                        user: msg.username || 'Anonymous'
                     });
                 }
             });
@@ -2199,51 +2184,50 @@ async function getRecentReports() {
 }
 
 async function generateCattyVerseStory(reports) {
-    const reportSummary = reports.map(r => `${r.pet}: "${r.text}"`).join('\n');
+    // Summarize the real field reports
+    const reportSummary = reports.slice(0, 30).map(r => `- ${r.pet}: "${r.text}"`).join('\n');
 
     const characterGuide = Object.entries(CATTY_VERSE_CHARACTERS)
-        .map(([id, char]) => `${id}: ${char.role} - ${char.personality}. Quirks: ${char.quirks}`)
+        .map(([id, char]) => `${id}: ${char.role} - ${char.personality}`)
         .join('\n');
 
     // Random story styles for variety
     const storyStyles = [
-        "a conspiracy theory news report where everything connects in absurd ways",
-        "a dramatic soap opera with ridiculous plot twists",
-        "a nature documentary narrated by someone losing their mind",
-        "a noir detective story but the detective is clearly unhinged",
-        "a breaking news report where the reporter keeps getting distracted",
-        "an exposé that reveals increasingly ridiculous 'secrets'",
-        "a sports commentary but for mundane pet activities",
-        "a cooking show review but about pet food heists",
-        "a true crime podcast recap but the crimes are stealing treats",
-        "a reality TV show confessional with dramatic music cues"
+        "a cozy news dispatch with absurd plot twists",
+        "a dramatic soap opera moment",
+        "a nature documentary style observation",
+        "a noir detective case file",
+        "a breaking news bulletin",
+        "an investigative exposé",
+        "a sports recap but for pet activities",
+        "a gossip column from the pet underworld"
     ];
     const randomStyle = storyStyles[Math.floor(Math.random() * storyStyles.length)];
 
-    const prompt = `You are Addy, a COMPLETELY UNHINGED undercover reporter in the pet underworld called the "Catty-verse". Write a SHORT, ABSURDLY FUNNY fictional dispatch (150-200 words).
+    const prompt = `You are Addy, an undercover reporter in the pet underworld called the "Catty-verse". Write a SHORT, FUNNY fictional dispatch (150-200 words) based on these REAL field reports from users.
 
-STYLE FOR THIS DISPATCH: ${randomStyle}
+STYLE: ${randomStyle}
 
-FIELD INTEL TO INCORPORATE:
+REAL FIELD REPORTS TO BASE YOUR STORY ON:
 ${reportSummary}
 
-CHARACTERS (use their quirks!):
+CHARACTER PERSONALITIES:
 ${characterGuide}
 
-CRITICAL RULES:
-1. Meow-Meow is ALWAYS secretly behind everything evil. She's basically a cat mafia boss who never moves.
-2. Be WEIRD. Be ABSURD. Make bizarre logical leaps. Connect unrelated things.
-3. RP (deceased dog) appears as a glowing ghost giving cryptic wisdom like "the kibble remembers"
-4. Lila is fast BUT deeply melancholic - she wins races but cries inside
-5. Include at least ONE completely made-up "fact" presented as truth
-6. End with something unhinged - a conspiracy, a cliffhanger, or a fourth-wall break
-7. Use dramatic descriptions for mundane things ("The hairball incident of Tuesday... we don't speak of it")
-8. Chirpy should threaten violence at least once
-9. Reference "the incident" without ever explaining what it was
-10. Include a fake quote from a pet that's deeply philosophical or deeply stupid
+IMPORTANT RULES:
+1. Base the story LOOSELY on the actual field reports above - weave them into a narrative
+2. Meow-Meow is always secretly behind schemes (she's the anti-hero/villain)
+3. RP (deceased dog) can make brief cameo appearances as a wise ghost
+4. Lila is loyal but melancholic - fast but sad inside
+5. Chirpy is always angry and threatening
+6. Birch is goofy and accidentally causes chaos
+7. Guy Fiery is a contractor/mercenary for hire
+8. Smokey Joe is a mysterious wanderer/adventurer
+9. Be creative, funny, and a bit absurd
+10. Include at least 2-3 pets that were mentioned in the real reports
 
 FORMAT:
-Return JSON: {"title": "Clickbait-style absurd headline", "content": "Story with \\n\\n between paragraphs"}`;
+Return ONLY valid JSON: {"title": "Catchy headline", "content": "Story text with \\n\\n between paragraphs"}`;
 
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${CONFIG.gemini.model}:generateContent?key=${CONFIG.gemini.apiKey}`, {
         method: 'POST',
