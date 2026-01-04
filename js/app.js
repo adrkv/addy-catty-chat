@@ -65,40 +65,58 @@ const DEFAULT_PETS = [
 ];
 
 // ===========================================
-// Chatbot responses
+// Chatbot responses - Addy has OPINIONS
 // ===========================================
 const RESPONSES = {
     greetings: [
-        "Hey there! Tell me about your favorite cats! 🐱",
-        "Welcome! Which cat is on your mind today?",
-        "Hi! I love hearing about cats! Who's your favorite?"
+        "Yo! Ready to talk about cats? Just don't get me started on Meow-Meow... 🙄",
+        "Hey! Which cat we roasting today? I mean... discussing? 😏",
+        "Welcome! I'm contractually obligated to be nice to all cats. Except one. You know which one. 😹"
     ],
     positive: [
-        "Ooh, {cat} sounds amazing! Noted! ✨",
-        "I can tell {cat} is special! 🌟",
-        "{cat} is getting some love! Nice!",
-        "Great things about {cat}! I'll remember that! 😸"
+        "Ooh, {cat}! Finally, someone with taste! ✨",
+        "{cat} appreciation! Love to see it! 🌟",
+        "YES! {cat} supremacy! This is the content I'm here for! 😸",
+        "{cat}! A cat of culture! Unlike SOME cats who just lay around all day... 👀"
     ],
     negative: [
-        "Haha, poor {cat}! 😅",
-        "Oh no, {cat}! That's... interesting! 🙀",
-        "Noted about {cat}! Every opinion counts!",
-        "{cat} has... character! 😹"
+        "LMAOOO {cat} getting exposed! 💀",
+        "Oh no you didn't! {cat} catching strays! 😂",
+        "Dang, {cat} really living rent free in your head huh 😹",
+        "Tell me how you really feel about {cat}! Don't hold back! 🔥"
     ],
     neutral: [
-        "Ah, {cat}! Tell me more!",
-        "{cat} is in the conversation! What do you think of them?",
-        "I see you mentioned {cat}! How do you feel about them?"
+        "Ah, {cat}! Interesting choice... go on 👀",
+        "{cat} huh? I have thoughts. Many thoughts. What's yours?",
+        "Oh we're talking about {cat} now? *grabs popcorn* 🍿"
+    ],
+    // Special responses for Meow-Meow
+    meowMeowPositive: [
+        "Meow-Meow?? You're being nice to HER? She literally just sleeps and eats! 😭",
+        "I mean... she's cute I guess. In a 'spherical object' kind of way 🔮",
+        "Meow-Meow has her charms... like being an excellent doorstop 😂",
+        "Okay okay, Meow-Meow isn't THAT bad. She's just... gravitationally challenged 🌍"
+    ],
+    meowMeowNegative: [
+        "FINALLY someone speaking TRUTH about Meow-Meow! 🙌",
+        "I've been saying this for YEARS! Meow-Meow is basically a furry bowling ball! 🎳",
+        "Meow-Meow heard you and she doesn't care. She's too busy napping. As usual. 😴",
+        "The accuracy! Meow-Meow's survival strategy is just 'be too round to catch' 💀"
+    ],
+    meowMeowNeutral: [
+        "Meow-Meow... *sighs* ...where do I even begin with that absolute unit 😮‍💨",
+        "Ah yes, Meow-Meow. The cat who thinks 'exercise' is a type of food 🍽️",
+        "Meow-Meow! Fun fact: she has never voluntarily moved faster than 0.5 mph 🐌"
     ],
     noCatMentioned: [
-        "I didn't catch which cat you're talking about. Try mentioning one by name!",
-        "Which cat? Tell me about Meow-Meow, Smokey Joe, or Chirpy!",
-        "Mention a cat's name so I know who you're talking about!"
+        "Uh, which cat? I need names! Unless you're talking about Meow-Meow, I can roast her anytime 😏",
+        "Be specific! We got Smokey Joe (legend), Chirpy (icon), and Meow-Meow (the round one) 🐱",
+        "Name a cat! Any cat! ...Actually, name Smokey Joe or Chirpy. They deserve the love 😂"
     ],
     generic: [
-        "Tell me what you think about the cats!",
-        "Describe your favorite cat to me!",
-        "What makes a cat great in your opinion?"
+        "Give me your hottest cat takes! Don't be shy! 🔥",
+        "Rate the cats! I'll start: Meow-Meow gets a solid... participation trophy 🏆",
+        "What's your cat tier list? And yes, it's okay to put Meow-Meow at the bottom. I do. 📊"
     ]
 };
 
@@ -383,19 +401,31 @@ chatForm.addEventListener('submit', (e) => {
             });
 
             const catNamesStr = mentionedCats.map(p => p.name).join(' and ');
+            const isMeowMeow = mentionedCats.some(p => p.id === 'meow-meow');
 
             let responsePool;
-            if (sentiment === 'negative') {
-                responsePool = RESPONSES.negative;
-            } else if (sentiment === 'positive') {
-                responsePool = RESPONSES.positive;
+            // Special responses for Meow-Meow
+            if (isMeowMeow && mentionedCats.length === 1) {
+                if (sentiment === 'negative') {
+                    responsePool = RESPONSES.meowMeowNegative;
+                } else if (sentiment === 'positive') {
+                    responsePool = RESPONSES.meowMeowPositive;
+                } else {
+                    responsePool = RESPONSES.meowMeowNeutral;
+                }
             } else {
-                responsePool = RESPONSES.neutral;
+                if (sentiment === 'negative') {
+                    responsePool = RESPONSES.negative;
+                } else if (sentiment === 'positive') {
+                    responsePool = RESPONSES.positive;
+                } else {
+                    responsePool = RESPONSES.neutral;
+                }
             }
 
             const response = randomFrom(responsePool).replace('{cat}', catNamesStr);
             addMessage(response, 'addy');
-        } else if (/^(hi|hello|hey|hiya)\b/i.test(message)) {
+        } else if (/^(hi|hello|hey|hiya|yo|sup)\b/i.test(message)) {
             addMessage(randomFrom(RESPONSES.greetings), 'addy');
         } else {
             addMessage(randomFrom(RESPONSES.noCatMentioned), 'addy');
@@ -464,6 +494,28 @@ function saveGlobalMessage(text, catMentioned = null) {
 function randomFrom(array) {
     return array[Math.floor(Math.random() * array.length)];
 }
+
+// ===========================================
+// Music Toggle
+// ===========================================
+const musicToggle = document.getElementById('music-toggle');
+const bgMusic = document.getElementById('bg-music');
+let isMusicPlaying = false;
+
+bgMusic.volume = 0.3; // Set volume to 30%
+
+musicToggle.addEventListener('click', () => {
+    if (isMusicPlaying) {
+        bgMusic.pause();
+        musicToggle.textContent = '🔇';
+        musicToggle.classList.remove('playing');
+    } else {
+        bgMusic.play();
+        musicToggle.textContent = '🎵';
+        musicToggle.classList.add('playing');
+    }
+    isMusicPlaying = !isMusicPlaying;
+});
 
 // ===========================================
 // Initialize
