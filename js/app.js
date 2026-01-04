@@ -565,7 +565,7 @@ function initFirebase() {
         });
 
         // Listen for global messages
-        messagesRef.orderByChild('timestamp').limitToLast(50).on('value', (snapshot) => {
+        messagesRef.orderByChild('timestamp').limitToLast(30).on('value', (snapshot) => {
             const data = snapshot.val();
             if (data) {
                 renderGlobalChat(Object.values(data));
@@ -1027,6 +1027,8 @@ function renderGlobalChat(messages) {
     container.scrollTop = container.scrollHeight;
 }
 
+const MAX_MESSAGES = 30; // Keep only last 30 messages to stay in free tier
+
 function saveGlobalMessage(text, catMentioned = null) {
     if (!messagesRef || !currentUser) return;
 
@@ -1038,6 +1040,32 @@ function saveGlobalMessage(text, catMentioned = null) {
         text: text,
         catMentioned: catMentioned,
         timestamp: Date.now()
+    });
+
+    // Auto-cleanup: remove old messages beyond limit
+    cleanupOldMessages();
+}
+
+function cleanupOldMessages() {
+    messagesRef.orderByChild('timestamp').once('value', (snapshot) => {
+        const messages = [];
+        snapshot.forEach((child) => {
+            messages.push({ key: child.key, timestamp: child.val().timestamp });
+        });
+
+        // If we have more than MAX_MESSAGES, delete the oldest ones
+        if (messages.length > MAX_MESSAGES) {
+            // Sort by timestamp (oldest first)
+            messages.sort((a, b) => a.timestamp - b.timestamp);
+
+            // Delete oldest messages
+            const toDelete = messages.slice(0, messages.length - MAX_MESSAGES);
+            toDelete.forEach((msg) => {
+                messagesRef.child(msg.key).remove();
+            });
+
+            console.log(`[Cleanup] Removed ${toDelete.length} old messages`);
+        }
     });
 }
 
