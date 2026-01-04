@@ -500,26 +500,28 @@ function randomFrom(array) {
 }
 
 // ===========================================
-// Music Toggle
+// Background Music - Autoplay on first interaction
 // ===========================================
-const musicToggle = document.getElementById('music-toggle');
 const bgMusic = document.getElementById('bg-music');
-let isMusicPlaying = false;
+let musicStarted = false;
 
-bgMusic.volume = 0.3; // Set volume to 30%
+bgMusic.volume = 0.25; // Set volume to 25%
 
-musicToggle.addEventListener('click', () => {
-    if (isMusicPlaying) {
-        bgMusic.pause();
-        musicToggle.textContent = 'OFF';
-        musicToggle.classList.remove('playing');
-    } else {
-        bgMusic.play();
-        musicToggle.textContent = 'ON';
-        musicToggle.classList.add('playing');
+function startMusic() {
+    if (!musicStarted) {
+        bgMusic.play().catch(() => {});
+        musicStarted = true;
+        // Remove listeners after music starts
+        document.removeEventListener('click', startMusic);
+        document.removeEventListener('keydown', startMusic);
+        document.removeEventListener('touchstart', startMusic);
     }
-    isMusicPlaying = !isMusicPlaying;
-});
+}
+
+// Start music on any user interaction
+document.addEventListener('click', startMusic);
+document.addEventListener('keydown', startMusic);
+document.addEventListener('touchstart', startMusic);
 
 // ===========================================
 // Minecraft-style Pixel Cats Background
