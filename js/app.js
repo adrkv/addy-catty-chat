@@ -146,9 +146,13 @@ const VETERANS = [
 // ===========================================
 const RESPONSES = {
     greetings: [
-        "Yo! Agent reporting in? I need intel on these pets. What have you observed lately?",
-        "Hey field reporter! Got any updates for the rankings? I'm especially interested in any Meow-Meow sightings...",
-        "Welcome to HQ! I'm Addy, your rankings analyst. Help me keep these scores accurate - what's your latest intel?"
+        "Yo! Agent reporting in? Please tell me Meow-Meow hasn't corrupted another reporter... she's been bribing people with naps lately.",
+        "Hey field reporter! Any updates? Birch knocked over three things this morning and blamed it on 'the wind.' INDOORS.",
+        "Welcome to HQ! Quick briefing: Smokey Joe set a new speed record but cleared the room with his... aroma. Again.",
+        "Agent! Good timing. Lila just won a race and celebrated for 47 minutes straight. We had to sedate her with treats.",
+        "HQ here! Chirpy's in a mood today - she's dropped everything she's touched. Literally everything. Even her dignity.",
+        "Reporting for duty? Great. Guy Fiery just out-jumped a cat half his age. The worms are clearly not slowing him down.",
+        "Welcome! Fair warning: Meow-Meow's been spreading propaganda. If anyone tells you she's 'athletic,' they've been compromised."
     ],
     positive: [
         "Excellent report on {cat}! Updating the rankings now. This is the intel I need!",
@@ -246,14 +250,17 @@ const RESPONSES = {
         "Birch sighting confirmed. My report: unpredictable chaos agent. Good luck getting accurate intel on her."
     ],
     noCatMentioned: [
-        "Agent, I need SPECIFIC intel! Which pet are you reporting on? Names help me update rankings accurately!",
-        "Good enthusiasm, but which pet? I need targeted intel: Smokey Joe, Chirpy, Lila, Birch, Guy Fiery, or... Meow-Meow.",
-        "Hold up - which pet is this report about? I can't adjust rankings without knowing the subject!"
+        "Agent, I need SPECIFIC intel! Which pet? Is Smokey Joe stinking up the place? Is Birch breaking things? Is Meow-Meow... existing?",
+        "Good enthusiasm, but which pet? Did Lila celebrate too hard again? Did Chirpy drop something in anger? NAMES, agent!",
+        "Hold up - which pet? If it's about Meow-Meow being lazy, that's not news. That's just Tuesday. Give me specifics!",
+        "I need a name! Did Guy Fiery out-jump someone? Did Birch start drama? Did Meow-Meow finally move? (That last one would be HUGE news.)"
     ],
     generic: [
-        "HQ standing by for intel! What have you observed about the pets lately? Every report helps!",
-        "Field reporter, I need updates! Who's been performing well? Who's slacking? Meow-Meow is always slacking, but specifics help.",
-        "Rankings update time! Give me your latest observations. What's the intel from the field?"
+        "HQ standing by! Has Smokey Joe's smell improved? (Spoiler: it hasn't.) What's the latest from the field?",
+        "Need updates! Is Lila still celebrating that win from last week? That dog doesn't know when to stop.",
+        "Intel time! Birch just knocked over my coffee. While I clean this up, tell me what you've observed out there.",
+        "Rankings need updating! Fun fact: Meow-Meow's last recorded movement was 3 days ago. She blinked. Revolutionary.",
+        "Field reporter! Chirpy's anger levels are at an all-time high today. She hissed at a WALL. What's happening on your end?"
     ],
     smokeyJoePositive: [
         "Excellent Smokey Joe intel! Speed and strength confirmed. Though my other reports mention... the smell situation.",
