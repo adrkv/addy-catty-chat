@@ -2310,7 +2310,7 @@ setTimeout(updateVersionDisplay, 100);
 // AUTO-UPDATE: Check for new versions
 // ===========================================
 const APP_VERSION_KEY = 'catChatAppVersion';
-const VERSION_CHECK_INTERVAL = 60000; // Check every 60 seconds
+const VERSION_CHECK_INTERVAL = 300000; // Check every 5 minutes
 
 async function checkForUpdates() {
     try {
