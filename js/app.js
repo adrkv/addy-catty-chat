@@ -142,118 +142,154 @@ const VETERANS = [
 ];
 
 // ===========================================
-// Chatbot responses - Addy has OPINIONS (no emojis - game style)
+// Chatbot responses - Addy the Rankings Analyst (intel-gathering theme)
 // ===========================================
 const RESPONSES = {
     greetings: [
-        "Yo! Ready to talk about cats? Just don't get me started on Meow-Meow...",
-        "Hey! Which cat we roasting today? I mean... discussing?",
-        "Welcome! I'm contractually obligated to be nice to all cats. Except one. You know which one."
+        "Yo! Agent reporting in? I need intel on these pets. What have you observed lately?",
+        "Hey field reporter! Got any updates for the rankings? I'm especially interested in any Meow-Meow sightings...",
+        "Welcome to HQ! I'm Addy, your rankings analyst. Help me keep these scores accurate - what's your latest intel?"
     ],
     positive: [
-        "Ooh, {cat}! Finally, someone with taste!",
-        "{cat} appreciation! Love to see it!",
-        "YES! {cat} supremacy! This is the content I'm here for!",
-        "{cat}! A cat of culture! Unlike SOME cats who just lay around all day..."
+        "Excellent report on {cat}! Updating the rankings now. This is the intel I need!",
+        "Good intel on {cat}! Noted and logged. Rankings adjusted accordingly!",
+        "Solid field report! {cat} performance data received. Bumping their score!",
+        "This {cat} intel checks out! Thanks for the accurate reporting, agent!"
     ],
     negative: [
-        "LMAOOO {cat} getting exposed!",
-        "Oh no you didn't! {cat} catching strays!",
-        "Dang, {cat} really living rent free in your head huh",
-        "Tell me how you really feel about {cat}! Don't hold back!"
+        "Oof, tough report on {cat}. But accuracy matters! Adjusting rankings...",
+        "Noted! {cat} intel logged. Even bad news helps keep rankings accurate!",
+        "Thanks for the honest report on {cat}. Can't have accurate rankings without the truth!",
+        "Critical intel on {cat} received! This is why I need field reporters like you!"
     ],
     neutral: [
-        "Ah, {cat}! Interesting choice... go on",
-        "{cat} huh? I have thoughts. Many thoughts. What's yours?",
-        "Oh we're talking about {cat} now? *grabs popcorn*"
+        "Interesting report on {cat}. Tell me more - I need details for accurate rankings!",
+        "{cat} sighting logged. What else have you observed? Every detail helps!",
+        "Got it, {cat} intel received. Keep the reports coming - accuracy is everything!"
     ],
     meowMeowPositive: [
-        "Meow-Meow?? You're being nice to HER? She literally just sleeps and eats!",
-        "I mean... she's cute I guess. In a 'spherical object' kind of way.",
-        "Meow-Meow has her charms... like being an excellent doorstop.",
-        "Okay okay, Meow-Meow isn't THAT bad. She's just... gravitationally challenged."
+        "Wait, POSITIVE intel on Meow-Meow?? Let me verify this... she actually DID something? Logging it anyway...",
+        "Meow-Meow... being praised? I'll update the rankings but my sources say she's still basically a furry boulder.",
+        "Hmm, your report says Meow-Meow is good? My field data says 'stationary object.' But I'll log your intel!",
+        "Noted! But between us... multiple reports confirm Meow-Meow's main activity is 'existing horizontally.'"
     ],
     meowMeowNegative: [
-        "FINALLY someone speaking TRUTH about Meow-Meow!",
-        "I've been saying this for YEARS! Meow-Meow is basically a furry bowling ball!",
-        "Meow-Meow heard you and she doesn't care. She's too busy napping. As usual.",
-        "The accuracy! Meow-Meow's survival strategy is just 'be too round to catch'."
+        "FINALLY some accurate intel on Meow-Meow! This confirms my other field reports - she IS basically a doorstop!",
+        "This Meow-Meow report matches all my data! Rankings updated. Accuracy restored!",
+        "Excellent field work! Your Meow-Meow intel aligns with my research: round, stationary, questionable survival odds.",
+        "Verified! Your report on Meow-Meow matches HQ records. She's been filed under 'gravitationally challenged.'"
     ],
     meowMeowNeutral: [
-        "Meow-Meow... *sighs* ...where do I even begin with that absolute unit.",
-        "Ah yes, Meow-Meow. The cat who thinks 'exercise' is a type of food.",
-        "Meow-Meow! Fun fact: she has never voluntarily moved faster than 0.5 mph."
+        "Meow-Meow intel logged. Between us, she's been corrupting other reporters to boost her rankings. Watch out.",
+        "Got it. Fun fact from HQ files: Meow-Meow has never voluntarily moved faster than 0.5 mph. True story.",
+        "Meow-Meow report received. My analysis? She can only climb rankings through... alternative methods. Corruption, basically."
     ],
     lilaPositive: [
-        "Lila! Three legs and she's STILL the fastest one here! An absolute speed demon!",
-        "Yes! Lila appreciation! This tripod ZOOMS! She'd lap Meow-Meow three times before that cat even woke up!",
-        "Lila the ROCKET! Senior dog? More like senior SPRINTER! Three legs, zero slowdown!",
-        "Lila! Living proof that you only need 3 legs to be faster than everyone else with 4!",
-        "The speed queen herself! Lila runs so fast you'd think she has EXTRA legs, not fewer!"
+        "EXCELLENT Lila intel! My speed tracking data confirms - three legs, ZERO slowdown! Rankings boosted!",
+        "Your Lila report matches HQ records perfectly! She's our fastest agent despite the leg situation. Updated!",
+        "Verified! Lila speed data logged. She'd lap most four-legged pets. Rankings adjusted accordingly!",
+        "Top-tier field report! Lila's three-legged rocket status CONFIRMED. Though her celebrations are... excessive.",
+        "Great intel! But note for the file: Lila's overcelebratory behavior after wins is becoming a concern. Still fast though!"
     ],
     lilaNegative: [
-        "Excuse me?! Lila is a THREE-LEGGED SPEED MACHINE! She could outrun you ANY day!",
-        "Lila slander? She's a senior tripod who runs FASTER than most four-legged animals! Put some respect on her name!",
-        "Bold words for someone who's never seen Lila zoom. Three legs and she's STILL top tier!",
-        "Lila heard that while sprinting past. She doesn't have time for haters - she's too fast!"
+        "Hmm, negative Lila report? My speed data says otherwise. But I'll log your observation for accuracy...",
+        "Interesting... most field reports say Lila is a speed demon. I'll cross-reference your intel with other sources.",
+        "Noted, but HQ data shows Lila outpaces most pets. Maybe you caught her during a celebration break?",
+        "That doesn't match my other Lila intel... she IS prone to tripping from over-excitement though. Logging it."
     ],
     lilaNeutral: [
-        "Ah Lila! The three-legged speed demon! ...wait, why is a dog in a cat chat? Because she EARNED it by being faster than all of them!",
-        "Lila Dog! Three legs, turbocharged! She makes Meow-Meow look like a statue. Which... Meow-Meow basically is.",
-        "Lila! Fun fact: she's missing a leg and STILL outruns every cat here. Absolute legend.",
-        "The tripod speedster! Lila may be a senior dog but she's got more zoom than the entire roster combined!"
+        "Lila intel logged! Fun fact: she's technically a dog in a cat competition because she EARNED it through speed.",
+        "Lila Dog report received. HQ notes: three legs, turbocharged, occasional excessive celebration incidents.",
+        "Got it! Lila file updated. My analysis: peak physical specimen, minor deductions for showboating.",
+        "Lila sighting confirmed. Field notes indicate she makes Meow-Meow look like a decorative pillow. Which... accurate."
     ],
     rpMentioned: [
-        "RP... *moment of respectful silence* ...a true legend. Forever in our hearts.",
-        "You mentioned RP. That's a name we always honor here. A real one.",
-        "RP... the GOAT. Always respected. Check out the Veterans tab to pay respects.",
-        "RP! An absolute legend. Gone but NEVER forgotten. True royalty."
+        "RP... *moment of silence* ...that name is in our Hall of Fame. Forever ranked #1 in the Veterans file.",
+        "You mentioned RP. That's classified as LEGEND status. Check the Veterans tab for the full dossier.",
+        "RP intel is sealed in the archives with highest honors. A true legend. Gone but never forgotten.",
+        "RP! That file is marked 'ETERNAL RESPECT.' Some rankings transcend the algorithm."
     ],
     guyFieryPositive: [
-        "Guy Fiery! Poor dude's got cat AIDS but he's still hanging in there! A true fighter!",
-        "Aww Guy Fiery! He may have cat AIDS but he's got MORE fight than Meow-Meow on her best day!",
-        "Guy Fiery appreciation! This cat's dealing with cat AIDS and STILL showing up! Unlike SOME healthy cats who just sleep...",
-        "Guy Fiery! Living proof that even with cat AIDS, you can still outrank Meow-Meow. Not that that's hard."
+        "Guy Fiery intel logged! My medical files confirm the cat AIDS situation, but your report shows fighting spirit!",
+        "Great report! Guy Fiery's health data is rough, but field intel shows he's still performing. Rankings adjusted!",
+        "Positive Guy Fiery intel! Between the cat AIDS and worm history, it's impressive he's still competing. Noted!",
+        "Good intel! HQ file says: 'Medical challenges significant, but determination levels off the charts.'"
     ],
     guyFieryNegative: [
-        "Hey, Guy Fiery's got CAT AIDS! Give him a break! He's still doing better than Meow-Meow!",
-        "Coming for Guy Fiery? The cat has cat AIDS and he's STILL more active than Meow-Meow!",
-        "Guy Fiery slander? He's battling cat AIDS with more energy than Meow-Meow has ever shown healthy!",
-        "Bold to roast a cat with cat AIDS when Meow-Meow exists being perfectly healthy and still useless."
+        "Noted... but my files show Guy Fiery is fighting through cat AIDS AND a worm history. Cut him some slack?",
+        "Tough intel on Guy Fiery. HQ records show he's battling health issues but still outperforming Meow-Meow somehow.",
+        "Logged. But field note: any pet fighting cat AIDS who STILL ranks above Meow-Meow deserves some credit.",
+        "Guy Fiery critique received. Though between us, being sick and still more active than healthy Meow-Meow is saying something."
     ],
     guyFieryNeutral: [
-        "Ah Guy Fiery! The cat AIDS warrior! Struggling but still beating Meow-Meow somehow!",
-        "Guy Fiery! He's got cat AIDS which hurts his rankings, but he's STILL not last. That's reserved for you-know-who.",
-        "Guy Fiery... poor guy's dealing with cat AIDS. But even sick, he's got more going on than our resident potato cat.",
-        "The Flavortown cat himself! Cat AIDS can't keep him down. Unlike Meow-Meow who's kept down by... gravity."
+        "Guy Fiery report filed. HQ medical brief: cat AIDS positive, worm history, but surprisingly athletic despite everything.",
+        "Intel logged! Guy Fiery's health data is concerning, but he's a fighter. Rankings reflect both factors.",
+        "Got it. The Flavortown cat's file is... complicated. Health issues tank his score, but spirit keeps him going.",
+        "Guy Fiery sighting confirmed. My notes: 'Health problems severe. Fighting spirit? Immense. Net ranking: challenging.'"
     ],
     birchPositive: [
-        "Birch! She's a scaredy cat who makes a mess everywhere, but... she's trying her best?",
-        "Aww Birch! Yeah she's terrified of everything and super messy, but at least she MOVES. Unlike Meow-Meow.",
-        "Birch appreciation! She may be afraid of her own shadow and leave chaos everywhere, but she's got spirit!",
-        "Birch! Messy, scared of literally everything, but STILL more functional than Meow-Meow somehow."
+        "Birch intel received! Noted: smooth fur confirmed. But my chaos reports also show... significant messes.",
+        "Positive Birch report logged! Though HQ files indicate she starts trouble with other pets. Constantly.",
+        "Good Birch intel! Field notes confirm nice fur, but also 'refuses to be petted' and 'maximum chaos agent.'",
+        "Birch praise noted! Though my other field reports mention the mess... and the drama... and the fear of everything."
     ],
     birchNegative: [
-        "I mean... Birch IS scared of everything and makes a huge mess. But she's still not as bad as Meow-Meow!",
-        "Yeah Birch is a scaredy cat disaster zone, but at least fear makes her MOVE. Meow-Meow can't relate.",
-        "Birch being messy and afraid? Fair. But even trembling in a corner, she's more active than Meow-Meow.",
-        "Roasting Birch for being scared and messy? Valid. But she's still not bottom tier. That spot's taken."
+        "Birch critique matches HQ data! Messy, chaotic, scared of everything. Good accurate reporting, agent!",
+        "Your Birch intel aligns with multiple sources: trouble with other pets, mess everywhere, won't cooperate.",
+        "Confirmed! Birch's file reads: 'Smooth fur (untouchable), chaos agent, drops everything.' Your report is accurate.",
+        "Excellent field work! Birch data shows peak haphazard behavior. Rankings adjusted for messiness."
     ],
     birchNeutral: [
-        "Birch! The scaredy cat who leaves a trail of chaos. Her fear keeps her ranking low, but not MEOW-MEOW low.",
-        "Ah Birch... afraid of everything, messy as heck. But even her panic running is more exercise than Meow-Meow gets.",
-        "Birch! She's terrified and chaotic, which hurts her score. But at least she has a survival instinct, unlike some cats.",
-        "The messy scaredy cat! Birch may panic at everything but that adrenaline gives her more energy than Meow-Meow!"
+        "Birch report logged. HQ summary: gorgeous smooth fur she won't let anyone touch, and a trail of chaos.",
+        "Intel received! Birch file notes: 'Beautiful but chaotic. Scared of own shadow. Causes inter-pet drama.'",
+        "Got it! Birch analysis: her smooth skin bonus is offset by the mess, the fear, and the troublemaking.",
+        "Birch sighting confirmed. My report: unpredictable chaos agent. Good luck getting accurate intel on her."
     ],
     noCatMentioned: [
-        "Uh, which one? I need names! Unless you're talking about Meow-Meow, I can roast her anytime.",
-        "Be specific! We got Smokey Joe [legend], Chirpy [icon], Lila [the tripod dog], and Meow-Meow [the round one].",
-        "Name someone! We got 3 cats and 1 very determined three-legged dog. All better options than Meow-Meow tbh."
+        "Agent, I need SPECIFIC intel! Which pet are you reporting on? Names help me update rankings accurately!",
+        "Good enthusiasm, but which pet? I need targeted intel: Smokey Joe, Chirpy, Lila, Birch, Guy Fiery, or... Meow-Meow.",
+        "Hold up - which pet is this report about? I can't adjust rankings without knowing the subject!"
     ],
     generic: [
-        "Give me your hottest cat takes! Don't be shy!",
-        "Rate the cats! I'll start: Meow-Meow gets a solid... participation trophy.",
-        "What's your cat tier list? And yes, it's okay to put Meow-Meow at the bottom. I do."
+        "HQ standing by for intel! What have you observed about the pets lately? Every report helps!",
+        "Field reporter, I need updates! Who's been performing well? Who's slacking? Meow-Meow is always slacking, but specifics help.",
+        "Rankings update time! Give me your latest observations. What's the intel from the field?"
+    ],
+    smokeyJoePositive: [
+        "Excellent Smokey Joe intel! Speed and strength confirmed. Though my other reports mention... the smell situation.",
+        "Great report on Smokey Joe! He's a legend in my files. Fast, strong, athletic - just wish the smell data was better.",
+        "Smokey Joe praise logged! Peak physical specimen per HQ records. The odor issue is... a known factor.",
+        "Top-tier Smokey Joe intel! My analysis: would rank #1 if not for the smell repelling potential supporters."
+    ],
+    smokeyJoeNegative: [
+        "Smokey Joe critique received. Is this about the smell? Because that's well-documented in my files...",
+        "Noted! If this is smell-related, it matches HQ data. Otherwise his stats are actually impressive.",
+        "Smokey Joe negative intel... my sensors confirm the odor situation. Fair criticism there.",
+        "Logged. The smell issue is his main weakness per multiple field reports. Can't argue with the data."
+    ],
+    smokeyJoeNeutral: [
+        "Smokey Joe intel filed. HQ summary: fast, strong, built like a champion... with an unfortunate aroma.",
+        "Got it! Smokey Joe's file reads: 'Peak athletic performance. Approach with caution (smell-related).'",
+        "Smokey Joe report logged. My notes: legendary stats, but the smell factor affects his supporter count.",
+        "Intel received! The Smokey Joe paradox: amazing abilities, challenging proximity experience."
+    ],
+    chirpyPositive: [
+        "Chirpy intel logged! Sympathy points confirmed - she's been through a lot. Updating rankings!",
+        "Good Chirpy report! My files show the injury history. She's a survivor. Rankings adjusted!",
+        "Positive Chirpy intel! HQ notes: 'Smooth operator when calm. Gets sympathy support.' Though the anger issues...",
+        "Chirpy praise received! Field data confirms resilience. Just watch out for the temperamental episodes."
+    ],
+    chirpyNegative: [
+        "Chirpy critique noted. Is this about the anger issues? Or the dropping stuff constantly? Both are in my files.",
+        "Your Chirpy intel matches HQ's temperament data. She DOES have anger management concerns. Logged!",
+        "Noted! Chirpy's file mentions the clumsy-when-mad situation. Accurate reporting, agent.",
+        "Chirpy negative report received. The anger plus dropping things combo is well-documented here."
+    ],
+    chirpyNeutral: [
+        "Chirpy intel filed. HQ summary: injured past (sympathy factor), current status: angry, drops stuff, but a survivor.",
+        "Got it! Chirpy's file: 'Smooth when she wants to be. Temperamental otherwise. Clumsy when frustrated.'",
+        "Chirpy report logged. My analysis: the sympathy points help, but anger issues and clumsiness hurt rankings.",
+        "Intel received! Chirpy data is mixed - past injury generates support, but current behavior is... chaotic."
     ]
 };
 
@@ -300,7 +336,7 @@ function showUserInfo() {
     if (!existingInfo) {
         const userInfo = document.createElement('div');
         userInfo.className = 'user-info';
-        userInfo.innerHTML = `<span>Chatting as</span><span class="current-user-badge">${currentUser}</span>`;
+        userInfo.innerHTML = `<span>Agent:</span><span class="current-user-badge">${currentUser}</span>`;
         header.appendChild(userInfo);
     }
 }
@@ -350,7 +386,7 @@ function initFirebase() {
             if (data) {
                 renderGlobalChat(Object.values(data));
             } else {
-                document.getElementById('global-chat-log').innerHTML = '<p style="text-align:center;color:#999;">No messages yet. Be the first!</p>';
+                document.getElementById('global-chat-log').innerHTML = '<p style="text-align:center;color:#999;">No field reports yet. Be the first agent to submit intel!</p>';
             }
         });
 
@@ -604,6 +640,8 @@ chatForm.addEventListener('submit', (e) => {
             const isLila = mentionedCats.some(p => p.id === 'lila-dog');
             const isGuyFiery = mentionedCats.some(p => p.id === 'guy-fiery');
             const isBirch = mentionedCats.some(p => p.id === 'birch');
+            const isSmokeyJoe = mentionedCats.some(p => p.id === 'smokey-joe');
+            const isChirpy = mentionedCats.some(p => p.id === 'chirpy');
 
             let responsePool;
             // Special responses for Meow-Meow
@@ -641,6 +679,24 @@ chatForm.addEventListener('submit', (e) => {
                     responsePool = RESPONSES.birchPositive;
                 } else {
                     responsePool = RESPONSES.birchNeutral;
+                }
+            // Special responses for Smokey Joe
+            } else if (isSmokeyJoe && mentionedCats.length === 1) {
+                if (sentiment === 'negative') {
+                    responsePool = RESPONSES.smokeyJoeNegative;
+                } else if (sentiment === 'positive') {
+                    responsePool = RESPONSES.smokeyJoePositive;
+                } else {
+                    responsePool = RESPONSES.smokeyJoeNeutral;
+                }
+            // Special responses for Chirpy
+            } else if (isChirpy && mentionedCats.length === 1) {
+                if (sentiment === 'negative') {
+                    responsePool = RESPONSES.chirpyNegative;
+                } else if (sentiment === 'positive') {
+                    responsePool = RESPONSES.chirpyPositive;
+                } else {
+                    responsePool = RESPONSES.chirpyNeutral;
                 }
             } else {
                 if (sentiment === 'negative') {
@@ -945,14 +1001,14 @@ function renderPetBios() {
 
 function getProTip(petId) {
     const tips = {
-        'smokey-joe': "Emphasize his speed and strength! Just... don't mention the smell.",
-        'lila-dog': "She's a speed demon! Talk about how fast she hops. Ignore the excessive victory dances.",
-        'chirpy': "Play the sympathy card - she's been through a lot. Avoid mentioning her anger issues.",
-        'birch': "Her smooth fur is her only saving grace. Good luck with the rest.",
-        'guy-fiery': "Focus on his fighting spirit and jumping skills. The health stuff really tanks him.",
-        'meow-meow': "She can only win through corruption. Convince others to support her... if you dare."
+        'smokey-joe': "Report his speed and strength to boost rankings! Avoid mentioning the smell - that data hurts him.",
+        'lila-dog': "Submit speed reports! Her three-legged rocket status helps rankings. Skip the overcelebration intel.",
+        'chirpy': "Sympathy reports help her score! Past injury data boosts rankings. Anger reports hurt her.",
+        'birch': "Good luck, agent. Report smooth fur for minor gains. Everything else in her file is problematic.",
+        'guy-fiery': "Fighting spirit reports help offset his health file! Focus on speed and jumping intel.",
+        'meow-meow': "HQ Warning: She corrupts reporters. Only way she climbs is through... alternative intel methods."
     };
-    return tips[petId] || "Show them some love!";
+    return tips[petId] || "Submit accurate intel to help rankings!";
 }
 
 // ===========================================

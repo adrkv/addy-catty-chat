@@ -29,11 +29,11 @@
     <!-- Username Modal -->
     <div class="modal" id="username-modal">
         <div class="modal-content">
-            <h2>Welcome to Addy's Cat Chat!</h2>
-            <p>What should we call you?</p>
+            <h2>Welcome, Field Reporter!</h2>
+            <p>Enter your agent codename to start submitting intel:</p>
             <form id="username-form">
-                <input type="text" id="username-input" placeholder="Enter your name..." required minlength="2" maxlength="20">
-                <button type="submit">Let's Chat!</button>
+                <input type="text" id="username-input" placeholder="Your codename..." required minlength="2" maxlength="20">
+                <button type="submit">Begin Reporting</button>
             </form>
         </div>
     </div>
@@ -41,7 +41,7 @@
     <div class="container">
         <header>
             <h1>Addy Catty Catty Cat Chat</h1>
-            <p class="subtitle">Chat with Addy about the cats! Your words might influence the rankings...</p>
+            <p class="subtitle">Help Addy get accurate rankings! Report your latest intel on the pets.</p>
         </header>
 
         <main>
@@ -64,7 +64,7 @@
 
                 <div id="pets-tab" class="tab-content">
                     <div class="pets-intro">
-                        <p>Get to know our contenders! Each pet has unique strengths and weaknesses that affect their rankings.</p>
+                        <p>Intel Dossiers: Study each pet's profile to submit better reports. Their traits directly affect how Addy calculates rankings!</p>
                     </div>
                     <div class="pets-bio-list" id="pets-bio-list">
                     </div>
@@ -81,20 +81,20 @@
 
             <!-- Chat Section -->
             <section class="chat">
-                <h2>Chat with Addy</h2>
+                <h2>Report to Addy</h2>
                 <div class="chat-container">
                     <div class="chat-messages" id="chat-messages">
                         <div class="message addy">
                             <span class="pixel-avatar addy-avatar"></span>
                             <div class="bubble">
-                                <p>Yo! I'm Addy! Let's talk cats. Fair warning: I have opinions. Strong ones. Especially about a certain... rotund tuxedo cat.</p>
+                                <p>Yo! I'm Addy, your rankings analyst! I need YOUR help keeping these rankings accurate. Got any intel on the pets? What have you observed lately? Every report helps me adjust the scores!</p>
                             </div>
                         </div>
                     </div>
 
                     <form class="chat-input" id="chat-form">
-                        <input type="text" id="message-input" placeholder="Type your message..." autocomplete="off">
-                        <button type="submit">Send</button>
+                        <input type="text" id="message-input" placeholder="Report your pet observations..." autocomplete="off">
+                        <button type="submit">Report</button>
                     </form>
                 </div>
             </section>
@@ -102,9 +102,9 @@
 
         <!-- Global Chat Log -->
         <section class="global-chat">
-            <h2>What Everyone's Saying</h2>
+            <h2>Field Reports</h2>
             <div class="global-chat-log" id="global-chat-log">
-                <div class="loading">Loading messages...</div>
+                <div class="loading">Loading field reports...</div>
             </div>
         </section>
 
