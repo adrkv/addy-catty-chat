@@ -150,6 +150,42 @@ const RESPONSES = {
         "RP... the GOAT. Always respected. Check out the Veterans tab to pay respects.",
         "RP! An absolute legend. Gone but NEVER forgotten. True royalty."
     ],
+    guyFieryPositive: [
+        "Guy Fiery! Poor dude's got cat AIDS but he's still hanging in there! A true fighter!",
+        "Aww Guy Fiery! He may have cat AIDS but he's got MORE fight than Meow-Meow on her best day!",
+        "Guy Fiery appreciation! This cat's dealing with cat AIDS and STILL showing up! Unlike SOME healthy cats who just sleep...",
+        "Guy Fiery! Living proof that even with cat AIDS, you can still outrank Meow-Meow. Not that that's hard."
+    ],
+    guyFieryNegative: [
+        "Hey, Guy Fiery's got CAT AIDS! Give him a break! He's still doing better than Meow-Meow!",
+        "Coming for Guy Fiery? The cat has cat AIDS and he's STILL more active than Meow-Meow!",
+        "Guy Fiery slander? He's battling cat AIDS with more energy than Meow-Meow has ever shown healthy!",
+        "Bold to roast a cat with cat AIDS when Meow-Meow exists being perfectly healthy and still useless."
+    ],
+    guyFieryNeutral: [
+        "Ah Guy Fiery! The cat AIDS warrior! Struggling but still beating Meow-Meow somehow!",
+        "Guy Fiery! He's got cat AIDS which hurts his rankings, but he's STILL not last. That's reserved for you-know-who.",
+        "Guy Fiery... poor guy's dealing with cat AIDS. But even sick, he's got more going on than our resident potato cat.",
+        "The Flavortown cat himself! Cat AIDS can't keep him down. Unlike Meow-Meow who's kept down by... gravity."
+    ],
+    birchPositive: [
+        "Birch! She's a scaredy cat who makes a mess everywhere, but... she's trying her best?",
+        "Aww Birch! Yeah she's terrified of everything and super messy, but at least she MOVES. Unlike Meow-Meow.",
+        "Birch appreciation! She may be afraid of her own shadow and leave chaos everywhere, but she's got spirit!",
+        "Birch! Messy, scared of literally everything, but STILL more functional than Meow-Meow somehow."
+    ],
+    birchNegative: [
+        "I mean... Birch IS scared of everything and makes a huge mess. But she's still not as bad as Meow-Meow!",
+        "Yeah Birch is a scaredy cat disaster zone, but at least fear makes her MOVE. Meow-Meow can't relate.",
+        "Birch being messy and afraid? Fair. But even trembling in a corner, she's more active than Meow-Meow.",
+        "Roasting Birch for being scared and messy? Valid. But she's still not bottom tier. That spot's taken."
+    ],
+    birchNeutral: [
+        "Birch! The scaredy cat who leaves a trail of chaos. Her fear keeps her ranking low, but not MEOW-MEOW low.",
+        "Ah Birch... afraid of everything, messy as heck. But even her panic running is more exercise than Meow-Meow gets.",
+        "Birch! She's terrified and chaotic, which hurts her score. But at least she has a survival instinct, unlike some cats.",
+        "The messy scaredy cat! Birch may panic at everything but that adrenaline gives her more energy than Meow-Meow!"
+    ],
     noCatMentioned: [
         "Uh, which one? I need names! Unless you're talking about Meow-Meow, I can roast her anytime.",
         "Be specific! We got Smokey Joe [legend], Chirpy [icon], Lila [the tripod dog], and Meow-Meow [the round one].",
@@ -449,19 +485,29 @@ chatForm.addEventListener('submit', (e) => {
 
         if (mentionedCats.length > 0) {
             mentionedCats.forEach(pet => {
-                // Lila gets a speed bonus - she's a three-legged rocket!
                 let petPoints = points;
+                // Lila gets a speed bonus - she's a three-legged rocket!
                 if (pet.id === 'lila-dog') {
                     petPoints = Math.max(points + 2, 3); // Lila always gets at least 3 points, plus a +2 bonus
+                }
+                // Guy Fiery gets a penalty - cat AIDS holds him back
+                if (pet.id === 'guy-fiery') {
+                    petPoints = Math.max(points - 1, 1); // Guy Fiery gets reduced points but at least 1
+                }
+                // Birch gets a penalty - too scared and messy
+                if (pet.id === 'birch') {
+                    petPoints = Math.max(points - 1, 1); // Birch gets reduced points but at least 1
                 }
                 addPoints(pet.id, petPoints);
             });
 
             const catNamesStr = mentionedCats.map(p => p.name).join(' and ');
             const isMeowMeow = mentionedCats.some(p => p.id === 'meow-meow');
+            const isLila = mentionedCats.some(p => p.id === 'lila-dog');
+            const isGuyFiery = mentionedCats.some(p => p.id === 'guy-fiery');
+            const isBirch = mentionedCats.some(p => p.id === 'birch');
 
             let responsePool;
-            const isLila = mentionedCats.some(p => p.id === 'lila-dog');
             // Special responses for Meow-Meow
             if (isMeowMeow && mentionedCats.length === 1) {
                 if (sentiment === 'negative') {
@@ -479,6 +525,24 @@ chatForm.addEventListener('submit', (e) => {
                     responsePool = RESPONSES.lilaPositive;
                 } else {
                     responsePool = RESPONSES.lilaNeutral;
+                }
+            // Special responses for Guy Fiery
+            } else if (isGuyFiery && mentionedCats.length === 1) {
+                if (sentiment === 'negative') {
+                    responsePool = RESPONSES.guyFieryNegative;
+                } else if (sentiment === 'positive') {
+                    responsePool = RESPONSES.guyFieryPositive;
+                } else {
+                    responsePool = RESPONSES.guyFieryNeutral;
+                }
+            // Special responses for Birch
+            } else if (isBirch && mentionedCats.length === 1) {
+                if (sentiment === 'negative') {
+                    responsePool = RESPONSES.birchNegative;
+                } else if (sentiment === 'positive') {
+                    responsePool = RESPONSES.birchPositive;
+                } else {
+                    responsePool = RESPONSES.birchNeutral;
                 }
             } else {
                 if (sentiment === 'negative') {
@@ -753,6 +817,104 @@ function initTabs() {
 }
 
 // ===========================================
+// Pet Requests Feature
+// ===========================================
+let petRequestsRef = null;
+
+function initPetRequests() {
+    if (db) {
+        petRequestsRef = db.ref('petRequests');
+
+        // Listen for pet requests
+        petRequestsRef.orderByChild('votes').limitToLast(10).on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                const requests = Object.entries(data).map(([id, req]) => ({ id, ...req }));
+                renderPetRequests(requests);
+            }
+        });
+    }
+}
+
+function renderPetRequests(requests) {
+    const container = document.getElementById('pet-requests-list');
+    if (!container) return;
+
+    // Sort by votes descending
+    const sorted = requests.sort((a, b) => (b.votes || 0) - (a.votes || 0));
+
+    if (sorted.length === 0) {
+        container.innerHTML = '<p class="no-requests">No pet requests yet. Be the first!</p>';
+        return;
+    }
+
+    container.innerHTML = sorted.map((req, index) => `
+        <div class="request-card">
+            <div class="request-rank">${index + 1}</div>
+            <div class="request-info">
+                <div class="request-name">${req.petName}</div>
+                <div class="request-type">${req.petType}</div>
+                <div class="request-by">Requested by ${req.requestedBy}</div>
+            </div>
+            <div class="request-votes">
+                <button class="vote-btn" onclick="votePetRequest('${req.id}')">+1</button>
+                <span class="vote-count">${req.votes || 0}</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+function submitPetRequest(e) {
+    e.preventDefault();
+
+    if (!petRequestsRef || !currentUser) {
+        alert('Please enter your name first!');
+        return;
+    }
+
+    const petName = document.getElementById('request-pet-name').value.trim();
+    const petType = document.getElementById('request-pet-type').value.trim();
+
+    if (!petName || !petType) {
+        alert('Please fill in all fields!');
+        return;
+    }
+
+    // Check for duplicates (case insensitive)
+    petRequestsRef.orderByChild('petNameLower').equalTo(petName.toLowerCase()).once('value', (snapshot) => {
+        if (snapshot.exists()) {
+            alert('This pet has already been requested! Vote for it instead!');
+        } else {
+            petRequestsRef.push({
+                petName: petName,
+                petNameLower: petName.toLowerCase(),
+                petType: petType,
+                requestedBy: currentUser,
+                votes: 1,
+                timestamp: Date.now()
+            });
+
+            // Clear form
+            document.getElementById('request-pet-name').value = '';
+            document.getElementById('request-pet-type').value = '';
+
+            alert('Pet request submitted! Others can vote for it now!');
+        }
+    });
+}
+
+function votePetRequest(requestId) {
+    if (!petRequestsRef) return;
+
+    petRequestsRef.child(requestId).child('votes').transaction((current) => {
+        return (current || 0) + 1;
+    });
+}
+
+// Make votePetRequest available globally
+window.votePetRequest = votePetRequest;
+
+// ===========================================
 // Initialize
 // ===========================================
 checkUsername();
@@ -761,3 +923,14 @@ initPixelCats();
 addSittingCats();
 initTabs();
 renderVeterans();
+
+// Initialize pet requests after Firebase is ready
+setTimeout(() => {
+    initPetRequests();
+
+    // Setup form submission
+    const requestForm = document.getElementById('pet-request-form');
+    if (requestForm) {
+        requestForm.addEventListener('submit', submitPetRequest);
+    }
+}, 1000);

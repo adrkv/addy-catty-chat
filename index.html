@@ -99,6 +99,27 @@
             </div>
         </section>
 
+        <!-- Pet Request Section -->
+        <section class="pet-requests">
+            <h2>Request a Pet</h2>
+            <p class="request-intro">Want to see your pet on the leaderboard? Request them here!</p>
+
+            <form class="request-form" id="pet-request-form">
+                <div class="form-row">
+                    <input type="text" id="request-pet-name" placeholder="Pet's name..." required maxlength="30">
+                    <input type="text" id="request-pet-type" placeholder="Type (cat, dog, etc.)" required maxlength="20">
+                    <button type="submit">Request Pet</button>
+                </div>
+            </form>
+
+            <div class="most-requested">
+                <h3>Most Requested Pets</h3>
+                <div class="pet-requests-list" id="pet-requests-list">
+                    <p class="no-requests">No pet requests yet. Be the first!</p>
+                </div>
+            </div>
+        </section>
+
         <footer>
             <p>Made with love for cats everywhere</p>
             <p class="version">v0.1</p>
