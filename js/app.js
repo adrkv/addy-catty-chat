@@ -439,8 +439,12 @@ function addMessage(text, sender) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${sender}`;
 
+    const avatar = sender === 'addy'
+        ? '<img src="assets/addy.jpg" alt="Addy" class="addy-avatar">'
+        : '😊';
+
     messageDiv.innerHTML = `
-        <span class="avatar">${sender === 'addy' ? '😺' : '😊'}</span>
+        <span class="avatar">${avatar}</span>
         <div class="bubble"><p>${text}</p></div>
     `;
     chatMessages.appendChild(messageDiv);

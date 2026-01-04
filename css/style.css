@@ -1240,3 +1240,53 @@ header .user-info span {
 .modal {
     z-index: 1000;
 }
+
+/* ===========================================
+   ADDY'S CUTE PIXEL AVATAR
+   =========================================== */
+.addy-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    border-radius: 50%;
+    /* Pixelated cartoon effect */
+    image-rendering: pixelated;
+    filter: contrast(1.2) saturate(1.3) brightness(1.05);
+    animation: addyBounce 2s ease-in-out infinite;
+}
+
+.message.addy .avatar {
+    overflow: hidden;
+    background: linear-gradient(135deg, #ffd93d 0%, #ffb347 100%);
+    border: 3px solid #ff6b9d;
+    box-shadow: 0 0 10px rgba(255, 107, 157, 0.4);
+}
+
+/* Cute bounce animation */
+@keyframes addyBounce {
+    0%, 100% { 
+        transform: scale(1) rotate(0deg); 
+    }
+    25% { 
+        transform: scale(1.05) rotate(-2deg); 
+    }
+    50% { 
+        transform: scale(1) rotate(0deg); 
+    }
+    75% { 
+        transform: scale(1.05) rotate(2deg); 
+    }
+}
+
+/* Add sparkle effect on hover */
+.message.addy .avatar:hover .addy-avatar {
+    animation: addyWiggle 0.5s ease-in-out;
+    filter: contrast(1.3) saturate(1.5) brightness(1.1);
+}
+
+@keyframes addyWiggle {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-10deg); }
+    75% { transform: rotate(10deg); }
+}
