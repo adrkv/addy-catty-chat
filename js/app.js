@@ -24,7 +24,11 @@ const SURVIVABILITY = {
         'lean', 'active', 'energetic', 'quick', 'nimble', 'alert', 'smart',
         'clever', 'hunter', 'fierce', 'brave', 'tough', 'survivor', 'wild',
         'sleek', 'swift', 'powerful', 'sharp', 'stealthy', 'cunning', 'skinny',
-        'thin', 'slim', 'lithe', 'graceful', 'spy', 'ninja', 'predator'
+        'thin', 'slim', 'lithe', 'graceful', 'spy', 'ninja', 'predator',
+        // Pet-specific positive traits
+        'speedy', 'jumpy', 'jumper', 'hopper', 'rocket', 'zoom', 'zoomy',
+        'smooth', 'silky', 'soft fur', 'fighter', 'warrior', 'legend',
+        'sympathetic', 'sympathy', 'underdog', 'resilient', 'determined'
     ],
     positivePoints: 2,
 
@@ -38,7 +42,14 @@ const SURVIVABILITY = {
         'whale', 'hippo', 'hefty', 'heavy', 'tubby', 'porky', 'blimp',
         'butterball', 'fatso', 'fatty', 'big boi', 'big boy', 'big girl',
         'wide', 'wideboi', 'mega chonk', 'oh lawd', 'oh lawd he comin',
-        'sphere', 'orb', 'barrel', 'tank', 'absolute chonker'
+        'sphere', 'orb', 'barrel', 'tank', 'absolute chonker',
+        // Pet-specific negative traits
+        'smelly', 'stinky', 'stink', 'smell', 'odor', 'funky', 'rank',
+        'angry', 'mad', 'rage', 'furious', 'temperamental', 'grumpy',
+        'messy', 'chaotic', 'haphazard', 'troublemaker', 'drama',
+        'corrupt', 'bribe', 'cheater', 'manipulator', 'schemer',
+        'worms', 'parasites', 'aids', 'diseased', 'infected',
+        'overcelebrate', 'showoff', 'drops stuff', 'clumsy', 'drops things'
     ],
     negativePoints: -2,
 
@@ -47,6 +58,54 @@ const SURVIVABILITY = {
         'cuddly', 'precious', 'baby', 'love', 'favorite', 'best', 'amazing'
     ],
     cutePoints: 1
+};
+
+// ===========================================
+// PET BIOS - Strengths, Weaknesses & Personality
+// ===========================================
+const PET_BIOS = {
+    "smokey-joe": {
+        bio: "The undisputed legend. Fast, strong, and built like a champion. Only problem? He's got that distinctive... aroma.",
+        strengths: ["Lightning fast", "Super strong", "Athletic build"],
+        weaknesses: ["Extremely smelly", "The smell repels potential supporters"],
+        rankModifier: 1, // Small bonus for being a legend
+        smellyPenalty: -1 // Smell costs him some points
+    },
+    "lila-dog": {
+        bio: "Three-legged speed demon! Lost a leg but gained turbo boost. Gets a bit TOO excited when she wins though.",
+        strengths: ["Incredibly fast hopper", "Three legs = aerodynamic", "Never gives up attitude"],
+        weaknesses: ["Overcelebratory", "Excessive celebrations annoy judges", "Sometimes trips from excitement"],
+        rankModifier: 2, // Speed bonus
+        celebrationPenalty: -1 // Over-the-top celebrations cost her
+    },
+    "chirpy": {
+        bio: "The tabby with a troubled past. Injured a while back and people feel for her. But watch out - she's got anger issues and drops things. A lot.",
+        strengths: ["Gets sympathy points", "Smooth when she wants to be", "Survivor mentality"],
+        weaknesses: ["Angry and temperamental", "Drops stuff constantly", "Clumsy when mad"],
+        rankModifier: 1, // Sympathy bonus
+        angerPenalty: -1 // Anger issues hurt her score
+    },
+    "birch": {
+        bio: "Absolute chaos agent. Messy, haphazard, and constantly starting drama with other pets. Has gorgeous smooth skin but WILL NOT let anyone touch her.",
+        strengths: ["Silky smooth fur", "Unpredictable (keeps opponents guessing)"],
+        weaknesses: ["Extremely messy", "Causes trouble with other pets", "Won't let anyone pet her", "Scared of everything"],
+        rankModifier: 0, // No bonus
+        messyPenalty: -2 // Her messiness and troublemaking really hurts
+    },
+    "guy-fiery": {
+        bio: "The Flavortown warrior fighting through adversity. Has cat AIDS and a history of worms which tanks his rankings, but he's fast and can JUMP.",
+        strengths: ["Surprisingly fast", "Impressive jumping ability", "Fighter spirit"],
+        weaknesses: ["Cat AIDS", "History of worms", "Health issues affect stamina"],
+        rankModifier: -2, // Health issues really hurt him
+        healthBonus: 1 // But his fighting spirit gives a small boost
+    },
+    "meow-meow": {
+        bio: "The notorious spherical mastermind. Too lazy to compete fairly, so she resorts to... alternative methods. Rumor has it she bribes and corrupts other contenders.",
+        strengths: ["Master manipulator", "Corrupts opponents", "Strategic thinking (for a potato)"],
+        weaknesses: ["Extremely fat", "Basically a doorstop", "Can only win through corruption", "Zero athletic ability"],
+        rankModifier: 0, // No bonus - she relies on corruption
+        corruptionModifier: -1 // Her corrupt ways backfire sometimes
+    }
 };
 
 // ===========================================
@@ -487,28 +546,49 @@ chatForm.addEventListener('submit', (e) => {
             mentionedCats.forEach(pet => {
                 // Base points from user's message (sentiment) - THIS IS THE PRIMARY DRIVER
                 let petPoints = points;
+                const bio = PET_BIOS[pet.id];
 
-                // Addy's personality modifiers - small adjustments that add up over time
-                // These don't override user sentiment, they just tweak it slightly
+                // ===========================================
+                // PERSONALITY-BASED MODIFIERS
+                // Each pet's unique traits affect their score!
+                // ===========================================
 
-                if (pet.id === 'lila-dog') {
-                    // Lila gets a small speed bonus (+1) - she's a three-legged rocket!
-                    petPoints += 1;
+                if (bio) {
+                    // Apply the pet's base rank modifier (from strengths)
+                    petPoints += bio.rankModifier || 0;
+
+                    // Apply weakness penalties
+                    if (bio.smellyPenalty) petPoints += bio.smellyPenalty; // Smokey Joe's smell
+                    if (bio.celebrationPenalty) petPoints += bio.celebrationPenalty; // Lila's overcelebrating
+                    if (bio.angerPenalty) petPoints += bio.angerPenalty; // Chirpy's anger issues
+                    if (bio.messyPenalty) petPoints += bio.messyPenalty; // Birch's messiness
+                    if (bio.healthBonus) petPoints += bio.healthBonus; // Guy Fiery's fighting spirit
+                    if (bio.corruptionModifier) petPoints += bio.corruptionModifier; // Meow-Meow's corruption backfires
                 }
-                if (pet.id === 'guy-fiery') {
-                    // Guy Fiery gets a small penalty - cat AIDS holds him back slightly
-                    // But positive mentions still help him! Just a bit less.
-                    petPoints = Math.max(petPoints - 1, Math.ceil(points * 0.7));
+
+                // Special case handlers for extreme traits
+                if (pet.id === 'smokey-joe') {
+                    // Smokey Joe: Fast and strong, but the smell issue
+                    // Net effect: +1 (legend) -1 (smell) = 0, plus user sentiment
+                }
+                if (pet.id === 'lila-dog') {
+                    // Lila: Speed demon! +2 for speed, -1 for overcelebrating = +1 net
+                }
+                if (pet.id === 'chirpy') {
+                    // Chirpy: Sympathy +1, anger -1 = 0 net, but sympathy word detection helps
                 }
                 if (pet.id === 'birch') {
-                    // Birch gets a small penalty - scared and messy
-                    // But she still benefits from love! Just slightly less.
-                    petPoints = Math.max(petPoints - 1, Math.ceil(points * 0.7));
+                    // Birch: No bonus, -2 for messiness/trouble = -2 net (she's a handful!)
+                }
+                if (pet.id === 'guy-fiery') {
+                    // Guy Fiery: -2 health issues, +1 fighting spirit = -1 net
+                    // Cat AIDS and worms really hurt his rankings
+                    petPoints = Math.max(petPoints, Math.ceil(points * 0.6)); // Health caps his potential
                 }
                 if (pet.id === 'meow-meow') {
-                    // Meow-Meow is Addy's least favorite but user love still counts!
-                    // She gets what users give her - no bonus, no penalty
-                    // Her low rank is from lack of love, not rigged algorithm
+                    // Meow-Meow: 0 modifier, -1 corruption backfire = -1 net
+                    // She can only win through corrupting others (user manipulation!)
+                    // No algorithmic help - she has to earn it through... persuasion
                 }
 
                 // Ensure minimum 1 point for any positive mention
@@ -790,6 +870,92 @@ function addSittingCats() {
 }
 
 // ===========================================
+// Meet the Pets Tab - Pet Bios
+// ===========================================
+function renderPetBios() {
+    const container = document.getElementById('pets-bio-list');
+    if (!container) return;
+
+    // Get current rankings
+    const sortedPets = [...petsData].sort((a, b) => b.score - a.score);
+    const rankings = {};
+    sortedPets.forEach((pet, index) => {
+        rankings[pet.id] = index + 1;
+    });
+
+    container.innerHTML = DEFAULT_PETS.map(pet => {
+        const bio = PET_BIOS[pet.id];
+        if (!bio) return '';
+
+        const currentPet = petsData.find(p => p.id === pet.id);
+        const score = currentPet ? currentPet.score : 0;
+        const rank = rankings[pet.id] || '-';
+
+        // Calculate net modifier for display
+        let netModifier = bio.rankModifier || 0;
+        if (bio.smellyPenalty) netModifier += bio.smellyPenalty;
+        if (bio.celebrationPenalty) netModifier += bio.celebrationPenalty;
+        if (bio.angerPenalty) netModifier += bio.angerPenalty;
+        if (bio.messyPenalty) netModifier += bio.messyPenalty;
+        if (bio.healthBonus) netModifier += bio.healthBonus;
+        if (bio.corruptionModifier) netModifier += bio.corruptionModifier;
+
+        const modifierClass = netModifier > 0 ? 'positive' : netModifier < 0 ? 'negative' : 'neutral';
+        const modifierDisplay = netModifier > 0 ? `+${netModifier}` : netModifier;
+
+        return `
+            <div class="pet-bio-card" data-pet="${pet.id}">
+                <div class="pet-bio-header">
+                    <div class="pet-bio-avatar">
+                        <img src="${pet.image}" alt="${pet.name}" onerror="this.style.display='none'">
+                        <div class="pet-bio-rank">#${rank}</div>
+                    </div>
+                    <div class="pet-bio-title">
+                        <div class="pet-bio-name">${pet.name}</div>
+                        <div class="pet-bio-type">${pet.type}</div>
+                        <div class="pet-bio-score">Score: ${score}</div>
+                    </div>
+                    <div class="pet-bio-modifier ${modifierClass}">
+                        <span class="modifier-label">Net Modifier</span>
+                        <span class="modifier-value">${modifierDisplay}</span>
+                    </div>
+                </div>
+                <div class="pet-bio-description">${bio.bio}</div>
+                <div class="pet-bio-traits">
+                    <div class="pet-bio-strengths">
+                        <h4>Strengths</h4>
+                        <ul>
+                            ${bio.strengths.map(s => `<li>${s}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div class="pet-bio-weaknesses">
+                        <h4>Weaknesses</h4>
+                        <ul>
+                            ${bio.weaknesses.map(w => `<li>${w}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+                <div class="pet-bio-tip">
+                    <strong>Pro tip:</strong> ${getProTip(pet.id)}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function getProTip(petId) {
+    const tips = {
+        'smokey-joe': "Emphasize his speed and strength! Just... don't mention the smell.",
+        'lila-dog': "She's a speed demon! Talk about how fast she hops. Ignore the excessive victory dances.",
+        'chirpy': "Play the sympathy card - she's been through a lot. Avoid mentioning her anger issues.",
+        'birch': "Her smooth fur is her only saving grace. Good luck with the rest.",
+        'guy-fiery': "Focus on his fighting spirit and jumping skills. The health stuff really tanks him.",
+        'meow-meow': "She can only win through corruption. Convince others to support her... if you dare."
+    };
+    return tips[petId] || "Show them some love!";
+}
+
+// ===========================================
 // Veterans Tab
 // ===========================================
 function renderVeterans() {
@@ -829,6 +995,9 @@ function initTabs() {
 
             if (tabId === 'veterans-tab') {
                 renderVeterans();
+            }
+            if (tabId === 'pets-tab') {
+                renderPetBios();
             }
         });
     });
