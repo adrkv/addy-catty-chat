@@ -327,6 +327,34 @@ function validatePetsMentioned(aiPetIds, message, allPets) {
     });
 }
 
+// Check if AI response text mentions pets that user didn't mention
+// Returns true if response is contaminated (mentions wrong pets)
+function isResponseContaminated(responseText, validPetIds, allPets) {
+    const lowerResponse = responseText.toLowerCase();
+
+    for (const pet of allPets) {
+        // Skip pets that were validly mentioned by user
+        if (validPetIds.includes(pet.id)) continue;
+
+        // Check if this non-mentioned pet appears in AI response
+        const namesToCheck = [
+            pet.name.toLowerCase(),
+            pet.id.replace(/-/g, ' '),
+            pet.id.replace(/-/g, ''),
+            ...(pet.aliases || []).slice(0, 5).map(a => a.toLowerCase()) // Check main aliases
+        ];
+
+        for (const name of namesToCheck) {
+            // Only check names with 3+ chars to avoid false positives
+            if (name.length >= 3 && lowerResponse.includes(name)) {
+                console.log(`[AI] Response contaminated: mentions "${name}" but user didn't mention ${pet.id}`);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 // ===========================================
 // SECRET SURVIVABILITY SCORING
 // Users don't know this - they think it's just popularity!
@@ -967,6 +995,49 @@ chatForm.addEventListener('submit', async (e) => {
         const validatedPetIds = validatePetsMentioned(aiResult.petsMentioned || [], message, petsData);
         if (validatedPetIds.length !== (aiResult.petsMentioned || []).length) {
             console.log('[AI] Filtered out hallucinated pets. AI said:', aiResult.petsMentioned, 'Validated:', validatedPetIds);
+        }
+
+        // Check if AI response text mentions pets the user didn't mention
+        // If contaminated, reject AI response and use a clean generic response
+        if (isResponseContaminated(aiResult.response || '', validatedPetIds, petsData)) {
+            console.log('[AI] Response rejected due to contamination, using clean response');
+            const mentionedPets = getPetsFromIds(validatedPetIds, petsData);
+            const catNames = mentionedPets.length > 0 ? mentionedPets.map(p => p.name).join(', ') : null;
+            saveGlobalMessage(message, catNames);
+
+            // Apply points using validated pets only
+            if (mentionedPets.length > 0) {
+                const { points } = analyzeSurvivability(message);
+                mentionedPets.forEach(pet => {
+                    let petPoints = points;
+                    const bio = PET_BIOS[pet.id];
+                    if (bio) {
+                        petPoints += bio.rankModifier || 0;
+                        if (bio.smellyPenalty) petPoints += bio.smellyPenalty;
+                        if (bio.celebrationPenalty) petPoints += bio.celebrationPenalty;
+                        if (bio.angerPenalty) petPoints += bio.angerPenalty;
+                        if (bio.messyPenalty) petPoints += bio.messyPenalty;
+                        if (bio.healthBonus) petPoints += bio.healthBonus;
+                        if (bio.corruptionModifier) petPoints += bio.corruptionModifier;
+                    }
+                    if (points > 0) petPoints = Math.max(petPoints, 1);
+                    addPoints(pet.id, petPoints);
+                });
+
+                // Clean response that only mentions the validated pet(s)
+                const petNamesStr = mentionedPets.map(p => p.name).join(' and ');
+                const cleanResponses = [
+                    `${petNamesStr} intel logged! Keep the reports coming!`,
+                    `Noted! ${petNamesStr} data recorded.`,
+                    `${petNamesStr} update received! Rankings adjusted.`,
+                    `Got it! ${petNamesStr} report filed.`,
+                    `${petNamesStr} observation noted! Good intel.`
+                ];
+                addMessage(cleanResponses[Math.floor(Math.random() * cleanResponses.length)], 'addy');
+            } else {
+                addMessage("Intel received! Keep those reports coming.", 'addy');
+            }
+            return;
         }
 
         // Get mentioned pets and update scores
