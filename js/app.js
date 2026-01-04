@@ -322,7 +322,8 @@ function validatePetsMentioned(aiPetIds, message, allPets) {
 
         return namesToCheck.some(name => {
             const cleanName = name.replace(/[^a-z\s]/g, '');
-            return cleanName && lowerMsg.includes(cleanName);
+            // Require minimum 3 chars to avoid false positives
+            return cleanName && cleanName.length >= 3 && lowerMsg.includes(cleanName);
         });
     });
 }
@@ -897,7 +898,8 @@ function detectCats(message) {
 
         for (const name of allNames) {
             const cleanName = name.replace(/[^a-z\s]/g, '');
-            if (cleanName && lowerMsg.includes(cleanName)) {
+            // Require minimum 3 chars to avoid false positives (e.g., "m2" → "m" matching "cinnamon")
+            if (cleanName && cleanName.length >= 3 && lowerMsg.includes(cleanName)) {
                 if (!mentioned.find(m => m.id === pet.id)) {
                     mentioned.push(pet);
                 }
@@ -1083,7 +1085,17 @@ chatForm.addEventListener('submit', async (e) => {
         // === FALLBACK: Keyword-based system ===
         console.log('[Fallback] Using keyword-based response');
 
-        const mentionedCats = detectCats(message);
+        let mentionedCats = detectCats(message);
+        console.log('[Fallback] detectCats returned:', mentionedCats.map(p => p.id));
+
+        // IMPORTANT: Validate detected cats to prevent false positives
+        // Only keep cats that are ACTUALLY mentioned in the message
+        const validatedIds = validatePetsMentioned(mentionedCats.map(p => p.id), message, petsData);
+        if (validatedIds.length !== mentionedCats.length) {
+            console.log('[Fallback] Filtered out false positives. Before:', mentionedCats.map(p => p.id), 'After:', validatedIds);
+            mentionedCats = mentionedCats.filter(p => validatedIds.includes(p.id));
+        }
+
         const { points, sentiment } = analyzeSurvivability(message);
 
         const catNames = mentionedCats.length > 0 ? mentionedCats.map(p => p.name).join(', ') : null;
