@@ -737,6 +737,14 @@ const usernameModal = document.getElementById('username-modal');
 const usernameForm = document.getElementById('username-form');
 const usernameInput = document.getElementById('username-input');
 
+// Blocked names list
+const BLOCKED_NAMES = ['addy', 'aditya', 'aditya rao', 'aditya rao kaveti'];
+
+function isBlockedName(name) {
+    const normalizedName = name.toLowerCase().trim();
+    return BLOCKED_NAMES.some(blocked => normalizedName === blocked);
+}
+
 // Generate a unique persistent user ID (can't be changed - prevents fraud)
 function getUserId() {
     let userId = localStorage.getItem('catChatUserId');
@@ -762,6 +770,10 @@ function checkUsername() {
 usernameForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const name = usernameInput.value.trim();
+    if (isBlockedName(name)) {
+        alert('This name is not allowed. Please choose a different codename.');
+        return;
+    }
     if (name.length >= 2) {
         currentUser = name;
         localStorage.setItem('catChatUsername', name);
@@ -791,6 +803,10 @@ function showUserInfo() {
 function editUsername() {
     const newName = prompt('Enter your new agent codename:', currentUser);
     if (newName && newName.trim().length >= 2 && newName.trim().length <= 20) {
+        if (isBlockedName(newName.trim())) {
+            alert('This name is not allowed. Please choose a different codename.');
+            return;
+        }
         currentUser = newName.trim();
         localStorage.setItem('catChatUsername', currentUser);
         showUserInfo();
@@ -1892,6 +1908,12 @@ function submitPetRequest(e) {
         return;
     }
 
+    // Check for blocked pet names
+    if (isBlockedName(petName)) {
+        alert('This pet name is not allowed.');
+        return;
+    }
+
     // Check for duplicates (case insensitive)
     petRequestsRef.orderByChild('petNameLower').equalTo(petName.toLowerCase()).once('value', (snapshot) => {
         if (snapshot.exists()) {
@@ -1918,8 +1940,21 @@ function submitPetRequest(e) {
 function votePetRequest(requestId) {
     if (!petRequestsRef) return;
 
+    // Check if user already voted for this pet request
+    const votedRequests = JSON.parse(localStorage.getItem('votedPetRequests') || '[]');
+    if (votedRequests.includes(requestId)) {
+        alert('You have already voted for this pet!');
+        return;
+    }
+
     petRequestsRef.child(requestId).child('votes').transaction((current) => {
         return (current || 0) + 1;
+    }, (error, committed) => {
+        if (!error && committed) {
+            // Save that user voted for this request
+            votedRequests.push(requestId);
+            localStorage.setItem('votedPetRequests', JSON.stringify(votedRequests));
+        }
     });
 }
 

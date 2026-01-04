@@ -1682,7 +1682,7 @@ header .user-info span {
 
 .request-form button {
     padding: 12px 24px;
-    background: linear-gradient(135deg, var(--accent) 0%, #5ab963 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     color: white;
     border: 3px solid #333;
     border-radius: 4px;
@@ -1695,6 +1695,13 @@ header .user-info span {
 
 .request-form button:hover {
     transform: scale(1.02);
+}
+
+.most-requested {
+    background: #f0f0f0;
+    border-radius: 4px;
+    border: 2px solid #555;
+    padding: 16px;
 }
 
 .most-requested h3 {
@@ -1726,23 +1733,23 @@ header .user-info span {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 14px 16px;
-    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    padding: 12px 16px;
+    background: white;
     border-radius: 4px;
-    border: 2px solid var(--accent);
+    border: 2px solid #555;
 }
 
 .request-rank {
-    width: 30px;
-    height: 30px;
-    background: var(--accent);
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--secondary) 0%, #ffcd00 100%);
     border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: 'Press Start 2P', monospace;
-    font-size: 0.7rem;
-    color: white;
+    font-size: 0.6rem;
+    color: #8b6914;
     border: 2px solid #333;
     flex-shrink: 0;
 }
@@ -1759,7 +1766,7 @@ header .user-info span {
 
 .request-type {
     font-size: 0.8rem;
-    color: var(--accent);
+    color: var(--text-light);
     text-transform: capitalize;
 }
 
@@ -1799,7 +1806,7 @@ header .user-info span {
 .vote-count {
     font-family: 'Press Start 2P', monospace;
     font-size: 0.8rem;
-    color: var(--accent);
+    color: var(--primary);
     min-width: 30px;
     text-align: center;
 }
@@ -2226,105 +2233,91 @@ header .user-info span {
    CATTY-VERSE SECTION
    =========================================== */
 .cattyverse-section {
-    background: linear-gradient(135deg, #fef9f3 0%, #fdf6ed 100%);
-    border: 3px solid #d4a574;
     margin-top: 24px;
-    position: relative;
-}
-
-.cattyverse-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4a574' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-    pointer-events: none;
-    border-radius: 5px;
-}
-
-.cattyverse-section h2 {
-    color: #8b5a2b;
 }
 
 .cattyverse-section h2::before {
-    color: #d4a574;
+    content: '[~]';
 }
 
 .cattyverse-subtitle {
-    color: #7a6855;
+    color: var(--text-light);
     font-size: 0.95rem;
     margin-bottom: 20px;
     text-align: center;
     font-style: italic;
 }
 
+.cattyverse-story {
+    background: #f0f0f0;
+    border-radius: 4px;
+    border: 2px solid #555;
+    padding: 16px;
+}
 
 /* Story Card */
 .story-card {
-    background: linear-gradient(135deg, #fffcf7 0%, #faf5eb 100%);
-    border-radius: 12px;
-    padding: 24px;
-    margin-bottom: 20px;
-    border: 2px solid #e8d5c4;
-    box-shadow: 0 4px 15px rgba(139, 90, 43, 0.1);
+    background: white;
+    border-radius: 4px;
+    padding: 16px;
+    margin-bottom: 12px;
+    border: 2px solid #555;
     position: relative;
 }
 
 .story-card.today,
 .story-card.featured {
-    border-color: #d4a574;
-    box-shadow: 0 4px 15px rgba(212, 165, 116, 0.2);
+    border-color: var(--primary);
 }
 
 .story-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
+    margin-bottom: 12px;
 }
 
 .story-badge {
     font-family: 'Press Start 2P', monospace;
     font-size: 0.55rem;
-    background: linear-gradient(135deg, #d4a574 0%, #c49660 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     color: #fff;
     padding: 5px 10px;
     border-radius: 4px;
+    border: 1px solid #333;
 }
 
 .story-date {
     font-size: 0.8rem;
-    color: #a08060;
+    color: var(--text-light);
 }
 
 .story-title {
     font-family: 'Press Start 2P', monospace;
     font-size: 0.8rem;
-    color: #5d4037;
-    margin-bottom: 15px;
+    color: var(--text-dark);
+    margin-bottom: 12px;
     line-height: 1.6;
 }
 
 .story-content {
-    color: #4a4a4a;
+    color: var(--text-dark);
     font-size: 0.95rem;
     line-height: 1.9;
-    padding: 15px;
-    background: rgba(212, 165, 116, 0.08);
-    border-radius: 8px;
-    border-left: 4px solid #d4a574;
+    padding: 12px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    border-left: 4px solid var(--primary);
 }
 
 .story-footer {
-    margin-top: 20px;
+    margin-top: 16px;
     text-align: right;
 }
 
 .story-author {
     font-style: italic;
-    color: #8b5a2b;
+    color: var(--text-light);
     font-size: 0.9rem;
 }
 
@@ -2332,9 +2325,9 @@ header .user-info span {
 .story-placeholder {
     text-align: center;
     padding: 40px 20px;
-    background: linear-gradient(135deg, #fffcf7 0%, #faf5eb 100%);
-    border-radius: 12px;
-    border: 2px dashed #d4a574;
+    background: white;
+    border-radius: 4px;
+    border: 2px dashed #555;
 }
 
 .placeholder-icon {
@@ -2343,25 +2336,29 @@ header .user-info span {
 }
 
 .story-placeholder p {
-    color: #7a6855;
+    color: var(--text-dark);
     font-size: 1rem;
     margin-bottom: 10px;
 }
 
 .placeholder-hint {
-    color: #a08060;
+    color: var(--text-light);
     font-size: 0.85rem;
 }
 
 /* Story Archive */
 .cattyverse-archive {
-    margin-top: 30px;
+    margin-top: 20px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    border: 2px solid #555;
+    padding: 16px;
 }
 
 .cattyverse-archive h4 {
     font-family: 'Press Start 2P', monospace;
     font-size: 0.65rem;
-    color: #8b5a2b;
+    color: var(--text-dark);
     margin-bottom: 15px;
     text-transform: uppercase;
 }
@@ -2373,30 +2370,30 @@ header .user-info span {
 }
 
 .archive-card {
-    background: linear-gradient(135deg, #fffcf7 0%, #faf5eb 100%);
-    border-radius: 8px;
-    padding: 15px;
+    background: white;
+    border-radius: 4px;
+    padding: 12px 16px;
     cursor: pointer;
     transition: all 0.2s ease;
-    border: 2px solid #e8d5c4;
+    border: 2px solid #555;
 }
 
 .archive-card:hover {
-    border-color: #d4a574;
+    border-color: var(--primary);
     transform: translateX(5px);
-    box-shadow: 0 2px 10px rgba(212, 165, 116, 0.2);
+    box-shadow: 0 2px 10px var(--shadow);
 }
 
 .archive-date {
     font-size: 0.75rem;
-    color: #a08060;
+    color: var(--text-light);
     display: block;
     margin-bottom: 5px;
 }
 
 .archive-title {
     font-weight: 700;
-    color: #5d4037;
+    color: var(--text-dark);
     font-size: 0.9rem;
     display: block;
     margin-bottom: 5px;
@@ -2404,26 +2401,26 @@ header .user-info span {
 
 .archive-excerpt {
     font-size: 0.8rem;
-    color: #7a6855;
+    color: var(--text-light);
     line-height: 1.4;
 }
 
 .archive-read-more {
     font-size: 0.7rem;
-    color: #d4a574;
+    color: var(--primary);
     font-weight: 600;
     margin-top: 8px;
     display: block;
 }
 
 .archive-card:hover .archive-read-more {
-    color: #8b5a2b;
+    color: var(--primary-dark);
     text-decoration: underline;
 }
 
 .no-stories {
     text-align: center;
-    color: #a08060;
+    color: var(--text-light);
     font-style: italic;
     padding: 20px;
 }
@@ -2440,8 +2437,8 @@ header .user-info span {
 .loading-spinner {
     width: 40px;
     height: 40px;
-    border: 4px solid #e8d5c4;
-    border-top: 4px solid #d4a574;
+    border: 4px solid #ddd;
+    border-top: 4px solid var(--primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-bottom: 15px;
@@ -2453,7 +2450,7 @@ header .user-info span {
 }
 
 .story-loading p {
-    color: #7a6855;
+    color: var(--text-light);
     font-size: 0.9rem;
 }
 
