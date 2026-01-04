@@ -13,10 +13,12 @@ const CONFIG = {
     },
     basePoints: 1,
     // Gemini AI Configuration (free tier: 60 req/min, 1500/day)
+    // AI is now reserved for Catty-verse story generation only
     gemini: {
         apiKey: "AIzaSyC1BWcg_Xv38N5C33vfJ9SuQimpgPkeMLQ",
         model: "gemini-2.5-flash",
-        enabled: true // Set to false to disable AI and use keyword fallback only
+        enabled: false, // Disabled for chat - using keyword-only for faster responses
+        enabledForStories: true // AI used for Catty-verse daily stories
     }
 };
 
@@ -106,10 +108,36 @@ function formatTimeUntilReset() {
 
 function updateReportCounter() {
     const counter = document.getElementById('report-counter');
+    const submitBtn = document.querySelector('#chat-form button[type="submit"]');
+    const messageInput = document.getElementById('message-input');
+
     if (counter) {
         const remaining = getRemainingReports();
         counter.textContent = `${remaining}/${DAILY_REPORT_LIMIT} reports left today`;
         counter.className = remaining <= 5 ? 'report-counter low' : 'report-counter';
+
+        // Disable input and button when out of reports
+        if (remaining <= 0) {
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.classList.add('disabled');
+            }
+            if (messageInput) {
+                messageInput.disabled = true;
+                messageInput.placeholder = `No reports left! Resets in ${formatTimeUntilReset()}`;
+            }
+            counter.classList.add('exhausted');
+        } else {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('disabled');
+            }
+            if (messageInput) {
+                messageInput.disabled = false;
+                messageInput.placeholder = 'Report your pet observations...';
+            }
+            counter.classList.remove('exhausted');
+        }
     }
 }
 
@@ -526,13 +554,13 @@ const VETERANS = [
 // ===========================================
 const RESPONSES = {
     greetings: [
-        "Yo! Agent reporting in? Please tell me Meow-Meow hasn't corrupted another reporter... she's been bribing people with naps lately.",
-        "Hey field reporter! Any updates? Birch knocked over three things this morning and blamed it on 'the wind.' INDOORS.",
-        "Welcome to HQ! Quick briefing: Smokey Joe set a new speed record but cleared the room with his... aroma. Again.",
-        "Agent! Good timing. Lila just won a race and celebrated for 47 minutes straight. We had to sedate her with treats.",
-        "HQ here! Chirpy's in a mood today - she's dropped everything she's touched. Literally everything. Even her dignity.",
-        "Reporting for duty? Great. Guy Fiery just out-jumped a cat half his age. The worms are clearly not slowing him down.",
-        "Welcome! Fair warning: Meow-Meow's been spreading propaganda. If anyone tells you she's 'athletic,' they've been compromised."
+        "Agent! Perfect timing - I need intel ASAP! What have you observed? Did Meow-Meow move today? (Unlikely, but report it if true!)",
+        "Field reporter spotted! Quick - tell me what you've seen! Birch break anything? Smokey Joe clear a room? REPORT IT!",
+        "Welcome to HQ! Skip the small talk - I need OBSERVATIONS! What did the pets do? Every detail affects rankings!",
+        "Agent on deck! Listen, rankings are updating fast. Tell me what you've witnessed - good OR bad behavior!",
+        "HQ receiving! Don't waste your reports on chitchat - give me the INTEL! What. Did. You. See?",
+        "Reporting for duty? EXCELLENT! Now use those reports wisely - tell me about pet behaviors, not the weather!",
+        "Welcome! You've got limited reports, so make them count! What pet intel do you have for me today?"
     ],
     positive: [
         "Excellent report on {cat}! Updating the rankings now. This is the intel I need!",
@@ -630,32 +658,29 @@ const RESPONSES = {
         "Birch sighting confirmed. My report: unpredictable chaos agent. Good luck getting accurate intel on her."
     ],
     noCatMentioned: [
-        "Agent, I need SPECIFIC intel! Which pet? Is Smokey Joe stinking up the place? Is Birch breaking things? Is Meow-Meow... existing?",
-        "Good enthusiasm, but which pet? Did Lila celebrate too hard again? Did Chirpy drop something in anger? NAMES, agent!",
-        "Hold up - which pet? If it's about Meow-Meow being lazy, that's not news. That's just Tuesday. Give me specifics!",
-        "I need a name! Did Guy Fiery out-jump someone? Did Birch start drama? Did Meow-Meow finally move? (That last one would be HUGE news.)"
+        "WAIT - which pet?! Say a NAME! 'Meow-Meow is lazy' or 'Chirpy caught something' - I need specifics to update rankings!",
+        "No pet mentioned = no ranking update! Try: 'Smokey Joe is fast' or 'Birch broke something' - NAME + BEHAVIOR!",
+        "Agent, you're wasting a report! Include a pet name! Example: 'Lila is speedy' or 'Guy Fiery jumped high!'",
+        "I can't update rankings without a pet name! Who did what? Meow-Meow? Birch? Smokey? TELL ME!"
     ],
     generic: [
-        "HQ standing by! Has Smokey Joe's smell improved? (Spoiler: it hasn't.) What's the latest from the field?",
-        "Need updates! Is Lila still celebrating that win from last week? That dog doesn't know when to stop.",
-        "Intel time! Birch just knocked over my coffee. While I clean this up, tell me what you've observed out there.",
-        "Rankings need updating! Fun fact: Meow-Meow's last recorded movement was 3 days ago. She blinked. Revolutionary.",
-        "Field reporter! Chirpy's anger levels are at an all-time high today. She hissed at a WALL. What's happening on your end?"
+        "Don't waste reports on chitchat! Tell me: which pet did something? Good or bad - I need to know!",
+        "Agent, reports are LIMITED! Use them wisely - tell me about pet BEHAVIORS, not random stuff!",
+        "HQ reminder: Every report should mention a PET and what they DID. That's how rankings work!",
+        "Save the small talk! Your reports affect the leaderboard. Who did something noteworthy today?",
+        "Limited intel remaining! Make it count - report on actual pet observations: names and actions!"
     ],
     questionAsked: [
-        "Whoa whoa, YOU'RE the field agent here! I'm stuck at HQ! Did you SEE {cat} do something? Report what you witnessed!",
-        "Agent, I can't see anything from HQ - Meow-Meow is blocking my window. Probably on purpose. Tell ME what {cat} did!",
-        "Hold up - you're asking ME? I've got Birch knocking stuff over here, I can't monitor everyone! What did YOU observe about {cat}?",
-        "I'm the analyst, you're the reporter! If {cat} did something, YOU tell ME! That's how intel works!",
-        "Did {cat} do what now? I wasn't there! You're my eyes in the field, agent. Report what you saw!",
-        "Look, Smokey Joe's smell is currently impairing my senses. I can't investigate anything. What did {cat} do? TELL me!"
+        "Questions don't update rankings! REPORTS do! Instead of asking about {cat}, tell me what {cat} DID!",
+        "No questions - STATEMENTS! Don't ask 'is {cat} fast?' - TELL me '{cat} is fast!' That's how this works!",
+        "Agent, flip that question into a report! '{cat} did X' - that's what I need! Questions waste your limited reports!",
+        "I can't answer questions - I process INTEL! Rephrase as: '{cat} [behavior]' and watch the rankings update!"
     ],
     questionNoCat: [
-        "Wait, you're asking ME questions? I'm trapped at HQ with Meow-Meow judging me silently. YOU'RE the field agent - report what you saw!",
-        "Agent, this isn't an interrogation of ME! I need YOU to tell me what's happening out there. Birch just broke something, I'm busy!",
-        "Hold up - I ask the questions here! Well, actually I don't. I just process reports. So... give me a report! What happened?",
-        "You're the one in the field! I'm here trying to stop Chirpy from dropping my files. Tell me what you observed!",
-        "I can't answer that - Lila's victory dance is distracting me. Just tell me what you witnessed and I'll update the rankings!"
+        "Questions don't count! Your reports are limited - use them to TELL me things, not ASK me things!",
+        "Agent, that's a question - I need STATEMENTS! Example: 'Meow-Meow is lazy' or 'Lila ran fast' - facts, not questions!",
+        "No Q&A here! This is intel submission! Report format: [PET NAME] + [WHAT THEY DID]. Go!",
+        "Can't process questions! Rephrase as a report: 'I saw [pet] do [thing]' - that's what updates rankings!"
     ],
     smokeyJoePositive: [
         "Excellent Smokey Joe intel! Speed and strength confirmed. Though my other reports mention... the smell situation.",
@@ -1923,6 +1948,296 @@ setTimeout(() => {
         requestForm.addEventListener('submit', submitPetRequest);
     }
 }, 1000);
+
+// ===========================================
+// CATTY-VERSE: AI-Generated Daily Stories
+// Based on field reports from agents
+// ===========================================
+
+const CATTY_VERSE_CHARACTERS = {
+    'meow-meow': {
+        role: 'The Mastermind / Anti-Hero Villain',
+        personality: 'Scheming, manipulative, lazy but cunning. Always plotting from her cushion throne. Bribes and corrupts others. The secret puppet master of the pet underworld.',
+        quirks: 'Never moves unless absolutely necessary. Communicates through meaningful stares. Has minions do her bidding.'
+    },
+    'lila-dog': {
+        role: 'The Loyal Lieutenant',
+        personality: 'Fiercely loyal but secretly depressed. Three legs but unstoppable speed. Hides her sadness behind celebrations. Deep inner turmoil about her place in the world.',
+        quirks: 'Overcelebrates victories to mask pain. Fastest in the group. Has trust issues after losing her leg.'
+    },
+    'chirpy': {
+        role: 'The Angry Enforcer',
+        personality: 'Perpetually furious tabby with a chip on her shoulder. Hair-trigger temper. Drops things when mad (which is always). Holds grudges forever.',
+        quirks: 'Knocks things over as intimidation. Hisses at walls. Has an enemies list. Secretly wants to be loved.'
+    },
+    'birch': {
+        role: 'The Chaotic Wildcard',
+        personality: 'Completely unpredictable goofy chaos agent. Accidentally causes problems everywhere. Scared of everything but causes the most destruction.',
+        quirks: 'Silky smooth fur but NO ONE can touch her. Starts drama without meaning to. Runs from her own shadow.'
+    },
+    'guy-fiery': {
+        role: 'The Contractor / Mercenary',
+        personality: 'A cat for hire despite his health issues. Cat AIDS and worm history but still takes jobs. Surprisingly athletic. Lives by a code.',
+        quirks: 'Jumps impossibly high. Takes on missions others won\'t. From Flavortown. Never talks about his past.'
+    },
+    'smokey-joe': {
+        role: 'The Wanderer / Adventurer',
+        personality: 'Legendary explorer and adventurer. Fast, strong, mysterious. Comes and goes as he pleases. The smell follows him everywhere - his blessing and curse.',
+        quirks: 'Clears rooms with his aroma. Has been everywhere. Knows secrets. Speaks in riddles.'
+    },
+    'rp': {
+        role: 'The Guardian Angel',
+        personality: 'Watches over everyone from the rainbow bridge. Appears in dreams and visions to give cryptic advice. Forever loved, forever respected.',
+        quirks: 'Makes cameo appearances at crucial moments. Provides wisdom from beyond. Glows slightly.'
+    }
+};
+
+let storiesRef = null;
+
+function initCattyVerse() {
+    if (db) {
+        storiesRef = db.ref('cattyverse');
+
+        // Listen for today's story
+        const today = new Date().toISOString().split('T')[0];
+        storiesRef.child(today).on('value', (snapshot) => {
+            const story = snapshot.val();
+            if (story) {
+                renderTodayStory(story);
+            } else {
+                // No story for today - try to generate one
+                checkAndGenerateStory();
+            }
+        });
+
+        // Load archive of previous stories
+        storiesRef.orderByChild('date').limitToLast(7).on('value', (snapshot) => {
+            const stories = [];
+            snapshot.forEach((child) => {
+                const story = child.val();
+                if (story.date !== today) {
+                    stories.push(story);
+                }
+            });
+            renderStoryArchive(stories.reverse());
+        });
+    }
+}
+
+function renderTodayStory(story) {
+    const container = document.getElementById('cattyverse-story');
+    if (!container) return;
+
+    const safeTitle = escapeHtml(story.title || 'Untitled Dispatch');
+    const safeContent = escapeHtml(story.content || '').replace(/\n/g, '<br>');
+    const safeDate = escapeHtml(story.date || 'Unknown date');
+
+    container.innerHTML = `
+        <div class="story-card today">
+            <div class="story-header">
+                <span class="story-badge">TODAY'S DISPATCH</span>
+                <span class="story-date">${safeDate}</span>
+            </div>
+            <h3 class="story-title">${safeTitle}</h3>
+            <div class="story-content">${safeContent}</div>
+            <div class="story-footer">
+                <span class="story-author">- Addy, Undercover Reporter</span>
+            </div>
+        </div>
+    `;
+}
+
+function renderStoryArchive(stories) {
+    const container = document.getElementById('archive-list');
+    if (!container) return;
+
+    if (stories.length === 0) {
+        container.innerHTML = '<p class="no-stories">No previous dispatches yet. Check back tomorrow!</p>';
+        return;
+    }
+
+    container.innerHTML = stories.map(story => {
+        const safeTitle = escapeHtml(story.title || 'Untitled');
+        const safeDate = escapeHtml(story.date || '');
+        const safeExcerpt = escapeHtml((story.content || '').substring(0, 150) + '...');
+
+        return `
+            <div class="archive-card" onclick="expandArchiveStory('${safeDate}')">
+                <span class="archive-date">${safeDate}</span>
+                <span class="archive-title">${safeTitle}</span>
+                <p class="archive-excerpt">${safeExcerpt}</p>
+            </div>
+        `;
+    }).join('');
+}
+
+async function checkAndGenerateStory() {
+    if (!CONFIG.gemini.enabledForStories || !CONFIG.gemini.apiKey) {
+        showStoryPlaceholder();
+        return;
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+
+    // Check if we already tried generating today (prevent spam)
+    const lastAttempt = localStorage.getItem('cattyverse_last_attempt');
+    if (lastAttempt === today) {
+        showStoryPlaceholder();
+        return;
+    }
+
+    // Fetch recent field reports to base story on
+    const recentReports = await getRecentReports();
+
+    if (recentReports.length < 3) {
+        showStoryPlaceholder('Not enough field reports yet. Submit more intel!');
+        return;
+    }
+
+    localStorage.setItem('cattyverse_last_attempt', today);
+
+    try {
+        const story = await generateCattyVerseStory(recentReports);
+        if (story && storiesRef) {
+            storiesRef.child(today).set({
+                ...story,
+                date: today,
+                timestamp: Date.now()
+            });
+        }
+    } catch (error) {
+        console.error('[Catty-verse] Story generation failed:', error);
+        showStoryPlaceholder('Story generation in progress... check back soon!');
+    }
+}
+
+async function getRecentReports() {
+    return new Promise((resolve) => {
+        if (!messagesRef) {
+            resolve([]);
+            return;
+        }
+
+        messagesRef.orderByChild('timestamp').limitToLast(50).once('value', (snapshot) => {
+            const reports = [];
+            snapshot.forEach((child) => {
+                const msg = child.val();
+                if (msg.catMentioned) {
+                    reports.push({
+                        pet: msg.catMentioned,
+                        text: msg.text,
+                        user: msg.username
+                    });
+                }
+            });
+            resolve(reports);
+        });
+    });
+}
+
+async function generateCattyVerseStory(reports) {
+    const reportSummary = reports.map(r => `${r.pet}: "${r.text}"`).join('\n');
+
+    const characterGuide = Object.entries(CATTY_VERSE_CHARACTERS)
+        .map(([id, char]) => `${id}: ${char.role} - ${char.personality}`)
+        .join('\n');
+
+    const prompt = `You are Addy, an undercover reporter in the pet underworld called the "Catty-verse". Write a SHORT, FUNNY fictional news dispatch (150-250 words) based on these real field reports:
+
+RECENT INTEL:
+${reportSummary}
+
+CHARACTER GUIDE:
+${characterGuide}
+
+RULES:
+1. Meow-Meow is ALWAYS the secret villain/mastermind behind everything
+2. Write like a noir detective story mixed with comedy
+3. RP (a deceased dog) can make brief cameo appearances as a ghost/angel giving advice
+4. Base the plot loosely on the actual reports but make it dramatic/funny
+5. Include at least 3 different pets from the reports
+6. End with a cliffhanger or funny twist
+7. Keep it family-friendly but edgy
+
+FORMAT:
+Return JSON: {"title": "Catchy headline", "content": "The story text with paragraphs separated by \\n\\n"}`;
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${CONFIG.gemini.model}:generateContent?key=${CONFIG.gemini.apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+                temperature: 0.9,
+                maxOutputTokens: 1024
+            }
+        })
+    });
+
+    if (!response.ok) {
+        throw new Error('API request failed');
+    }
+
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!text) {
+        throw new Error('Empty response');
+    }
+
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+        throw new Error('Could not parse JSON');
+    }
+
+    return JSON.parse(jsonMatch[0]);
+}
+
+function showStoryPlaceholder(message = 'Today\'s dispatch is being prepared...') {
+    const container = document.getElementById('cattyverse-story');
+    if (!container) return;
+
+    container.innerHTML = `
+        <div class="story-placeholder">
+            <div class="placeholder-icon">📰</div>
+            <p>${escapeHtml(message)}</p>
+            <p class="placeholder-hint">Stories are generated daily based on YOUR field reports!</p>
+        </div>
+    `;
+}
+
+function expandArchiveStory(date) {
+    if (!storiesRef) return;
+
+    storiesRef.child(date).once('value', (snapshot) => {
+        const story = snapshot.val();
+        if (story) {
+            // Show in a modal or expand in place
+            alert(`${story.title}\n\n${story.content}\n\n- Addy`);
+        }
+    });
+}
+
+// Make function available globally
+window.expandArchiveStory = expandArchiveStory;
+
+// Initialize Catty-verse after Firebase is ready
+setTimeout(initCattyVerse, 1500);
+
+// Update version display on page load
+function updateVersionDisplay() {
+    fetch(`version.json?t=${Date.now()}`, { cache: 'no-store' })
+        .then(res => res.json())
+        .then(data => {
+            const version = `v${data.version}`;
+            const headerVersion = document.getElementById('header-version');
+            const footerVersion = document.getElementById('footer-version');
+            if (headerVersion) headerVersion.textContent = version;
+            if (footerVersion) footerVersion.textContent = version;
+        })
+        .catch(() => {});
+}
+setTimeout(updateVersionDisplay, 100);
 
 // ===========================================
 // AUTO-UPDATE: Check for new versions

@@ -51,7 +51,7 @@
 
     <div class="container">
         <header>
-            <h1>Addy Catty Catty Cat Chat</h1>
+            <h1>Addy Catty Catty Cat Chat <span class="header-version" id="header-version">v1.2.0</span></h1>
             <p class="subtitle">Help Addy get accurate rankings! Report your latest intel on the pets.</p>
         </header>
 
@@ -61,6 +61,7 @@
                 <div class="leaderboard-tabs">
                     <button class="tab-btn active" data-tab="leaderboard-tab">Live Leaderboard</button>
                     <button class="tab-btn pets-tab-btn" data-tab="pets-tab">Meet the Pets</button>
+                    <button class="tab-btn cattyverse-tab-btn" data-tab="cattyverse-tab">The Catty-verse</button>
                     <button class="tab-btn veterans-tab-btn" data-tab="veterans-tab">Meet the Veterans</button>
                 </div>
 
@@ -81,6 +82,23 @@
                         <input type="text" id="pets-search" placeholder="Search pets..." autocomplete="off">
                     </div>
                     <div class="pets-bio-list" id="pets-bio-list">
+                    </div>
+                </div>
+
+                <div id="cattyverse-tab" class="tab-content">
+                    <div class="cattyverse-intro">
+                        <h3>Welcome to the Catty-verse</h3>
+                        <p>Daily dispatches from Addy, your undercover reporter in the pet underworld. Based on real field intel from agents like you!</p>
+                    </div>
+                    <div class="cattyverse-story" id="cattyverse-story">
+                        <div class="story-loading">
+                            <span class="loading-spinner"></span>
+                            <p>Addy is compiling today's report...</p>
+                        </div>
+                    </div>
+                    <div class="cattyverse-archive" id="cattyverse-archive">
+                        <h4>Previous Dispatches</h4>
+                        <div class="archive-list" id="archive-list"></div>
                     </div>
                 </div>
 
@@ -150,7 +168,7 @@
 
         <footer>
             <p>Made with love for cats everywhere</p>
-            <p class="version">v1.0.0</p>
+            <p class="version" id="footer-version">v1.2.0</p>
         </footer>
 
         <!-- Background Music - Peaceful lofi ambient vibes -->
@@ -163,6 +181,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
-    <script src="js/app.js?v=1.0.0"></script>
+    <script src="js/app.js?v=1.2.0"></script>
 </body>
 </html>
