@@ -518,43 +518,73 @@ musicToggle.addEventListener('click', () => {
 });
 
 // ===========================================
-// Pixel Cats Background
+// Minecraft-style Pixel Cats Background
 // ===========================================
 const pixelCatsContainer = document.getElementById('pixel-cats');
-const catEmojis = ['🐱', '🐈', '🐈‍⬛', '😺', '😸', '🐾'];
-const catColors = ['', 'orange', 'gray', 'black', 'pink'];
+
+// Cat color palettes (Minecraft-style)
+const catPalettes = [
+    { body: '#f4a460', dark: '#d2691e', light: '#ffe4c4' }, // Orange tabby
+    { body: '#808080', dark: '#505050', light: '#a0a0a0' }, // Gray
+    { body: '#2d2d2d', dark: '#1a1a1a', light: '#404040' }, // Black
+    { body: '#f5f5dc', dark: '#d4c4a8', light: '#fffff0' }, // White/cream
+    { body: '#8b4513', dark: '#5c3010', light: '#a0522d' }, // Brown
+    { body: '#ffb6c1', dark: '#ff91a4', light: '#ffc0cb' }, // Pink
+];
+
+function createMinecraftCat(palette) {
+    const cat = document.createElement('div');
+    cat.className = 'minecraft-cat';
+
+    // Create boxy pixel cat shape
+    cat.innerHTML = `
+        <div class="mc-cat-body" style="background: ${palette.body}">
+            <div class="mc-cat-head" style="background: ${palette.body}">
+                <div class="mc-cat-ear left" style="background: ${palette.dark}"></div>
+                <div class="mc-cat-ear right" style="background: ${palette.dark}"></div>
+                <div class="mc-cat-face">
+                    <div class="mc-cat-eye left"></div>
+                    <div class="mc-cat-eye right"></div>
+                    <div class="mc-cat-nose" style="background: ${palette.dark}"></div>
+                </div>
+            </div>
+            <div class="mc-cat-tail" style="background: ${palette.body}"></div>
+            <div class="mc-cat-legs">
+                <div class="mc-cat-leg" style="background: ${palette.dark}"></div>
+                <div class="mc-cat-leg" style="background: ${palette.dark}"></div>
+            </div>
+        </div>
+    `;
+
+    return cat;
+}
 
 function createPixelCat() {
-    const cat = document.createElement('div');
-    cat.className = 'pixel-cat';
-
-    // Random cat emoji
-    cat.textContent = catEmojis[Math.floor(Math.random() * catEmojis.length)];
-
-    // Random color
-    const color = catColors[Math.floor(Math.random() * catColors.length)];
-    if (color) cat.classList.add(color);
+    const palette = catPalettes[Math.floor(Math.random() * catPalettes.length)];
+    const cat = createMinecraftCat(palette);
+    cat.classList.add('pixel-cat');
 
     // Random vertical position
-    cat.style.top = Math.random() * 80 + 10 + '%';
+    cat.style.top = Math.random() * 70 + 15 + '%';
 
     // Random direction
     const goingRight = Math.random() > 0.5;
     cat.classList.add(goingRight ? 'walk-right' : 'walk-left');
 
-    // Random speed (15-35 seconds to cross screen)
-    const duration = 15 + Math.random() * 20;
+    // Random speed (20-40 seconds to cross screen)
+    const duration = 20 + Math.random() * 20;
     cat.style.setProperty('--duration', duration + 's');
 
     // Random delay
-    cat.style.animationDelay = Math.random() * 10 + 's';
+    cat.style.animationDelay = Math.random() * 8 + 's';
 
     // Random size variation
-    cat.style.fontSize = (1.5 + Math.random() * 1.5) + 'rem';
+    const scale = 0.8 + Math.random() * 0.6;
+    cat.style.setProperty('--scale', scale);
 
     pixelCatsContainer.appendChild(cat);
 
-    // Remove cat after animation completes to prevent buildup
+    // Remove cat after animation completes
     setTimeout(() => {
         cat.remove();
     }, (duration + 10) * 1000);
@@ -562,37 +592,34 @@ function createPixelCat() {
 
 // Create initial cats
 function initPixelCats() {
-    // Start with a few cats
-    for (let i = 0; i < 5; i++) {
-        setTimeout(() => createPixelCat(), i * 2000);
+    for (let i = 0; i < 4; i++) {
+        setTimeout(() => createPixelCat(), i * 3000);
     }
 
-    // Keep spawning new cats periodically
+    // Keep spawning new cats
     setInterval(() => {
-        if (pixelCatsContainer.children.length < 8) {
+        if (pixelCatsContainer.children.length < 6) {
             createPixelCat();
         }
-    }, 5000);
+    }, 6000);
 }
 
-// Add some sitting cats in fixed positions
+// Add floating sitting cats
 function addSittingCats() {
     const positions = [
-        { top: '15%', left: '5%' },
-        { top: '75%', right: '8%' },
-        { top: '45%', left: '3%' },
+        { top: '20%', left: '3%' },
+        { top: '70%', right: '5%' },
     ];
 
     positions.forEach((pos, i) => {
-        const cat = document.createElement('div');
-        cat.className = 'pixel-cat sitting';
-        cat.textContent = ['😺', '🐱', '😸'][i];
+        const palette = catPalettes[i % catPalettes.length];
+        const cat = createMinecraftCat(palette);
+        cat.classList.add('pixel-cat', 'floating');
         cat.style.top = pos.top;
         if (pos.left) cat.style.left = pos.left;
         if (pos.right) cat.style.right = pos.right;
-        cat.style.fontSize = '1.8rem';
-        cat.style.opacity = '0.4';
-        cat.style.animationDelay = (i * 0.5) + 's';
+        cat.style.setProperty('--scale', '0.7');
+        cat.style.animationDelay = (i * 1) + 's';
         pixelCatsContainer.appendChild(cat);
     });
 }
