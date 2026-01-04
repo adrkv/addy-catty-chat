@@ -210,7 +210,7 @@ async function processWithAI(message, existingPets) {
         `${p.id}(${p.aliases.slice(0, 3).join('/')})`
     ).join(',');
 
-    const systemPrompt = `Addy=sarcastic pet analyst. Pets:${petContext}. Traits:meow-meow=lazy,lila-dog=3-leg fast,smokey-joe=smelly,guy-fiery=sick,birch=chaotic,chirpy=angry. MUST use exact pet-id in response. JSON:{"petsMentioned":["exact-pet-id"],"sentiment":"positive/negative/neutral","points":<-3to3>,"response":"<10 words sarcastic>"}`;
+    const systemPrompt = `Addy=sarcastic pet analyst. Pets:${petContext}. Traits:meow-meow=lazy,lila-dog=3-leg fast,smokey-joe=smelly,guy-fiery=sick,birch=chaotic,chirpy=angry. ONLY include pets EXPLICITLY mentioned by name/alias in petsMentioned. If only "lila" mentioned, ONLY return ["lila-dog"]. Never guess or add extra pets. JSON:{"petsMentioned":["only-mentioned-pet-id"],"sentiment":"positive/negative/neutral","points":<-3to3>,"response":"<10 words sarcastic>"}`;
 
     try {
         AI_STATE.requestCount++;
