@@ -947,18 +947,6 @@ function renderPetBios() {
         const score = currentPet ? currentPet.score : 0;
         const rank = rankings[pet.id] || '-';
 
-        // Calculate net modifier for display
-        let netModifier = bio.rankModifier || 0;
-        if (bio.smellyPenalty) netModifier += bio.smellyPenalty;
-        if (bio.celebrationPenalty) netModifier += bio.celebrationPenalty;
-        if (bio.angerPenalty) netModifier += bio.angerPenalty;
-        if (bio.messyPenalty) netModifier += bio.messyPenalty;
-        if (bio.healthBonus) netModifier += bio.healthBonus;
-        if (bio.corruptionModifier) netModifier += bio.corruptionModifier;
-
-        const modifierClass = netModifier > 0 ? 'positive' : netModifier < 0 ? 'negative' : 'neutral';
-        const modifierDisplay = netModifier > 0 ? `+${netModifier}` : netModifier;
-
         return `
             <div class="pet-bio-card" data-pet="${pet.id}">
                 <div class="pet-bio-header">
@@ -970,10 +958,6 @@ function renderPetBios() {
                         <div class="pet-bio-name">${pet.name}</div>
                         <div class="pet-bio-type">${pet.type}</div>
                         <div class="pet-bio-score">Score: ${score}</div>
-                    </div>
-                    <div class="pet-bio-modifier ${modifierClass}">
-                        <span class="modifier-label">Net Modifier</span>
-                        <span class="modifier-value">${modifierDisplay}</span>
                     </div>
                 </div>
                 <div class="pet-bio-description">${bio.bio}</div>
