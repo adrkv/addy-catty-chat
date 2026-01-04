@@ -114,9 +114,49 @@ const RESPONSES = {
 let db = null;
 let petsRef = null;
 let imagesRef = null;
+let messagesRef = null;
 let petsData = [];
 let selectedImage = null;
 let isFirebaseConnected = false;
+let currentUser = null;
+
+// ===========================================
+// Username handling
+// ===========================================
+const usernameModal = document.getElementById('username-modal');
+const usernameForm = document.getElementById('username-form');
+const usernameInput = document.getElementById('username-input');
+
+function checkUsername() {
+    const savedUser = localStorage.getItem('catChatUsername');
+    if (savedUser) {
+        currentUser = savedUser;
+        usernameModal.classList.add('hidden');
+        showUserInfo();
+    }
+}
+
+usernameForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = usernameInput.value.trim();
+    if (name.length >= 2) {
+        currentUser = name;
+        localStorage.setItem('catChatUsername', name);
+        usernameModal.classList.add('hidden');
+        showUserInfo();
+    }
+});
+
+function showUserInfo() {
+    const header = document.querySelector('header');
+    const existingInfo = header.querySelector('.user-info');
+    if (!existingInfo) {
+        const userInfo = document.createElement('div');
+        userInfo.className = 'user-info';
+        userInfo.innerHTML = `<span>Chatting as</span><span class="current-user-badge">${currentUser}</span>`;
+        header.appendChild(userInfo);
+    }
+}
 
 // ===========================================
 // Initialize Firebase
@@ -133,6 +173,7 @@ function initFirebase() {
         db = firebase.database();
         petsRef = db.ref('pets');
         imagesRef = db.ref('images');
+        messagesRef = db.ref('messages');
 
         // Listen for pet updates in real-time
         petsRef.on('value', (snapshot) => {
@@ -157,6 +198,16 @@ function initFirebase() {
             const data = snapshot.val();
             if (data) {
                 renderGallery(Object.values(data).reverse());
+            }
+        });
+
+        // Listen for global messages
+        messagesRef.orderByChild('timestamp').limitToLast(50).on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                renderGlobalChat(Object.values(data));
+            } else {
+                document.getElementById('global-chat-log').innerHTML = '<p style="text-align:center;color:#999;">No messages yet. Be the first!</p>';
             }
         });
 
@@ -355,7 +406,11 @@ chatForm.addEventListener('submit', async (e) => {
 
             // Show image message
             const pet = petsData.find(p => p.id === selectedCatId);
-            addMessage(message || `Check out ${pet.name}!`, 'user', imageUrl);
+            const msgText = message || `Check out ${pet.name}!`;
+            addMessage(msgText, 'user', imageUrl);
+
+            // Save to global chat with image
+            saveGlobalMessage(msgText, pet.name, imageUrl);
 
             // Addy responds
             setTimeout(() => {
@@ -375,6 +430,10 @@ chatForm.addEventListener('submit', async (e) => {
         const mentionedCats = detectCats(message);
         const { points, sentiment } = analyzeSurvivability(message);
 
+        // Save to global chat (visible to all users)
+        const catNames = mentionedCats.length > 0 ? mentionedCats.map(p => p.name).join(', ') : null;
+        saveGlobalMessage(message, catNames, null);
+
         setTimeout(() => {
             if (mentionedCats.length > 0) {
                 // Award survivability-based points to each mentioned cat
@@ -382,7 +441,7 @@ chatForm.addEventListener('submit', async (e) => {
                     addPoints(pet.id, points);
                 });
 
-                const catNames = mentionedCats.map(p => p.name).join(' and ');
+                const catNamesStr = mentionedCats.map(p => p.name).join(' and ');
 
                 // Response based on sentiment (don't reveal actual scoring!)
                 let responsePool;
@@ -394,7 +453,7 @@ chatForm.addEventListener('submit', async (e) => {
                     responsePool = RESPONSES.neutral;
                 }
 
-                const response = randomFrom(responsePool).replace('{cat}', catNames);
+                const response = randomFrom(responsePool).replace('{cat}', catNamesStr);
                 addMessage(response, 'addy');
             } else if (/^(hi|hello|hey|hiya)\b/i.test(message)) {
                 addMessage(randomFrom(RESPONSES.greetings), 'addy');
@@ -514,6 +573,53 @@ function renderGallery(images) {
 }
 
 // ===========================================
+// Global Chat Log
+// ===========================================
+function renderGlobalChat(messages) {
+    const container = document.getElementById('global-chat-log');
+
+    // Sort by timestamp, newest last
+    const sorted = messages.sort((a, b) => a.timestamp - b.timestamp);
+
+    container.innerHTML = sorted.map(msg => {
+        const initials = msg.username.substring(0, 2).toUpperCase();
+        const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const catBadge = msg.catMentioned ? `<span class="cat-badge">${msg.catMentioned}</span>` : '';
+        const imageHtml = msg.imageUrl ? `<img src="${msg.imageUrl}" class="message-image" alt="Cat pic">` : '';
+
+        return `
+            <div class="global-message">
+                <div class="user-avatar">${initials}</div>
+                <div class="message-content">
+                    <div class="message-header">
+                        <span class="username">${msg.username}</span>
+                        ${catBadge}
+                        <span class="timestamp">${time}</span>
+                    </div>
+                    <div class="message-text">${msg.text}</div>
+                    ${imageHtml}
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Auto-scroll to bottom
+    container.scrollTop = container.scrollHeight;
+}
+
+function saveGlobalMessage(text, catMentioned = null, imageUrl = null) {
+    if (!messagesRef || !currentUser) return;
+
+    messagesRef.push({
+        username: currentUser,
+        text: text,
+        catMentioned: catMentioned,
+        imageUrl: imageUrl,
+        timestamp: Date.now()
+    });
+}
+
+// ===========================================
 // Helpers
 // ===========================================
 function randomFrom(array) {
@@ -523,4 +629,5 @@ function randomFrom(array) {
 // ===========================================
 // Initialize
 // ===========================================
+checkUsername();
 initFirebase();
