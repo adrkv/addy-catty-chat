@@ -439,12 +439,8 @@ function addMessage(text, sender) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${sender}`;
 
-    const avatar = sender === 'addy'
-        ? '<img src="assets/addy.jpg" alt="Addy" class="addy-avatar">'
-        : '😊';
-
     messageDiv.innerHTML = `
-        <span class="avatar">${avatar}</span>
+        <span class="avatar">${sender === 'addy' ? '😺' : '😊'}</span>
         <div class="bubble"><p>${text}</p></div>
     `;
     chatMessages.appendChild(messageDiv);
@@ -524,111 +520,81 @@ musicToggle.addEventListener('click', () => {
 // ===========================================
 // Pixel Cats Background
 // ===========================================
-const pixelCats = [];
-const catEmojis = ['🐱', '🐈', '😺', '😸', '🐈‍⬛', '😻'];
-const catColors = ['orange', 'gray', 'black', 'tuxedo', 'tabby'];
+const pixelCatsContainer = document.getElementById('pixel-cats');
+const catEmojis = ['🐱', '🐈', '🐈‍⬛', '😺', '😸', '🐾'];
+const catColors = ['', 'orange', 'gray', 'black', 'pink'];
 
 function createPixelCat() {
-    const container = document.getElementById('pixel-cats');
-    if (!container) return;
-
     const cat = document.createElement('div');
-    cat.className = `pixel-cat ${catColors[Math.floor(Math.random() * catColors.length)]}`;
+    cat.className = 'pixel-cat';
+
+    // Random cat emoji
     cat.textContent = catEmojis[Math.floor(Math.random() * catEmojis.length)];
 
-    // Random starting position
-    const startX = Math.random() * window.innerWidth;
-    const startY = Math.random() * window.innerHeight;
+    // Random color
+    const color = catColors[Math.floor(Math.random() * catColors.length)];
+    if (color) cat.classList.add(color);
 
-    cat.style.left = startX + 'px';
-    cat.style.top = startY + 'px';
-    cat.style.opacity = '0.6';
-    cat.style.fontSize = (18 + Math.random() * 12) + 'px';
+    // Random vertical position
+    cat.style.top = Math.random() * 80 + 10 + '%';
 
-    container.appendChild(cat);
+    // Random direction
+    const goingRight = Math.random() > 0.5;
+    cat.classList.add(goingRight ? 'walk-right' : 'walk-left');
 
-    // Cat state
-    const catState = {
-        element: cat,
-        x: startX,
-        y: startY,
-        targetX: startX,
-        targetY: startY,
-        speed: 0.3 + Math.random() * 0.5,
-        direction: Math.random() > 0.5 ? 1 : -1,
-        pauseUntil: 0,
-        state: 'walking' // walking, sitting, sleeping
-    };
+    // Random speed (15-35 seconds to cross screen)
+    const duration = 15 + Math.random() * 20;
+    cat.style.setProperty('--duration', duration + 's');
 
-    pixelCats.push(catState);
+    // Random delay
+    cat.style.animationDelay = Math.random() * 10 + 's';
+
+    // Random size variation
+    cat.style.fontSize = (1.5 + Math.random() * 1.5) + 'rem';
+
+    pixelCatsContainer.appendChild(cat);
+
+    // Remove cat after animation completes to prevent buildup
+    setTimeout(() => {
+        cat.remove();
+    }, (duration + 10) * 1000);
 }
 
-function updatePixelCats() {
-    const now = Date.now();
-
-    pixelCats.forEach(cat => {
-        // Check if cat is pausing
-        if (now < cat.pauseUntil) {
-            return;
-        }
-
-        // Randomly change behavior
-        if (Math.random() < 0.005) {
-            const behaviors = ['walking', 'sitting', 'sleeping'];
-            cat.state = behaviors[Math.floor(Math.random() * behaviors.length)];
-
-            if (cat.state === 'sitting') {
-                cat.element.textContent = '🐱';
-                cat.pauseUntil = now + 2000 + Math.random() * 3000;
-            } else if (cat.state === 'sleeping') {
-                cat.element.textContent = '😴';
-                cat.pauseUntil = now + 3000 + Math.random() * 5000;
-            } else {
-                cat.element.textContent = catEmojis[Math.floor(Math.random() * catEmojis.length)];
-            }
-        }
-
-        if (cat.state !== 'walking') return;
-
-        // Pick new target occasionally
-        if (Math.random() < 0.01) {
-            cat.targetX = Math.random() * (window.innerWidth - 50);
-            cat.targetY = Math.random() * (window.innerHeight - 50);
-        }
-
-        // Move towards target
-        const dx = cat.targetX - cat.x;
-        const dy = cat.targetY - cat.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
-        if (dist > 5) {
-            cat.x += (dx / dist) * cat.speed;
-            cat.y += (dy / dist) * cat.speed;
-
-            // Flip cat based on direction
-            if (dx > 0) {
-                cat.element.classList.remove('flipped');
-            } else {
-                cat.element.classList.add('flipped');
-            }
-        }
-
-        cat.element.style.left = cat.x + 'px';
-        cat.element.style.top = cat.y + 'px';
-    });
-
-    requestAnimationFrame(updatePixelCats);
-}
-
+// Create initial cats
 function initPixelCats() {
-    // Create 6-8 cats
-    const numCats = 6 + Math.floor(Math.random() * 3);
-    for (let i = 0; i < numCats; i++) {
-        setTimeout(() => createPixelCat(), i * 500);
+    // Start with a few cats
+    for (let i = 0; i < 5; i++) {
+        setTimeout(() => createPixelCat(), i * 2000);
     }
 
-    // Start animation loop
-    setTimeout(updatePixelCats, 1000);
+    // Keep spawning new cats periodically
+    setInterval(() => {
+        if (pixelCatsContainer.children.length < 8) {
+            createPixelCat();
+        }
+    }, 5000);
+}
+
+// Add some sitting cats in fixed positions
+function addSittingCats() {
+    const positions = [
+        { top: '15%', left: '5%' },
+        { top: '75%', right: '8%' },
+        { top: '45%', left: '3%' },
+    ];
+
+    positions.forEach((pos, i) => {
+        const cat = document.createElement('div');
+        cat.className = 'pixel-cat sitting';
+        cat.textContent = ['😺', '🐱', '😸'][i];
+        cat.style.top = pos.top;
+        if (pos.left) cat.style.left = pos.left;
+        if (pos.right) cat.style.right = pos.right;
+        cat.style.fontSize = '1.8rem';
+        cat.style.opacity = '0.4';
+        cat.style.animationDelay = (i * 0.5) + 's';
+        pixelCatsContainer.appendChild(cat);
+    });
 }
 
 // ===========================================
@@ -637,3 +603,4 @@ function initPixelCats() {
 checkUsername();
 initFirebase();
 initPixelCats();
+addSittingCats();
