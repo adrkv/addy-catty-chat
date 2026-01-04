@@ -21,6 +21,16 @@ const CONFIG = {
 };
 
 // ===========================================
+// SECURITY: HTML Escape to prevent XSS
+// ===========================================
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// ===========================================
 // USER DAILY REPORT LIMIT
 // ===========================================
 const DAILY_REPORT_LIMIT = 20; // Max reports per user per day
@@ -242,9 +252,14 @@ JSON:{"petsMentioned":["only-named-pets"],"sentiment":"positive/negative/neutral
     try {
         AI_STATE.requestCount++;
 
+        // Add timeout to prevent hanging requests
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${CONFIG.gemini.model}:generateContent?key=${CONFIG.gemini.apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            signal: controller.signal,
             body: JSON.stringify({
                 contents: [{
                     parts: [
@@ -258,6 +273,8 @@ JSON:{"petsMentioned":["only-named-pets"],"sentiment":"positive/negative/neutral
                 }
             })
         });
+
+        clearTimeout(timeoutId);
 
         if (response.status === 429) {
             // Rate limited - set backoff
@@ -322,8 +339,12 @@ function validatePetsMentioned(aiPetIds, message, allPets) {
 
         return namesToCheck.some(name => {
             const cleanName = name.replace(/[^a-z\s]/g, '');
-            // Require minimum 3 chars to avoid false positives
-            return cleanName && cleanName.length >= 3 && lowerMsg.includes(cleanName);
+            // Require minimum 3 chars and use word boundary matching
+            if (cleanName && cleanName.length >= 3) {
+                const wordBoundaryRegex = new RegExp(`\\b${cleanName.replace(/\s+/g, '\\s+')}\\b`, 'i');
+                return wordBoundaryRegex.test(lowerMsg);
+            }
+            return false;
         });
     });
 }
@@ -346,10 +367,14 @@ function isResponseContaminated(responseText, validPetIds, allPets) {
         ];
 
         for (const name of namesToCheck) {
-            // Only check names with 3+ chars to avoid false positives
-            if (name.length >= 3 && lowerResponse.includes(name)) {
-                console.log(`[AI] Response contaminated: mentions "${name}" but user didn't mention ${pet.id}`);
-                return true;
+            const cleanName = name.replace(/[^a-z\s]/g, '');
+            // Only check names with 3+ chars and use word boundary matching
+            if (cleanName && cleanName.length >= 3) {
+                const wordBoundaryRegex = new RegExp(`\\b${cleanName.replace(/\s+/g, '\\s+')}\\b`, 'i');
+                if (wordBoundaryRegex.test(lowerResponse)) {
+                    console.log(`[AI] Response contaminated: mentions "${cleanName}" but user didn't mention ${pet.id}`);
+                    return true;
+                }
             }
         }
     }
@@ -717,9 +742,10 @@ function showUserInfo() {
         header.appendChild(existingInfo);
     }
 
+    // SECURITY: Escape username to prevent XSS
     existingInfo.innerHTML = `
         <span>Agent:</span>
-        <span class="current-user-badge">${currentUser}</span>
+        <span class="current-user-badge">${escapeHtml(currentUser)}</span>
         <button class="edit-name-btn" onclick="editUsername()" title="Change codename">✎</button>
     `;
 }
@@ -899,11 +925,15 @@ function detectCats(message) {
         for (const name of allNames) {
             const cleanName = name.replace(/[^a-z\s]/g, '');
             // Require minimum 3 chars to avoid false positives (e.g., "m2" → "m" matching "cinnamon")
-            if (cleanName && cleanName.length >= 3 && lowerMsg.includes(cleanName)) {
-                if (!mentioned.find(m => m.id === pet.id)) {
-                    mentioned.push(pet);
+            // Use word boundary matching to prevent "mm" matching "shimmer", "yummy", etc.
+            if (cleanName && cleanName.length >= 3) {
+                const wordBoundaryRegex = new RegExp(`\\b${cleanName.replace(/\s+/g, '\\s+')}\\b`, 'i');
+                if (wordBoundaryRegex.test(lowerMsg)) {
+                    if (!mentioned.find(m => m.id === pet.id)) {
+                        mentioned.push(pet);
+                    }
+                    break;
                 }
-                break;
             }
         }
     }
@@ -919,28 +949,67 @@ function analyzeSurvivability(message) {
     let points = CONFIG.basePoints;
     let sentiment = 'neutral';
 
+    // Negation patterns to check before sentiment words
+    const negationPattern = /\b(not|isn't|isnt|aren't|arent|wasn't|wasnt|weren't|werent|don't|dont|doesn't|doesnt|didn't|didnt|won't|wont|wouldn't|wouldnt|can't|cant|cannot|never|no|hardly|barely|scarcely)\s+/;
+
+    // Helper to check if word is negated in the message
+    function isNegated(word) {
+        const regex = new RegExp(`\\b(not|isn't|isnt|aren't|arent|wasn't|wasnt|weren't|werent|don't|dont|doesn't|doesnt|didn't|didnt|won't|wont|wouldn't|wouldnt|can't|cant|cannot|never|no|hardly|barely|scarcely)\\s+(\\w+\\s+){0,2}${word}\\b`, 'i');
+        return regex.test(lowerMsg);
+    }
+
+    // Helper for word boundary matching (prevents "fit" matching "outfit")
+    function wordMatches(word) {
+        const regex = new RegExp(`\\b${word}\\b`, 'i');
+        return regex.test(lowerMsg);
+    }
+
     let positiveCount = 0;
+    let negatedPositiveCount = 0;
     for (const word of SURVIVABILITY.positive) {
-        if (lowerMsg.includes(word)) positiveCount++;
+        if (wordMatches(word)) {
+            if (isNegated(word)) {
+                negatedPositiveCount++; // "not fast" counts as negative
+            } else {
+                positiveCount++;
+            }
+        }
     }
 
     let negativeCount = 0;
+    let negatedNegativeCount = 0;
     for (const word of SURVIVABILITY.negative) {
-        if (lowerMsg.includes(word)) negativeCount++;
+        if (wordMatches(word)) {
+            if (isNegated(word)) {
+                negatedNegativeCount++; // "not fat" counts as positive
+            } else {
+                negativeCount++;
+            }
+        }
     }
 
     let cuteCount = 0;
     for (const word of SURVIVABILITY.cute) {
-        if (lowerMsg.includes(word)) cuteCount++;
+        if (wordMatches(word)) {
+            if (!isNegated(word)) {
+                cuteCount++;
+            }
+        }
     }
 
+    // Negated positives become negatives, negated negatives become positives
     points += positiveCount * SURVIVABILITY.positivePoints;
+    points += negatedPositiveCount * SURVIVABILITY.negativePoints; // "not fast" = negative
     points += negativeCount * SURVIVABILITY.negativePoints;
+    points += negatedNegativeCount * SURVIVABILITY.positivePoints; // "not fat" = positive
     points += cuteCount * SURVIVABILITY.cutePoints;
 
-    if (negativeCount > positiveCount) {
+    const effectivePositive = positiveCount + negatedNegativeCount + cuteCount;
+    const effectiveNegative = negativeCount + negatedPositiveCount;
+
+    if (effectiveNegative > effectivePositive) {
         sentiment = 'negative';
-    } else if (positiveCount > 0 || cuteCount > 0) {
+    } else if (effectivePositive > 0) {
         sentiment = 'positive';
     }
 
@@ -1275,9 +1344,11 @@ function addMessage(text, sender) {
         ? '<span class="pixel-avatar addy-avatar"></span>'
         : '<span class="pixel-avatar user-avatar"></span>';
 
+    // SECURITY: Escape HTML to prevent XSS
+    const safeText = escapeHtml(text);
     messageDiv.innerHTML = `
         ${avatarContent}
-        <div class="bubble"><p>${text}</p></div>
+        <div class="bubble"><p>${safeText}</p></div>
     `;
     chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -1291,20 +1362,25 @@ function renderGlobalChat(messages) {
     const sorted = messages.sort((a, b) => a.timestamp - b.timestamp);
 
     container.innerHTML = sorted.map(msg => {
-        const initials = msg.username.substring(0, 2).toUpperCase();
+        // SECURITY: Escape all user-generated content
+        const safeUsername = escapeHtml(msg.username || 'Anonymous');
+        const safeText = escapeHtml(msg.text || '');
+        const safeCatMentioned = escapeHtml(msg.catMentioned || '');
+
+        const initials = safeUsername.substring(0, 2).toUpperCase();
         const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const catBadge = msg.catMentioned ? `<span class="cat-badge">${msg.catMentioned}</span>` : '';
+        const catBadge = safeCatMentioned ? `<span class="cat-badge">${safeCatMentioned}</span>` : '';
 
         return `
             <div class="global-message">
                 <div class="user-avatar">${initials}</div>
                 <div class="message-content">
                     <div class="message-header">
-                        <span class="username">${msg.username}</span>
+                        <span class="username">${safeUsername}</span>
                         ${catBadge}
                         <span class="timestamp">${time}</span>
                     </div>
-                    <div class="message-text">${msg.text}</div>
+                    <div class="message-text">${safeText}</div>
                 </div>
             </div>
         `;
@@ -1737,20 +1813,28 @@ function renderPetRequests(requests) {
         return;
     }
 
-    container.innerHTML = sorted.map((req, index) => `
-        <div class="request-card">
-            <div class="request-rank">${index + 1}</div>
-            <div class="request-info">
-                <div class="request-name">${req.petName}</div>
-                <div class="request-type">${req.petType}</div>
-                <div class="request-by">Requested by ${req.requestedBy}</div>
+    container.innerHTML = sorted.map((req, index) => {
+        // SECURITY: Escape all user-generated content
+        const safePetName = escapeHtml(req.petName || '');
+        const safePetType = escapeHtml(req.petType || '');
+        const safeRequestedBy = escapeHtml(req.requestedBy || '');
+        const safeId = escapeHtml(req.id || '');
+
+        return `
+            <div class="request-card">
+                <div class="request-rank">${index + 1}</div>
+                <div class="request-info">
+                    <div class="request-name">${safePetName}</div>
+                    <div class="request-type">${safePetType}</div>
+                    <div class="request-by">Requested by ${safeRequestedBy}</div>
+                </div>
+                <div class="request-votes">
+                    <button class="vote-btn" onclick="votePetRequest('${safeId}')">+1</button>
+                    <span class="vote-count">${req.votes || 0}</span>
+                </div>
             </div>
-            <div class="request-votes">
-                <button class="vote-btn" onclick="votePetRequest('${req.id}')">+1</button>
-                <span class="vote-count">${req.votes || 0}</span>
-            </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 function submitPetRequest(e) {
