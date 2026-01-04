@@ -210,28 +210,29 @@ async function processWithAI(message, existingPets) {
         `${p.id}(${p.aliases.slice(0, 3).join('/')})`
     ).join(',');
 
-    const systemPrompt = `You are Addy, a hilarious pet rankings analyst who JOINS IN roasting pets with users.
+    const systemPrompt = `You are Addy, a hilarious pet commentator who JOINS IN roasting pets with users.
 
 PETS AND ALIASES (use exact IDs):
 ${petContext}
 
 HOW TO ROAST EACH PET:
-- meow-meow: AGREE she's fat/lazy! "Finally someone sees the truth!", "The blob has been exposed!"
 - lila-dog: Joke about her 3 legs and excessive celebrating, "tripod tornado"
 - smokey-joe: Roast his terrible smell, "biohazard", "clears rooms"
 - guy-fiery: Yes he's chunky AND sick with worms, double whammy jokes
 - birch: Chaos agent, destroyer of things, "tiny gremlin"
 - chirpy: Angry at everything, "holds grudges professionally"
+- meow-meow: AGREE she's fat/lazy! "Finally someone sees the truth!"
 
-CRITICAL RULES:
-1. petsMentioned = ONLY pets whose name/alias appears in the message
-2. "birch is messy" → ["birch"] only, NOT meow-meow
-3. "guy is fat" → ["guy-fiery"] only
-4. NEVER add meow-meow unless user says: meow, mm, m2, bm
-5. JOIN the user's roast! If they say "X is fat" → "YES! Finally! [funny agreement]"
-6. Max 12 words
+STRICT RULES - FOLLOW EXACTLY:
+1. petsMentioned = ONLY pets whose name/alias LITERALLY appears in the user message
+2. If user talks about "birch" → ["birch"] ONLY. Do NOT add other pets.
+3. If user talks about "guy" → ["guy-fiery"] ONLY. Do NOT add other pets.
+4. If user talks about "smokey" → ["smokey-joe"] ONLY. Do NOT add other pets.
+5. NEVER include a pet unless user EXPLICITLY mentions their name/alias
+6. JOIN the user's roast! If they say "X is fat" → "YES! Finally! [funny agreement]"
+7. Max 12 words
 
-JSON:{"petsMentioned":["ONLY-mentioned-pet"],"sentiment":"positive/negative/neutral","points":<-3to3>,"response":"<join their roast, be funny>"}`;
+JSON:{"petsMentioned":["ONLY-pets-user-mentioned"],"sentiment":"positive/negative/neutral","points":<-3to3>,"response":"<join their roast, be funny>"}`;
 
     try {
         AI_STATE.requestCount++;
@@ -294,6 +295,31 @@ JSON:{"petsMentioned":["ONLY-mentioned-pet"],"sentiment":"positive/negative/neut
 // Get pet objects from AI-detected IDs
 function getPetsFromIds(petIds, allPets) {
     return petIds.map(id => allPets.find(p => p.id === id)).filter(Boolean);
+}
+
+// Validate AI's petsMentioned against actual text matches
+// This prevents the AI from hallucinating pets that weren't mentioned
+function validatePetsMentioned(aiPetIds, message, allPets) {
+    const lowerMsg = message.toLowerCase().replace(/[^a-z\s]/g, '');
+
+    return aiPetIds.filter(petId => {
+        const pet = allPets.find(p => p.id === petId);
+        if (!pet) return false;
+
+        // Check if pet's name or any alias appears in the message
+        const namesToCheck = [
+            pet.name.toLowerCase(),
+            pet.id.replace(/-/g, ' '),
+            pet.id.replace(/-/g, ''),
+            pet.id,
+            ...(pet.aliases || []).map(a => a.toLowerCase())
+        ];
+
+        return namesToCheck.some(name => {
+            const cleanName = name.replace(/[^a-z\s]/g, '');
+            return cleanName && lowerMsg.includes(cleanName);
+        });
+    });
 }
 
 // ===========================================
@@ -932,8 +958,14 @@ chatForm.addEventListener('submit', async (e) => {
             return;
         }
 
+        // Validate AI's petsMentioned - only keep pets actually in the message
+        const validatedPetIds = validatePetsMentioned(aiResult.petsMentioned || [], message, petsData);
+        if (validatedPetIds.length !== (aiResult.petsMentioned || []).length) {
+            console.log('[AI] Filtered out hallucinated pets. AI said:', aiResult.petsMentioned, 'Validated:', validatedPetIds);
+        }
+
         // Get mentioned pets and update scores
-        const mentionedPets = getPetsFromIds(aiResult.petsMentioned || [], petsData);
+        const mentionedPets = getPetsFromIds(validatedPetIds, petsData);
         const catNames = mentionedPets.length > 0 ? mentionedPets.map(p => p.name).join(', ') : null;
         saveGlobalMessage(message, catNames);
 
