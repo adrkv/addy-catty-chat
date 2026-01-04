@@ -395,7 +395,13 @@ const SURVIVABILITY = {
         // Pet-specific positive traits
         'speedy', 'jumpy', 'jumper', 'hopper', 'rocket', 'zoom', 'zoomy',
         'smooth', 'silky', 'soft fur', 'fighter', 'warrior', 'legend',
-        'sympathetic', 'sympathy', 'underdog', 'resilient', 'determined'
+        'sympathetic', 'sympathy', 'underdog', 'resilient', 'determined',
+        // Good behaviors - actions that deserve rewards
+        'caught', 'hunted', 'protected', 'guarded', 'saved', 'helped',
+        'shared', 'cuddled', 'snuggled', 'purred', 'played', 'friendly',
+        'gentle', 'careful', 'obedient', 'listened', 'behaved', 'good boy',
+        'good girl', 'good kitty', 'well behaved', 'trained', 'loyal',
+        'cleaned', 'groomed', 'used litter', 'used scratching post'
     ],
     positivePoints: 2,
 
@@ -416,7 +422,14 @@ const SURVIVABILITY = {
         'messy', 'chaotic', 'haphazard', 'troublemaker', 'drama',
         'corrupt', 'bribe', 'cheater', 'manipulator', 'schemer',
         'worms', 'parasites', 'aids', 'diseased', 'infected',
-        'overcelebrate', 'showoff', 'drops stuff', 'clumsy', 'drops things'
+        'overcelebrate', 'showoff', 'drops stuff', 'clumsy', 'drops things',
+        // Bad behaviors - actions that deserve penalties
+        'stole', 'stealing', 'thief', 'bit', 'biting', 'scratched', 'attacked',
+        'knocked over', 'broke', 'destroyed', 'ruined', 'peed', 'pooped',
+        'vomited', 'threw up', 'hissed', 'growled', 'fought', 'bullied',
+        'escaped', 'ran away', 'ignored', 'disobedient', 'misbehaved', 'bad boy',
+        'bad girl', 'bad kitty', 'naughty', 'mean', 'evil', 'terrible', 'awful',
+        'annoying', 'scratched furniture', 'ate my food', 'woke me up'
     ],
     negativePoints: -2,
 
@@ -1119,7 +1132,8 @@ chatForm.addEventListener('submit', async (e) => {
         // Apply points if pets were mentioned and it's not a question
         if (mentionedPets.length > 0 && !aiResult.isQuestion) {
             mentionedPets.forEach(pet => {
-                let petPoints = aiResult.points || 1;
+                // Use nullish coalescing to handle 0 correctly (0 is valid, null/undefined defaults to 1)
+                let petPoints = aiResult.points ?? 1;
                 const bio = PET_BIOS[pet.id];
 
                 // Apply personality modifiers (keep the secret scoring!)
@@ -1135,7 +1149,7 @@ chatForm.addEventListener('submit', async (e) => {
 
                 // Guy Fiery health cap
                 if (pet.id === 'guy-fiery') {
-                    petPoints = Math.max(petPoints, Math.ceil((aiResult.points || 1) * 0.6));
+                    petPoints = Math.max(petPoints, Math.ceil((aiResult.points ?? 1) * 0.6));
                 }
 
                 // Ensure minimum 1 point for positive mentions
