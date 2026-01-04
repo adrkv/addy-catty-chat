@@ -505,13 +505,17 @@ function randomFrom(array) {
 const bgMusic = document.getElementById('bg-music');
 let musicStarted = false;
 
-bgMusic.volume = 0.25; // Set volume to 25%
+bgMusic.volume = 0.3;
 
 function startMusic() {
     if (!musicStarted) {
-        bgMusic.play().catch(() => {});
         musicStarted = true;
-        // Remove listeners after music starts
+        bgMusic.play().then(() => {
+            console.log('Music started!');
+        }).catch((err) => {
+            console.log('Music failed:', err);
+            musicStarted = false; // Allow retry
+        });
         document.removeEventListener('click', startMusic);
         document.removeEventListener('keydown', startMusic);
         document.removeEventListener('touchstart', startMusic);
@@ -522,6 +526,11 @@ function startMusic() {
 document.addEventListener('click', startMusic);
 document.addEventListener('keydown', startMusic);
 document.addEventListener('touchstart', startMusic);
+
+// Also try when audio is ready
+bgMusic.addEventListener('canplaythrough', () => {
+    console.log('Audio loaded and ready');
+});
 
 // ===========================================
 // Minecraft-style Pixel Cats Background
