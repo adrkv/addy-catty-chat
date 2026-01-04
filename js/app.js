@@ -485,19 +485,37 @@ chatForm.addEventListener('submit', (e) => {
 
         if (mentionedCats.length > 0) {
             mentionedCats.forEach(pet => {
+                // Base points from user's message (sentiment) - THIS IS THE PRIMARY DRIVER
                 let petPoints = points;
-                // Lila gets a speed bonus - she's a three-legged rocket!
+
+                // Addy's personality modifiers - small adjustments that add up over time
+                // These don't override user sentiment, they just tweak it slightly
+
                 if (pet.id === 'lila-dog') {
-                    petPoints = Math.max(points + 2, 3); // Lila always gets at least 3 points, plus a +2 bonus
+                    // Lila gets a small speed bonus (+1) - she's a three-legged rocket!
+                    petPoints += 1;
                 }
-                // Guy Fiery gets a penalty - cat AIDS holds him back
                 if (pet.id === 'guy-fiery') {
-                    petPoints = Math.max(points - 1, 1); // Guy Fiery gets reduced points but at least 1
+                    // Guy Fiery gets a small penalty - cat AIDS holds him back slightly
+                    // But positive mentions still help him! Just a bit less.
+                    petPoints = Math.max(petPoints - 1, Math.ceil(points * 0.7));
                 }
-                // Birch gets a penalty - too scared and messy
                 if (pet.id === 'birch') {
-                    petPoints = Math.max(points - 1, 1); // Birch gets reduced points but at least 1
+                    // Birch gets a small penalty - scared and messy
+                    // But she still benefits from love! Just slightly less.
+                    petPoints = Math.max(petPoints - 1, Math.ceil(points * 0.7));
                 }
+                if (pet.id === 'meow-meow') {
+                    // Meow-Meow is Addy's least favorite but user love still counts!
+                    // She gets what users give her - no bonus, no penalty
+                    // Her low rank is from lack of love, not rigged algorithm
+                }
+
+                // Ensure minimum 1 point for any positive mention
+                if (points > 0) {
+                    petPoints = Math.max(petPoints, 1);
+                }
+
                 addPoints(pet.id, petPoints);
             });
 
