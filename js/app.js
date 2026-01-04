@@ -2,15 +2,15 @@
 // CONFIGURATION - Owner fills these in!
 // ===========================================
 const CONFIG = {
-    // Firebase config - Get from Firebase Console
+    // Firebase config
     firebase: {
-        apiKey: "",
-        authDomain: "",
-        databaseURL: "",
-        projectId: "",
-        storageBucket: "",
-        messagingSenderId: "",
-        appId: ""
+        apiKey: "AIzaSyCuuH01cKY8JK_4UGRKEa-ZwqjlLx3oryM",
+        authDomain: "addy-catty-chat.firebaseapp.com",
+        databaseURL: "https://addy-catty-chat-default-rtdb.firebaseio.com",
+        projectId: "addy-catty-chat",
+        storageBucket: "addy-catty-chat.firebasestorage.app",
+        messagingSenderId: "604591070600",
+        appId: "1:604591070600:web:9e7a95a1e6c4b20a0cae3d"
     },
 
     // ImgBB API key - Get free key from https://api.imgbb.com/
