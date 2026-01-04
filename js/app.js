@@ -16,9 +16,41 @@ const CONFIG = {
     // ImgBB API key - Get free key from https://api.imgbb.com/
     imgbbApiKey: "",
 
-    // Points awarded per mention/image
-    pointsPerMention: 1,
-    pointsPerImage: 3
+    // Points (users see these as "popularity" but it's actually survivability!)
+    basePoints: 1,
+    imagePoints: 3
+};
+
+// ===========================================
+// SECRET SURVIVABILITY SCORING
+// Users don't know this - they think it's just popularity!
+// Positive = good for survival, Negative = bad for survival
+// ===========================================
+const SURVIVABILITY = {
+    // Positive traits (boost score)
+    positive: [
+        'fit', 'healthy', 'strong', 'fast', 'agile', 'athletic', 'muscular',
+        'lean', 'active', 'energetic', 'quick', 'nimble', 'alert', 'smart',
+        'clever', 'hunter', 'fierce', 'brave', 'tough', 'survivor', 'wild',
+        'sleek', 'swift', 'powerful', 'sharp', 'stealthy', 'cunning'
+    ],
+    positivePoints: 2,
+
+    // Negative traits (reduce score)
+    negative: [
+        'fat', 'chubby', 'lazy', 'slow', 'sick', 'weak', 'tired', 'sleepy',
+        'overweight', 'obese', 'chunky', 'thicc', 'thick', 'pudgy', 'plump',
+        'sluggish', 'lethargic', 'clumsy', 'dumb', 'stupid', 'useless',
+        'old', 'frail', 'fragile', 'soft', 'pampered', 'spoiled', 'domesticated'
+    ],
+    negativePoints: -2,
+
+    // Neutral/cute words (small boost - being liked helps survival a tiny bit)
+    cute: [
+        'cute', 'adorable', 'sweet', 'lovely', 'pretty', 'beautiful', 'fluffy',
+        'cuddly', 'precious', 'baby', 'love', 'favorite', 'best', 'amazing'
+    ],
+    cutePoints: 1
 };
 
 // ===========================================
@@ -31,34 +63,48 @@ const DEFAULT_PETS = [
 ];
 
 // ===========================================
-// Chatbot responses
+// Chatbot responses (deliberately vague about scoring!)
 // ===========================================
 const RESPONSES = {
     greetings: [
-        "Hey there! Talk about your favorite cats to boost their score! 🐱",
-        "Welcome! Which cat deserves some love today?",
-        "Hi! Ready to support your favorite feline? Every mention counts!"
+        "Hey there! Tell me about your favorite cats! 🐱",
+        "Welcome! Which cat is on your mind today?",
+        "Hi! I love hearing about cats! Who's your favorite?"
     ],
-    catMentioned: [
-        "Nice! +{points} point(s) for {cat}! 🎉",
-        "{cat} appreciates the love! +{points}! ⭐",
-        "Boosting {cat}'s score by {points}! Keep it coming!",
-        "{cat} is climbing the ranks! +{points}! 🚀"
+    // Positive sentiment detected
+    positive: [
+        "Ooh, {cat} sounds amazing! Noted! ✨",
+        "I can tell {cat} is special! 🌟",
+        "{cat} is getting some love! Nice!",
+        "Great things about {cat}! I'll remember that! 😸"
+    ],
+    // Negative sentiment detected (we don't tell them it hurts the score!)
+    negative: [
+        "Haha, poor {cat}! 😅",
+        "Oh no, {cat}! That's... interesting! 🙀",
+        "Noted about {cat}! Every opinion counts!",
+        "{cat} has... character! 😹"
+    ],
+    // Neutral mention
+    neutral: [
+        "Ah, {cat}! Tell me more!",
+        "{cat} is in the conversation! What do you think of them?",
+        "I see you mentioned {cat}! How do you feel about them?"
     ],
     imageSent: [
-        "Aww, cute pic of {cat}! +{points} points! 📸",
-        "Love that {cat} photo! +{points} bonus points! 🌟",
-        "{cat} is looking great! +{points} for the pic! 😍"
+        "Aww, nice pic of {cat}! 📸",
+        "Love that {cat} photo! 🌟",
+        "{cat} looking good! Thanks for sharing! 😍"
     ],
     noCatMentioned: [
         "I didn't catch which cat you're talking about. Try mentioning one by name!",
-        "Which cat? Mention Meow-Meow, Smokey Joe, or Chirpy!",
-        "Say a cat's name to give them points! Who's your favorite?"
+        "Which cat? Tell me about Meow-Meow, Smokey Joe, or Chirpy!",
+        "Mention a cat's name so I know who you're talking about!"
     ],
     generic: [
-        "Tell me about your favorite cat!",
-        "Which cat do you think should be #1?",
-        "Mention a cat's name to boost their score!"
+        "Tell me what you think about the cats!",
+        "Describe your favorite cat to me!",
+        "What makes a cat great in your opinion?"
     ]
 };
 
@@ -214,6 +260,54 @@ function detectCats(message) {
 }
 
 // ===========================================
+// SECRET: Analyze survivability from message
+// Returns: { points: number, sentiment: 'positive'|'negative'|'neutral' }
+// ===========================================
+function analyzeSurvivability(message) {
+    const lowerMsg = message.toLowerCase();
+    let points = CONFIG.basePoints; // Start with base points for any mention
+    let sentiment = 'neutral';
+
+    // Check for positive survivability traits
+    let positiveCount = 0;
+    for (const word of SURVIVABILITY.positive) {
+        if (lowerMsg.includes(word)) {
+            positiveCount++;
+        }
+    }
+
+    // Check for negative survivability traits
+    let negativeCount = 0;
+    for (const word of SURVIVABILITY.negative) {
+        if (lowerMsg.includes(word)) {
+            negativeCount++;
+        }
+    }
+
+    // Check for cute words (small bonus)
+    let cuteCount = 0;
+    for (const word of SURVIVABILITY.cute) {
+        if (lowerMsg.includes(word)) {
+            cuteCount++;
+        }
+    }
+
+    // Calculate total points
+    points += positiveCount * SURVIVABILITY.positivePoints;
+    points += negativeCount * SURVIVABILITY.negativePoints;
+    points += cuteCount * SURVIVABILITY.cutePoints;
+
+    // Determine sentiment for response
+    if (negativeCount > positiveCount) {
+        sentiment = 'negative';
+    } else if (positiveCount > 0 || cuteCount > 0) {
+        sentiment = 'positive';
+    }
+
+    return { points, sentiment };
+}
+
+// ===========================================
 // Chat functionality
 // ===========================================
 const chatMessages = document.getElementById('chat-messages');
@@ -277,20 +371,30 @@ chatForm.addEventListener('submit', async (e) => {
         // Text-only message
         addMessage(message, 'user');
 
-        // Detect and award points
+        // Detect cats and analyze survivability (SECRET!)
         const mentionedCats = detectCats(message);
+        const { points, sentiment } = analyzeSurvivability(message);
 
         setTimeout(() => {
             if (mentionedCats.length > 0) {
+                // Award survivability-based points to each mentioned cat
                 mentionedCats.forEach(pet => {
-                    addPoints(pet.id, CONFIG.pointsPerMention);
+                    addPoints(pet.id, points);
                 });
 
                 const catNames = mentionedCats.map(p => p.name).join(' and ');
-                const totalPoints = mentionedCats.length * CONFIG.pointsPerMention;
-                const response = randomFrom(RESPONSES.catMentioned)
-                    .replace('{cat}', catNames)
-                    .replace('{points}', totalPoints);
+
+                // Response based on sentiment (don't reveal actual scoring!)
+                let responsePool;
+                if (sentiment === 'negative') {
+                    responsePool = RESPONSES.negative;
+                } else if (sentiment === 'positive') {
+                    responsePool = RESPONSES.positive;
+                } else {
+                    responsePool = RESPONSES.neutral;
+                }
+
+                const response = randomFrom(responsePool).replace('{cat}', catNames);
                 addMessage(response, 'addy');
             } else if (/^(hi|hello|hey|hiya)\b/i.test(message)) {
                 addMessage(randomFrom(RESPONSES.greetings), 'addy');
