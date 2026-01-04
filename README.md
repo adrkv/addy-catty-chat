@@ -1,81 +1,122 @@
 # Addy Catty Catty Cat Chat
 
-A fun leaderboard and chat website where users chat with Addy about cats!
+A fun real-time leaderboard and chat website where users chat about cats and upload pictures! Every mention boosts a cat's score!
 
 ## Features
 
-- **Live Leaderboard**: Shows cat rankings that you control
-- **Chat with Addy**: Users can chat about cats with fun responses
-- **Message Tracking**: Optionally save messages to JSONbin.io to see what users write
-- **Easy to Update**: Change rankings by editing a JSON file
+- **Live Leaderboard**: Real-time score updates across all users
+- **Auto-Scoring**: Mention a cat → they get points!
+- **Image Uploads**: Share cat pics for bonus points
+- **Photo Gallery**: Recent uploads displayed for everyone
+- **Chat with Addy**: Fun chatbot responses
 
-## Setup
+## Quick Setup
 
-### 1. Enable GitHub Pages
+### 1. Create Firebase Project (Free)
 
-1. Go to your repo Settings > Pages
-2. Set Source to "main" branch
-3. Save
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Click "Create a project"
+3. Name it anything (e.g., "addy-catty-chat")
+4. Disable Google Analytics (not needed)
+5. Click "Create project"
 
-### 2. (Optional) Setup Message Saving
+### 2. Setup Realtime Database
 
-To see what users write about the cats:
+1. In Firebase Console, go to **Build → Realtime Database**
+2. Click "Create Database"
+3. Choose any location
+4. Start in **Test mode** (we'll secure it later)
+5. Copy your database URL (looks like: `https://your-project.firebaseio.com`)
 
-1. Create free account at [jsonbin.io](https://jsonbin.io)
-2. Create a new bin with initial content: `{"messages": []}`
-3. Copy your Bin ID and API Key
-4. Edit `js/app.js` and fill in:
-   ```javascript
-   const CONFIG = {
-       JSONBIN_BIN_ID: 'your-bin-id-here',
-       JSONBIN_API_KEY: 'your-api-key-here',
-       SAVE_MESSAGES: true
-   };
-   ```
+### 3. Get Firebase Config
 
-### 3. Customize Cats
+1. Go to **Project Settings** (gear icon)
+2. Scroll to "Your apps" → Click web icon `</>`
+3. Register app with any name
+4. Copy the `firebaseConfig` object
 
-Edit `data/leaderboard.json` to:
-- Change scores (rankings)
-- Add new cats/dogs
-- Update emojis
+### 4. Get ImgBB API Key (Free)
 
-Example:
+1. Go to [https://api.imgbb.com/](https://api.imgbb.com/)
+2. Sign up for free
+3. Copy your API key
+
+### 5. Add Config to Code
+
+Edit `js/app.js` and fill in your credentials:
+
+```javascript
+const CONFIG = {
+    firebase: {
+        apiKey: "your-api-key",
+        authDomain: "your-project.firebaseapp.com",
+        databaseURL: "https://your-project-default-rtdb.firebaseio.com",
+        projectId: "your-project",
+        storageBucket: "your-project.appspot.com",
+        messagingSenderId: "123456789",
+        appId: "your-app-id"
+    },
+    imgbbApiKey: "your-imgbb-api-key",
+    pointsPerMention: 1,
+    pointsPerImage: 3
+};
+```
+
+### 6. Deploy to GitHub Pages
+
+1. Push to GitHub
+2. Go to repo Settings → Pages
+3. Select "main" branch → Save
+4. Your site is live!
+
+## Adding New Cats/Dogs
+
+Edit the `DEFAULT_PETS` array in `js/app.js`:
+
+```javascript
+const DEFAULT_PETS = [
+    { id: "meow-meow", name: "Meow-Meow", type: "cat", score: 0, emoji: "😺", aliases: [] },
+    { id: "buddy", name: "Buddy", type: "dog", score: 0, emoji: "🐕", aliases: ["bud"] },
+    // Add more here!
+];
+```
+
+Or add directly in Firebase Console under the `pets` node.
+
+## Securing Your Database (Optional)
+
+After testing, update Firebase Realtime Database rules:
+
 ```json
 {
-  "pets": [
-    {
-      "id": "meow-meow",
-      "name": "Meow-Meow",
-      "type": "cat",
-      "score": 100,
-      "emoji": "😺"
-    },
-    {
-      "id": "buddy",
-      "name": "Buddy",
-      "type": "dog",
-      "score": 50,
-      "emoji": "🐕"
-    }
-  ],
-  "lastUpdated": "2026-01-04"
+  "rules": {
+    ".read": true,
+    ".write": true
+  }
 }
 ```
 
-### 4. Customize Chat Responses
+For production, you might want more restrictive rules.
 
-Edit the `RESPONSES` object in `js/app.js` to customize what Addy says about each cat.
+## How Scoring Works
 
-## How Rankings Work
+- **+1 point**: Each cat mentioned in a message
+- **+3 points**: Uploading a picture of a cat
+- Scores update in real-time for everyone!
 
-Only YOU can change the rankings! Users chat, you read their messages, and secretly adjust scores based on your hidden criteria.
+## Customization
 
-1. Check JSONbin dashboard to see messages
-2. Edit `data/leaderboard.json`
-3. Commit changes
-4. Leaderboard updates automatically!
+- **Points**: Change `pointsPerMention` and `pointsPerImage` in CONFIG
+- **Responses**: Edit the `RESPONSES` object for custom Addy messages
+- **Styling**: Modify `css/style.css` for different colors/themes
+
+## Local Testing
+
+```bash
+python -m http.server 8000
+# Open http://localhost:8000
+```
 
 ## Live Demo
 
-Visit: https://adrkv.github.io/addy-catty-chat
+https://adrkv.github.io/addy-catty-chat
