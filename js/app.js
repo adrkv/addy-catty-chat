@@ -13,12 +13,12 @@ const CONFIG = {
     },
     basePoints: 1,
     // Gemini AI Configuration (free tier: 60 req/min, 1500/day)
-    // AI is now reserved for Catty-verse story generation only
+    // AI used for generating pet quips based on field reports
     gemini: {
         apiKey: "AIzaSyC1BWcg_Xv38N5C33vfJ9SuQimpgPkeMLQ",
         model: "gemini-2.5-flash",
         enabled: false, // Disabled for chat - using keyword-only for faster responses
-        enabledForStories: true // AI used for Catty-verse daily stories
+        enabledForQuips: true // AI used for pet quips in Meet the Pets tab
     }
 };
 
@@ -608,6 +608,14 @@ const PET_BIOS = {
         weaknesses: ["Extremely fat", "Basically a doorstop", "Can only win through corruption", "Zero athletic ability"],
         rankModifier: 0, // No bonus - she relies on corruption
         corruptionModifier: -1 // Her corrupt ways backfire sometimes
+    },
+    "rp": {
+        bio: "A freedom-loving, unruly dog who lived life on his own terms. Crossed the rainbow bridge but forever holds a special place in our hearts.",
+        strengths: ["Unstoppable spirit", "Loved treats more than anything", "True legend status", "Forever #1 in our hearts"],
+        weaknesses: ["Treats (couldn't resist them)"],
+        rankModifier: 9999, // Forever legendary
+        isVeteran: true,
+        memorial: "Forever in our hearts. Crossed the rainbow bridge but never forgotten."
     }
 };
 
@@ -632,16 +640,10 @@ const DEFAULT_PETS = [
     ], image: "assets/cats/baby-birch.jpg" },
     { id: "guy-fiery", name: "Guy Fiery", type: "cat", score: 0, aliases: [
         "guy", "guy fiery", "fiery", "guy fieri", "fieri", "flavortown", "the guy", "fire guy", "spicy boy"
-    ], image: "assets/cats/guy-fiery.jpg" }
-];
-
-// ===========================================
-// Veterans - Forever in our hearts
-// ===========================================
-const VETERANS = [
+    ], image: "assets/cats/guy-fiery.jpg" },
     { id: "rp", name: "RP", type: "dog (Forever Loved)", score: 9999, aliases: [
         "rp", "r.p.", "r p", "rest in peace", "the legend"
-    ], image: "assets/cats/rp.jpg", memorial: "A true legend. Forever respected. Always remembered." }
+    ], image: "assets/cats/rp.jpg", isVeteran: true, memorial: "Forever in our hearts. Crossed the rainbow bridge but never forgotten." }
 ];
 
 // ===========================================
@@ -711,10 +713,10 @@ const RESPONSES = {
         "Lila sighting confirmed. Field notes indicate she makes Meow-Meow look like a decorative pillow. Which... accurate."
     ],
     rpMentioned: [
-        "RP... *moment of silence* ...that name is in our Hall of Fame. Forever ranked #1 in the Veterans file.",
-        "You mentioned RP. That's classified as LEGEND status. Check the Veterans tab for the full dossier.",
+        "RP... *moment of silence* ...that name is in our Hall of Fame. Forever ranked #1 in our hearts.",
+        "You mentioned RP. That's classified as LEGEND status. Check Meet the Pets for the full dossier.",
         "RP intel is sealed in the archives with highest honors. A true legend. Gone but never forgotten.",
-        "RP! That file is marked 'ETERNAL RESPECT.' Some rankings transcend the algorithm."
+        "RP! That file is marked 'ETERNAL RESPECT.' Some rankings transcend the algorithm. A freedom-loving soul who loved treats."
     ],
     guyFieryPositive: [
         "Guy Fiery intel logged! My medical files confirm the cat AIDS situation, but your report shows fighting spirit!",
@@ -1002,6 +1004,9 @@ function renderLeaderboard() {
 
     container.innerHTML = sortedPets.map((pet, index) => `
         <div class="pet-card rank-${index + 1}" data-id="${pet.id}">
+            <div class="pet-quip-inline" id="quip-inline-${pet.id}">
+                <span class="quip-inline-text"></span>
+            </div>
             <div class="rank-badge">${index + 1}</div>
             <div class="pet-avatar">
                 ${pet.image
@@ -1016,6 +1021,29 @@ function renderLeaderboard() {
             <div class="pet-score" id="score-${pet.id}">${pet.score}</div>
         </div>
     `).join('');
+
+    // Load quips for each pet after rendering
+    loadInlineQuips();
+}
+
+// Load quips into the inline bubbles
+async function loadInlineQuips() {
+    for (const pet of DEFAULT_PETS) {
+        const quipEl = document.querySelector(`#quip-inline-${pet.id} .quip-inline-text`);
+        if (quipEl) {
+            const quip = await generatePetQuip(pet.id, pet.name);
+            // Truncate to keep it short
+            const shortQuip = quip.length > 60 ? quip.substring(0, 57) + '...' : quip;
+            quipEl.textContent = `"${shortQuip}"`;
+            quipEl.parentElement.classList.add('loaded');
+        }
+        await delay(200); // Stagger API calls
+    }
+}
+
+// Utility delay function
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 function animateScore(petId) {
@@ -1233,6 +1261,7 @@ chatForm.addEventListener('submit', async (e) => {
             saveGlobalMessage(message, catNames);
 
             // Apply points using validated pets only
+            const petUpdates = [];
             if (mentionedPets.length > 0) {
                 const { points } = analyzeSurvivability(message);
                 mentionedPets.forEach(pet => {
@@ -1249,18 +1278,16 @@ chatForm.addEventListener('submit', async (e) => {
                     }
                     if (points > 0) petPoints = Math.max(petPoints, 1);
                     addPoints(pet.id, petPoints);
+
+                    petUpdates.push({
+                        name: pet.name,
+                        points: petPoints,
+                        newRank: getPetRank(pet.id)
+                    });
                 });
 
-                // Clean response that only mentions the validated pet(s)
-                const petNamesStr = mentionedPets.map(p => p.name).join(' and ');
-                const cleanResponses = [
-                    `${petNamesStr} intel logged! Keep the reports coming!`,
-                    `Noted! ${petNamesStr} data recorded.`,
-                    `${petNamesStr} update received! Rankings adjusted.`,
-                    `Got it! ${petNamesStr} report filed.`,
-                    `${petNamesStr} observation noted! Good intel.`
-                ];
-                addMessage(cleanResponses[Math.floor(Math.random() * cleanResponses.length)], 'addy');
+                // Transparent response with impact
+                addMessage(generateImpactResponse(petUpdates), 'addy');
             } else {
                 addMessage("Intel received! Keep those reports coming.", 'addy');
             }
@@ -1273,6 +1300,7 @@ chatForm.addEventListener('submit', async (e) => {
         saveGlobalMessage(message, catNames);
 
         // Apply points if pets were mentioned and it's not a question
+        const petUpdates = [];
         if (mentionedPets.length > 0 && !aiResult.isQuestion) {
             mentionedPets.forEach(pet => {
                 // Use nullish coalescing to handle 0 correctly (0 is valid, null/undefined defaults to 1)
@@ -1301,11 +1329,21 @@ chatForm.addEventListener('submit', async (e) => {
                 }
 
                 addPoints(pet.id, petPoints);
+
+                // Track the update for transparent response
+                petUpdates.push({
+                    name: pet.name,
+                    points: petPoints,
+                    newRank: getPetRank(pet.id)
+                });
             });
         }
 
-        // Use AI-generated response
-        addMessage(aiResult.response, 'addy');
+        // Use transparent response showing impact
+        const response = petUpdates.length > 0
+            ? generateImpactResponse(petUpdates)
+            : aiResult.response;
+        addMessage(response, 'addy');
 
     } else {
         // === FALLBACK: Keyword-based system ===
@@ -1349,6 +1387,9 @@ chatForm.addEventListener('submit', async (e) => {
                     return;
                 }
 
+                // Track updates for transparent response
+                const petUpdates = [];
+
                 mentionedCats.forEach(pet => {
                     // Base points from user's message (sentiment) - THIS IS THE PRIMARY DRIVER
                     let petPoints = points;
@@ -1373,28 +1414,10 @@ chatForm.addEventListener('submit', async (e) => {
                     }
 
                     // Special case handlers for extreme traits
-                    if (pet.id === 'smokey-joe') {
-                        // Smokey Joe: Fast and strong, but the smell issue
-                        // Net effect: +1 (legend) -1 (smell) = 0, plus user sentiment
-                    }
-                    if (pet.id === 'lila-dog') {
-                        // Lila: Speed demon! +2 for speed, -1 for overcelebrating = +1 net
-                    }
-                    if (pet.id === 'chirpy') {
-                        // Chirpy: Sympathy +1, anger -1 = 0 net, but sympathy word detection helps
-                    }
-                    if (pet.id === 'birch') {
-                        // Birch: No bonus, -2 for messiness/trouble = -2 net (she's a handful!)
-                    }
                     if (pet.id === 'guy-fiery') {
                         // Guy Fiery: -2 health issues, +1 fighting spirit = -1 net
                         // Cat AIDS and worms really hurt his rankings
                         petPoints = Math.max(petPoints, Math.ceil(points * 0.6)); // Health caps his potential
-                    }
-                    if (pet.id === 'meow-meow') {
-                        // Meow-Meow: 0 modifier, -1 corruption backfire = -1 net
-                        // She can only win through corrupting others (user manipulation!)
-                        // No algorithmic help - she has to earn it through... persuasion
                     }
 
                     // Ensure minimum 1 point for any positive mention
@@ -1403,6 +1426,13 @@ chatForm.addEventListener('submit', async (e) => {
                     }
 
                     addPoints(pet.id, petPoints);
+
+                    // Track update for transparent response
+                    petUpdates.push({
+                        name: pet.name,
+                        points: petPoints,
+                        newRank: getPetRank(pet.id)
+                    });
                 });
 
                 const catNamesStr = mentionedCats.map(p => p.name).join(' and ');
@@ -1478,8 +1508,9 @@ chatForm.addEventListener('submit', async (e) => {
                     }
                 }
 
-                const response = randomFrom(responsePool).replace('{cat}', catNamesStr);
-                addMessage(response, 'addy');
+                // Generate transparent response with impact info
+                const impactResponse = generateImpactResponse(petUpdates);
+                addMessage(impactResponse, 'addy');
             } else if (/^(hi|hello|hey|hiya|yo|sup)\b/i.test(message)) {
                 addMessage(randomFrom(RESPONSES.greetings), 'addy');
             } else if (isQuestion) {
@@ -1790,21 +1821,25 @@ function renderPetBios() {
 
         const currentPet = petsData.find(p => p.id === pet.id);
         const score = currentPet ? currentPet.score : 0;
-        const rank = rankings[pet.id] || '-';
+        const isVeteran = pet.isVeteran || bio.isVeteran;
+        const rank = isVeteran ? '★' : rankings[pet.id] || '-';
+        const cardClass = isVeteran ? 'pet-bio-card veteran-memorial' : 'pet-bio-card';
 
         return `
-            <div class="pet-bio-card" data-pet="${pet.id}">
+            <div class="${cardClass}" data-pet="${pet.id}">
                 <div class="pet-bio-header">
-                    <div class="pet-bio-avatar">
+                    <div class="pet-bio-avatar${isVeteran ? ' veteran-avatar-glow' : ''}">
                         <img src="${pet.image}" alt="${pet.name}" onerror="this.style.display='none'">
-                        <div class="pet-bio-rank">#${rank}</div>
+                        ${isVeteran ? '<div class="veteran-halo"></div>' : ''}
+                        <div class="pet-bio-rank">${isVeteran ? '★' : '#' + rank}</div>
                     </div>
                     <div class="pet-bio-title">
                         <div class="pet-bio-name">${pet.name}</div>
                         <div class="pet-bio-type">${pet.type}</div>
-                        <div class="pet-bio-score">Score: ${score}</div>
+                        <div class="pet-bio-score">${isVeteran ? 'Forever #1' : 'Score: ' + score}</div>
                     </div>
                 </div>
+                ${isVeteran && bio.memorial ? `<div class="pet-memorial-banner">${bio.memorial}</div>` : ''}
                 <div class="pet-bio-description">${bio.bio}</div>
                 <div class="pet-bio-traits">
                     <div class="pet-bio-strengths">
@@ -1835,32 +1870,10 @@ function getProTip(petId) {
         'chirpy': "Sympathy reports help her score! Past injury data boosts rankings. Anger reports hurt her.",
         'birch': "Good luck, agent. Report smooth fur for minor gains. Everything else in her file is problematic.",
         'guy-fiery': "Fighting spirit reports help offset his health file! Focus on speed and jumping intel.",
-        'meow-meow': "HQ Warning: She corrupts reporters. Only way she climbs is through... alternative intel methods."
+        'meow-meow': "HQ Warning: She corrupts reporters. Only way she climbs is through... alternative intel methods.",
+        'rp': "RP is a legend. Forever #1 in our hearts. Share memories of his freedom-loving spirit!"
     };
     return tips[petId] || "Submit accurate intel to help rankings!";
-}
-
-// ===========================================
-// Veterans Tab
-// ===========================================
-function renderVeterans() {
-    const container = document.getElementById('veterans-list');
-    if (!container) return;
-
-    container.innerHTML = VETERANS.map(vet => `
-        <div class="veteran-card">
-            <div class="veteran-avatar">
-                <img src="${vet.image}" alt="${vet.name}" onerror="this.style.display='none'">
-                <div class="veteran-halo"></div>
-            </div>
-            <div class="veteran-info">
-                <div class="veteran-name">${vet.name}</div>
-                <div class="veteran-type">${vet.type}</div>
-                <div class="veteran-memorial">${vet.memorial}</div>
-            </div>
-            <div class="veteran-score">Forever #1</div>
-        </div>
-    `).join('');
 }
 
 // Tab switching
@@ -1878,11 +1891,6 @@ function initTabs() {
             btn.classList.add('active');
             document.getElementById(tabId).classList.add('active');
 
-            if (tabId === 'veterans-tab') {
-                renderVeterans();
-                // Clear search when switching tabs
-                document.getElementById('veterans-search').value = '';
-            }
             if (tabId === 'pets-tab') {
                 renderPetBios();
                 // Clear search when switching tabs
@@ -1897,7 +1905,6 @@ function initTabs() {
 // ===========================================
 function initSearch() {
     const petsSearch = document.getElementById('pets-search');
-    const veteransSearch = document.getElementById('veterans-search');
 
     if (petsSearch) {
         petsSearch.addEventListener('input', (e) => {
@@ -1910,25 +1917,6 @@ function initSearch() {
                 const bio = card.querySelector('.pet-bio-description')?.textContent.toLowerCase() || '';
 
                 if (name.includes(query) || type.includes(query) || bio.includes(query)) {
-                    card.style.display = '';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        });
-    }
-
-    if (veteransSearch) {
-        veteransSearch.addEventListener('input', (e) => {
-            const query = e.target.value.toLowerCase().trim();
-            const cards = document.querySelectorAll('.veteran-card');
-
-            cards.forEach(card => {
-                const name = card.querySelector('.veteran-name')?.textContent.toLowerCase() || '';
-                const type = card.querySelector('.veteran-type')?.textContent.toLowerCase() || '';
-                const memorial = card.querySelector('.veteran-memorial')?.textContent.toLowerCase() || '';
-
-                if (name.includes(query) || type.includes(query) || memorial.includes(query)) {
                     card.style.display = '';
                 } else {
                     card.style.display = 'none';
@@ -2073,7 +2061,6 @@ initPixelCats();
 addSittingCats();
 initTabs();
 initSearch();
-renderVeterans();
 
 // Initialize pet requests after Firebase is ready
 setTimeout(() => {
@@ -2087,229 +2074,59 @@ setTimeout(() => {
 }, 1000);
 
 // ===========================================
-// CATTY-VERSE: AI-Generated Daily Stories
+// PET QUIPS: AI-Generated Personality Quips
 // Based on field reports from agents
 // ===========================================
 
-const CATTY_VERSE_CHARACTERS = {
+const PET_PERSONALITIES = {
     'meow-meow': {
-        role: 'The Mastermind / Anti-Hero Villain',
-        personality: 'Scheming, manipulative, lazy but cunning. Always plotting from her cushion throne. Bribes and corrupts others. The secret puppet master of the pet underworld.',
-        quirks: 'Never moves unless absolutely necessary. Communicates through meaningful stares. Has minions do her bidding.'
+        voice: 'Scheming, lazy, speaks in self-important third person. Acts like a mob boss from her cushion throne.',
+        style: 'Denies everything while implying she orchestrated it all. Blames others. Very dramatic.'
     },
     'lila-dog': {
-        role: 'The Loyal Lieutenant',
-        personality: 'Fiercely loyal but secretly depressed. Three legs but unstoppable speed. Hides her sadness behind celebrations. Deep inner turmoil about her place in the world.',
-        quirks: 'Overcelebrates victories to mask pain. Fastest in the group. Has trust issues after losing her leg.'
+        voice: 'Enthusiastic but with undertones of existential sadness. Three-legged speed demon energy.',
+        style: 'Celebrates everything to mask inner turmoil. Uses lots of exclamation points then gets suddenly melancholy.'
     },
     'chirpy': {
-        role: 'The Angry Enforcer',
-        personality: 'Perpetually furious tabby with a chip on her shoulder. Hair-trigger temper. Drops things when mad (which is always). Holds grudges forever.',
-        quirks: 'Knocks things over as intimidation. Hisses at walls. Has an enemies list. Secretly wants to be loved.'
+        voice: 'Perpetually angry and defensive. Hair-trigger temper. Holds grudges.',
+        style: 'Everything is someone else\'s fault. Threatens to knock things over. Secretly wants validation.'
     },
     'birch': {
-        role: 'The Chaotic Wildcard',
-        personality: 'Completely unpredictable goofy chaos agent. Accidentally causes problems everywhere. Scared of everything but causes the most destruction.',
-        quirks: 'Silky smooth fur but NO ONE can touch her. Starts drama without meaning to. Runs from her own shadow.'
+        voice: 'Chaotic and confused. Scared of everything. Accidentally causes problems.',
+        style: 'Doesn\'t understand what happened. Everything startles her. Very dramatic overreactions.'
     },
     'guy-fiery': {
-        role: 'The Contractor / Mercenary',
-        personality: 'A cat for hire despite his health issues. Cat AIDS and worm history but still takes jobs. Surprisingly athletic. Lives by a code.',
-        quirks: 'Jumps impossibly high. Takes on missions others won\'t. From Flavortown. Never talks about his past.'
+        voice: 'Tough mercenary vibe despite health issues. Professional contractor energy.',
+        style: 'Speaks like he\'s from Flavortown. Takes jobs others won\'t. References his jumping skills.'
     },
     'smokey-joe': {
-        role: 'The Wanderer / Adventurer',
-        personality: 'Legendary explorer and adventurer. Fast, strong, mysterious. Comes and goes as he pleases. The smell follows him everywhere - his blessing and curse.',
-        quirks: 'Clears rooms with his aroma. Has been everywhere. Knows secrets. Speaks in riddles.'
+        voice: 'Mysterious wanderer. Speaks in riddles. The smell is his power.',
+        style: 'Cryptic observations. References his legendary adventures. Acknowledges the aroma situation.'
     },
     'rp': {
-        role: 'The Guardian Angel',
-        personality: 'Watches over everyone from the rainbow bridge. Appears in dreams and visions to give cryptic advice. Forever loved, forever respected.',
-        quirks: 'Makes cameo appearances at crucial moments. Provides wisdom from beyond. Glows slightly.'
+        voice: 'Free spirit speaking from beyond. Wise but still unruly. Obsessed with treats even in the afterlife.',
+        style: 'Speaks with eternal wisdom but gets distracted by memories of treats. Forever untamed. Rainbow bridge vibes.'
     }
 };
 
-let storiesRef = null;
+// Cache for pet quips (session-based)
+const petQuipsCache = {};
+const QUIP_CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 
-let allStories = [];
-let currentStoryIndex = 0;
-
-// Auto-generate a new story every 3 days
-const STORY_GENERATION_INTERVAL = 3 * 24 * 60 * 60 * 1000; // 3 days in ms
-
-function initCattyVerse() {
-    if (db) {
-        storiesRef = db.ref('cattyverse');
-
-        // Listen for all stories, show most recent
-        storiesRef.orderByChild('timestamp').limitToLast(10).on('value', (snapshot) => {
-            allStories = [];
-            snapshot.forEach((child) => {
-                allStories.push({ key: child.key, ...child.val() });
-            });
-
-            if (allStories.length > 0) {
-                // Sort by timestamp descending, show newest
-                allStories.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-                currentStoryIndex = 0;
-                renderStories();
-
-                // Check if we should auto-generate a new story
-                checkAutoGenerateStory();
-            } else {
-                showStoryPlaceholder('No dispatches yet!');
-                // Try to generate the first story
-                checkAutoGenerateStory();
-            }
-        });
-    }
-}
-
-async function checkAutoGenerateStory() {
-    // Only attempt once per session
-    if (window._storyGenerationAttempted) return;
-
-    const now = Date.now();
-    const lastStoryTime = allStories.length > 0 ? (allStories[0].timestamp || 0) : 0;
-    const timeSinceLastStory = now - lastStoryTime;
-
-    // Check if enough time has passed since last story
-    if (timeSinceLastStory < STORY_GENERATION_INTERVAL && allStories.length > 0) {
-        console.log('[Catty-verse] Story is recent enough, skipping generation');
-        return;
-    }
-
-    // Check if we already tried today (prevent multiple attempts)
-    const today = new Date().toDateString();
-    const lastAttemptDate = localStorage.getItem('cattyverse_last_gen_date');
-    if (lastAttemptDate === today) {
-        console.log('[Catty-verse] Already attempted generation today');
-        return;
-    }
-
-    window._storyGenerationAttempted = true;
-    localStorage.setItem('cattyverse_last_gen_date', today);
-
-    console.log('[Catty-verse] Auto-generating new story based on field reports...');
-    await generateStoryFromReports();
-}
-
-async function generateStoryFromReports() {
-    if (!CONFIG.gemini.enabledForStories || !CONFIG.gemini.apiKey) {
-        console.log('[Catty-verse] Story generation disabled');
-        return;
-    }
-
-    // Fetch real field reports from Firebase
-    const reports = await getRecentReports();
-
-    if (reports.length < 5) {
-        console.log('[Catty-verse] Not enough field reports yet:', reports.length);
-        return;
-    }
-
-    try {
-        const story = await generateCattyVerseStory(reports);
-        if (story && storiesRef) {
-            const storyId = Date.now().toString();
-            await storiesRef.child(storyId).set({
-                ...story,
-                id: storyId,
-                date: new Date().toLocaleDateString(),
-                timestamp: Date.now(),
-                basedOnReports: reports.length
-            });
-            console.log('[Catty-verse] New story generated and saved!');
-        }
-    } catch (error) {
-        console.error('[Catty-verse] Auto-generation failed:', error);
-    }
-}
-
-function renderStories() {
-    renderFeaturedStory(allStories[currentStoryIndex]);
-    renderStoryArchive(allStories.filter((_, i) => i !== currentStoryIndex));
-}
-
-function selectStory(storyKey) {
-    const index = allStories.findIndex(s => s.key === storyKey);
-    if (index !== -1) {
-        currentStoryIndex = index;
-        renderStories();
-        // Scroll to top of story
-        document.getElementById('cattyverse-story')?.scrollIntoView({ behavior: 'smooth' });
-    }
-}
-
-// Make function available globally
-window.selectStory = selectStory;
-
-function renderFeaturedStory(story) {
-    const container = document.getElementById('cattyverse-story');
-    if (!container) return;
-
-    const safeTitle = escapeHtml(story.title || 'Untitled Dispatch');
-    const safeContent = escapeHtml(story.content || '').replace(/\n/g, '<br>');
-    const safeDate = escapeHtml(story.date || 'Unknown date');
-    const isNewest = allStories.length > 0 && story.key === allStories[0].key;
-
-    container.innerHTML = `
-        <div class="story-card featured">
-            <div class="story-header">
-                <span class="story-badge">${isNewest ? 'LATEST DISPATCH' : 'DISPATCH'}</span>
-                <span class="story-date">${safeDate}</span>
-            </div>
-            <h3 class="story-title">${safeTitle}</h3>
-            <div class="story-content">${safeContent}</div>
-            <div class="story-footer">
-                <span class="story-author">- Addy</span>
-            </div>
-        </div>
-    `;
-}
-
-function renderStoryArchive(stories) {
-    const container = document.getElementById('archive-list');
-    if (!container) return;
-
-    if (stories.length === 0) {
-        container.innerHTML = '<p class="no-stories">No other dispatches.</p>';
-        return;
-    }
-
-    container.innerHTML = stories.map(story => {
-        const safeTitle = escapeHtml(story.title || 'Untitled');
-        const safeDate = escapeHtml(story.date || '');
-        const safeExcerpt = escapeHtml((story.content || '').substring(0, 100) + '...');
-        const safeKey = escapeHtml(story.key || '');
-
-        return `
-            <div class="archive-card" onclick="selectStory('${safeKey}')">
-                <span class="archive-date">${safeDate}</span>
-                <span class="archive-title">${safeTitle}</span>
-                <p class="archive-excerpt">${safeExcerpt}</p>
-                <span class="archive-read-more">Click to read</span>
-            </div>
-        `;
-    }).join('');
-}
-
-
-async function getRecentReports() {
+// Get recent field reports for a specific pet
+async function getReportsForPet(petId) {
     return new Promise((resolve) => {
         if (!messagesRef) {
             resolve([]);
             return;
         }
 
-        // Get last 100 reports to have good material for stories
-        messagesRef.orderByChild('timestamp').limitToLast(100).once('value', (snapshot) => {
+        messagesRef.orderByChild('timestamp').limitToLast(50).once('value', (snapshot) => {
             const reports = [];
             snapshot.forEach((child) => {
                 const msg = child.val();
-                if (msg.catMentioned && msg.text) {
+                if (msg.catMentioned === petId && msg.text) {
                     reports.push({
-                        pet: msg.catMentioned,
                         text: msg.text,
                         user: msg.username || 'Anonymous'
                     });
@@ -2320,113 +2137,136 @@ async function getRecentReports() {
     });
 }
 
-async function generateCattyVerseStory(reports) {
-    // Summarize the real field reports
-    const reportSummary = reports.slice(0, 30).map(r => `- ${r.pet}: "${r.text}"`).join('\n');
-
-    const characterGuide = Object.entries(CATTY_VERSE_CHARACTERS)
-        .map(([id, char]) => `${id}: ${char.role} - ${char.personality}`)
-        .join('\n');
-
-    // Random story styles for variety
-    const storyStyles = [
-        "a cozy news dispatch with absurd plot twists",
-        "a dramatic soap opera moment",
-        "a nature documentary style observation",
-        "a noir detective case file",
-        "a breaking news bulletin",
-        "an investigative exposé",
-        "a sports recap but for pet activities",
-        "a gossip column from the pet underworld"
-    ];
-    const randomStyle = storyStyles[Math.floor(Math.random() * storyStyles.length)];
-
-    const prompt = `You are Addy, an undercover reporter in the pet underworld called the "Catty-verse". Write a SHORT, FUNNY fictional dispatch (150-200 words) based on these REAL field reports from users.
-
-STYLE: ${randomStyle}
-
-REAL FIELD REPORTS TO BASE YOUR STORY ON:
-${reportSummary}
-
-CHARACTER PERSONALITIES:
-${characterGuide}
-
-IMPORTANT RULES:
-1. Base the story LOOSELY on the actual field reports above - weave them into a narrative
-2. Meow-Meow is always secretly behind schemes (she's the anti-hero/villain)
-3. RP (deceased dog) can make brief cameo appearances as a wise ghost
-4. Lila is loyal but melancholic - fast but sad inside
-5. Chirpy is always angry and threatening
-6. Birch is goofy and accidentally causes chaos
-7. Guy Fiery is a contractor/mercenary for hire
-8. Smokey Joe is a mysterious wanderer/adventurer
-9. Be creative, funny, and a bit absurd
-10. Include at least 2-3 pets that were mentioned in the real reports
-
-FORMAT:
-Return ONLY valid JSON: {"title": "Catchy headline", "content": "Story text with \\n\\n between paragraphs"}`;
-
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${CONFIG.gemini.model}:generateContent?key=${CONFIG.gemini.apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-                temperature: 0.9,
-                maxOutputTokens: 1024
-            }
-        })
-    });
-
-    if (!response.ok) {
-        throw new Error('API request failed');
+// Generate a quip for a specific pet based on field reports
+async function generatePetQuip(petId, petName) {
+    // Check cache first
+    const cached = petQuipsCache[petId];
+    if (cached && (Date.now() - cached.timestamp) < QUIP_CACHE_DURATION) {
+        return cached.quip;
     }
 
-    const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!text) {
-        throw new Error('Empty response');
+    if (!CONFIG.gemini.enabledForQuips || !CONFIG.gemini.apiKey) {
+        return getFallbackQuip(petId);
     }
 
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-        throw new Error('Could not parse JSON');
+    const personality = PET_PERSONALITIES[petId];
+    if (!personality) {
+        return getFallbackQuip(petId);
     }
 
-    return JSON.parse(jsonMatch[0]);
-}
+    const reports = await getReportsForPet(petId);
 
-function showStoryPlaceholder(message = 'No dispatches yet!') {
-    const container = document.getElementById('cattyverse-story');
-    if (!container) return;
+    // If no reports, use a default quip
+    if (reports.length === 0) {
+        return getFallbackQuip(petId);
+    }
 
-    container.innerHTML = `
-        <div class="story-placeholder">
-            <div class="placeholder-icon">📰</div>
-            <p>${escapeHtml(message)}</p>
-            <p class="placeholder-hint">Check back soon for new dispatches!</p>
-        </div>
-    `;
-}
+    const reportSummary = reports.slice(0, 10).map(r => `"${r.text}"`).join(', ');
 
-function expandArchiveStory(date) {
-    if (!storiesRef) return;
+    const prompt = `You are ${petName}, a pet with this personality: ${personality.voice}
 
-    storiesRef.child(date).once('value', (snapshot) => {
-        const story = snapshot.val();
-        if (story) {
-            // Show in a modal or expand in place
-            alert(`${story.title}\n\n${story.content}\n\n- Addy`);
+Style guide: ${personality.style}
+
+Recent field reports about you: ${reportSummary}
+
+Write a SHORT (15-25 words max), funny first-person quip reacting to what people have been saying about you. Stay completely in character. Be cozy and cute but match your personality. Start with something like "Allegedly..." or deny/confirm the reports in your unique way.
+
+Return ONLY the quip text, no quotes, no explanation.`;
+
+    try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${CONFIG.gemini.model}:generateContent?key=${CONFIG.gemini.apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    temperature: 0.9,
+                    maxOutputTokens: 100
+                }
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('API request failed');
         }
-    });
+
+        const data = await response.json();
+        const quip = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+
+        if (quip) {
+            // Cache the quip
+            petQuipsCache[petId] = { quip, timestamp: Date.now() };
+            return quip;
+        }
+    } catch (error) {
+        console.error('[Pet Quips] Generation failed for', petId, error);
+    }
+
+    return getFallbackQuip(petId);
 }
 
-// Make function available globally
-window.expandArchiveStory = expandArchiveStory;
+// Fallback quips when AI is unavailable
+function getFallbackQuip(petId) {
+    const fallbacks = {
+        'meow-meow': "Meow-Meow has no comment at this time. *stares meaningfully from cushion*",
+        'lila-dog': "I ran SO fast today! ...but sometimes I wonder if I'm running from something. Anyway, TREATS!",
+        'chirpy': "I didn't knock anything over. And if I did, it deserved it. *hisses at nothing*",
+        'birch': "I don't know what happened but I'm SCARED and also it wasn't me!",
+        'guy-fiery': "Another day, another job well done. Welcome to Flavortown, baby.",
+        'smokey-joe': "The wind whispers secrets... and yes, that smell is me. You're welcome.",
+        'rp': "Still running free across rainbow fields... did someone say treats? *wags eternally*"
+    };
+    return fallbacks[petId] || "No comment at this time.";
+}
 
-// Initialize Catty-verse after Firebase is ready
-setTimeout(initCattyVerse, 1500);
+// ===========================================
+// HELPER: Get pet's current rank
+// ===========================================
+function getPetRank(petId) {
+    const sortedPets = [...petsData].sort((a, b) => b.score - a.score);
+    const index = sortedPets.findIndex(p => p.id === petId);
+    return index !== -1 ? index + 1 : null;
+}
+
+// Get pet's score
+function getPetScore(petId) {
+    const pet = petsData.find(p => p.id === petId);
+    return pet ? pet.score : 0;
+}
+
+// Format points change for display
+function formatPointsChange(points) {
+    if (points > 0) return `+${points}`;
+    if (points < 0) return `${points}`;
+    return '0';
+}
+
+// Generate transparent response showing impact
+function generateImpactResponse(petUpdates, baseResponse) {
+    if (!petUpdates || petUpdates.length === 0) {
+        return baseResponse || "Intel received! Keep those reports coming.";
+    }
+
+    // Build impact summary
+    const impactLines = petUpdates.map(update => {
+        const pointsStr = formatPointsChange(update.points);
+        const rankStr = update.newRank ? `#${update.newRank}` : '';
+        return `${update.name}: ${pointsStr} pts ${rankStr}`;
+    });
+
+    // Create response with impact
+    const impactSummary = impactLines.join(' | ');
+
+    // Pick a response style
+    const responseStyles = [
+        `Report logged! ${impactSummary}`,
+        `Intel received! ${impactSummary}`,
+        `Rankings updated! ${impactSummary}`,
+        `Got it! ${impactSummary}`
+    ];
+
+    return responseStyles[Math.floor(Math.random() * responseStyles.length)];
+}
 
 // Update version display on page load
 function updateVersionDisplay() {

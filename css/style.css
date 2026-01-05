@@ -2,8 +2,9 @@
 :root {
     --primary: #ff6b9d;
     --primary-dark: #e85a8a;
+    --primary-light: #ffb3c6;
     --secondary: #ffd93d;
-    --accent: #6bcb77;
+    --accent: #ff8fab; /* Soft pink instead of green */
     --bg-light: #fff5f8;
     --bg-card: #ffffff;
     --text-dark: #2d3436;
@@ -330,7 +331,7 @@ section h2::before {
 }
 
 .pixel-avatar.user-avatar {
-    background: linear-gradient(135deg, var(--accent) 0%, #98d8a0 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, #ffc2d1 100%);
     border: 2px solid #333;
 }
 
@@ -350,7 +351,7 @@ section h2::before {
 }
 
 .message.user .avatar {
-    background: linear-gradient(135deg, var(--accent) 0%, #98d8a0 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, #ffc2d1 100%);
 }
 
 .message .bubble {
@@ -367,7 +368,7 @@ section h2::before {
 }
 
 .message.user .bubble {
-    background: linear-gradient(135deg, var(--accent) 0%, #98d8a0 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, #ffc2d1 100%);
     color: white;
     border: 2px solid #333;
     border-bottom-right-radius: 0;
@@ -1489,126 +1490,12 @@ header .user-info span {
     border-color: #333;
 }
 
-.tab-btn.veterans-tab-btn {
-    background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
-}
-
-.tab-btn.veterans-tab-btn.active {
-    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-}
-
 .tab-content {
     display: none;
 }
 
 .tab-content.active {
     display: block;
-}
-
-/* Veterans Section */
-.veterans-intro {
-    text-align: center;
-    padding: 16px;
-    margin-bottom: 16px;
-    background: linear-gradient(135deg, #f8f5ff 0%, #ede9fe 100%);
-    border-radius: 4px;
-    border: 2px solid #8b5cf6;
-}
-
-.veterans-intro p {
-    color: #6b21a8;
-    font-size: 0.9rem;
-    line-height: 1.5;
-}
-
-.veterans-list {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.veteran-card {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 20px;
-    background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
-    border-radius: 4px;
-    border: 3px solid #8b5cf6;
-    position: relative;
-    overflow: hidden;
-}
-
-.veteran-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #ffd700, #8b5cf6, #ffd700);
-}
-
-.veteran-avatar {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    overflow: hidden;
-    position: relative;
-    flex-shrink: 0;
-    border: 3px solid #8b5cf6;
-    background: linear-gradient(135deg, #f3e8ff 0%, #ede9fe 100%);
-}
-
-.veteran-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.veteran-halo {
-    position: absolute;
-    top: -12px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 30px;
-    height: 12px;
-    background: linear-gradient(135deg, #ffd700 0%, #ffed4a 100%);
-    border-radius: 50%;
-    border: 2px solid #b8860b;
-    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-}
-
-.veteran-info {
-    flex: 1;
-}
-
-.veteran-name {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 1rem;
-    color: #6b21a8;
-    margin-bottom: 4px;
-}
-
-.veteran-type {
-    font-size: 0.85rem;
-    color: #8b5cf6;
-    margin-bottom: 8px;
-}
-
-.veteran-memorial {
-    font-size: 0.9rem;
-    color: var(--text-dark);
-    font-style: italic;
-    line-height: 1.4;
-}
-
-.veteran-score {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 0.7rem;
-    color: #ffd700;
-    text-shadow: 1px 1px 0 #8b5cf6;
-    text-align: center;
 }
 
 /* Mobile adjustments for tabs */
@@ -1621,25 +1508,6 @@ header .user-info span {
     .tab-btn {
         font-size: 0.5rem;
         padding: 10px 12px;
-    }
-
-    .veteran-card {
-        flex-direction: column;
-        text-align: center;
-        padding: 16px;
-    }
-
-    .veteran-avatar {
-        width: 70px;
-        height: 70px;
-    }
-
-    .veteran-name {
-        font-size: 0.85rem;
-    }
-
-    .veteran-memorial {
-        font-size: 0.85rem;
     }
 }
 
@@ -1902,15 +1770,6 @@ header .user-info span {
     box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2);
 }
 
-#veterans-search {
-    border-color: #8b5cf6;
-}
-
-#veterans-search:focus {
-    border-color: #7c3aed;
-    box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.2);
-}
-
 .pets-bio-list {
     display: flex;
     flex-direction: column;
@@ -1928,6 +1787,62 @@ header .user-info span {
 .pet-bio-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(245, 158, 11, 0.3);
+}
+
+/* Veteran Memorial Card Styling */
+.pet-bio-card.veteran-memorial {
+    background: linear-gradient(135deg, #faf5ff 0%, #ede9fe 100%);
+    border-color: #8b5cf6;
+    position: relative;
+}
+
+.pet-bio-card.veteran-memorial::before {
+    content: '★ In Loving Memory ★';
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+    color: white;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.45rem;
+    padding: 4px 12px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.pet-bio-card.veteran-memorial:hover {
+    box-shadow: 0 8px 24px rgba(139, 92, 246, 0.3);
+}
+
+.veteran-avatar-glow {
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
+}
+
+.pet-bio-avatar .veteran-halo {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
+    height: 10px;
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4a 100%);
+    border-radius: 50%;
+    border: 2px solid #b8860b;
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+    z-index: 10;
+}
+
+.pet-memorial-banner {
+    background: linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%);
+    border: 2px solid #8b5cf6;
+    border-radius: 4px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    font-style: italic;
+    color: #5b21b6;
+    text-align: center;
+    font-size: 0.9rem;
 }
 
 .pet-bio-header {
@@ -2192,7 +2107,7 @@ header .user-info span {
 .header-version {
     font-family: 'Nunito', sans-serif;
     font-size: 0.5em;
-    background: linear-gradient(135deg, var(--accent) 0%, #4caf50 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -2236,251 +2151,87 @@ header .user-info span {
 }
 
 /* ===========================================
-   CATTY-VERSE SECTION
+   INLINE PET QUIPS - Speech bubbles on leaderboard
    =========================================== */
-.cattyverse-section {
-    margin-top: 24px;
-}
 
-.cattyverse-section h2::before {
-    content: '[~]';
-}
-
-.cattyverse-subtitle {
-    color: var(--text-light);
-    font-size: 0.95rem;
-    margin-bottom: 20px;
-    text-align: center;
-    font-style: italic;
-}
-
-.cattyverse-story {
-    background: #f0f0f0;
-    border-radius: 4px;
-    border: 2px solid #555;
-    padding: 16px;
-}
-
-/* Story Card */
-.story-card {
-    background: white;
-    border-radius: 4px;
-    padding: 16px;
-    margin-bottom: 12px;
-    border: 2px solid #555;
+/* Position pet cards to allow quip overflow */
+.pet-card {
     position: relative;
+    overflow: visible;
 }
 
-.story-card.today,
-.story-card.featured {
-    border-color: var(--primary);
+/* Inline quip bubble - positioned near pet avatar */
+.pet-quip-inline {
+    position: absolute;
+    left: -10px;
+    top: -8px;
+    transform: translateX(-100%);
+    max-width: 160px;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 5;
+    transition: opacity 0.4s ease;
 }
 
-.story-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
+.pet-quip-inline.loaded {
+    opacity: 1;
 }
 
-.story-badge {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 0.55rem;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-    color: #fff;
-    padding: 5px 10px;
-    border-radius: 4px;
-    border: 1px solid #333;
-}
-
-.story-date {
-    font-size: 0.8rem;
-    color: var(--text-light);
-}
-
-.story-title {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 0.8rem;
-    color: var(--text-dark);
-    margin-bottom: 12px;
-    line-height: 1.6;
-}
-
-.story-content {
-    color: var(--text-dark);
-    font-size: 0.95rem;
-    line-height: 1.9;
-    padding: 12px;
-    background: #f0f0f0;
-    border-radius: 4px;
-    border-left: 4px solid var(--primary);
-}
-
-.story-footer {
-    margin-top: 16px;
-    text-align: right;
-}
-
-.story-author {
-    font-style: italic;
-    color: var(--text-light);
-    font-size: 0.9rem;
-}
-
-/* Story Placeholder */
-.story-placeholder {
-    text-align: center;
-    padding: 40px 20px;
-    background: white;
-    border-radius: 4px;
-    border: 2px dashed #555;
-}
-
-.placeholder-icon {
-    font-size: 3rem;
-    margin-bottom: 15px;
-}
-
-.story-placeholder p {
-    color: var(--text-dark);
-    font-size: 1rem;
-    margin-bottom: 10px;
-}
-
-.placeholder-hint {
-    color: var(--text-light);
-    font-size: 0.85rem;
-}
-
-/* Story Archive */
-.cattyverse-archive {
-    margin-top: 20px;
-    background: #f0f0f0;
-    border-radius: 4px;
-    border: 2px solid #555;
-    padding: 16px;
-}
-
-.cattyverse-archive h4 {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 0.65rem;
-    color: var(--text-dark);
-    margin-bottom: 15px;
-    text-transform: uppercase;
-}
-
-.archive-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.archive-card {
-    background: white;
-    border-radius: 4px;
-    padding: 12px 16px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: 2px solid #555;
-}
-
-.archive-card:hover {
-    border-color: var(--primary);
-    transform: translateX(5px);
-    box-shadow: 0 2px 10px var(--shadow);
-}
-
-.archive-date {
-    font-size: 0.75rem;
-    color: var(--text-light);
+.quip-inline-text {
     display: block;
-    margin-bottom: 5px;
-}
-
-.archive-title {
-    font-weight: 700;
-    color: var(--text-dark);
-    font-size: 0.9rem;
-    display: block;
-    margin-bottom: 5px;
-}
-
-.archive-excerpt {
-    font-size: 0.8rem;
-    color: var(--text-light);
-    line-height: 1.4;
-}
-
-.archive-read-more {
+    background: #fefefe;
+    padding: 6px 10px;
     font-size: 0.7rem;
-    color: var(--primary);
-    font-weight: 600;
-    margin-top: 8px;
-    display: block;
-}
-
-.archive-card:hover .archive-read-more {
-    color: var(--primary-dark);
-    text-decoration: underline;
-}
-
-.no-stories {
-    text-align: center;
-    color: var(--text-light);
+    line-height: 1.4;
+    color: #555;
     font-style: italic;
-    padding: 20px;
+
+    /* Pixelated box style */
+    border: 2px solid #ddd;
+    border-radius: 2px;
+    box-shadow:
+        2px 2px 0 #e8e8e8,
+        inset 0 1px 0 rgba(255,255,255,0.9);
 }
 
-/* Loading spinner for stories */
-.story-loading {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 40px;
+/* Speech bubble pointer */
+.quip-inline-text::after {
+    content: '';
+    position: absolute;
+    right: -8px;
+    top: 12px;
+    width: 0;
+    height: 0;
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-left: 8px solid #ddd;
 }
 
-.loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #ddd;
-    border-top: 4px solid var(--primary);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 15px;
+.quip-inline-text::before {
+    content: '';
+    position: absolute;
+    right: -5px;
+    top: 14px;
+    width: 0;
+    height: 0;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    border-left: 6px solid #fefefe;
+    z-index: 1;
 }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+/* Hide quips on smaller screens */
+@media (max-width: 900px) {
+    .pet-quip-inline {
+        display: none;
+    }
 }
 
-.story-loading p {
-    color: var(--text-light);
-    font-size: 0.9rem;
+/* Make leaderboard section allow overflow */
+.leaderboard {
+    overflow: visible !important;
 }
 
-/* Mobile responsive for Catty-verse */
-@media (max-width: 600px) {
-    .story-card {
-        padding: 16px;
-    }
-
-    .story-title {
-        font-size: 0.75rem;
-    }
-
-    .story-content {
-        font-size: 0.85rem;
-        padding: 12px;
-    }
-
-    .cattyverse-intro h3 {
-        font-size: 0.75rem;
-    }
-
-    .generate-story-btn {
-        font-size: 0.6rem;
-        padding: 12px 20px;
-    }
+.leaderboard-list {
+    overflow: visible;
 }

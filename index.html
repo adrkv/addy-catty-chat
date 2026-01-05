@@ -30,7 +30,7 @@
     <meta name="apple-mobile-web-app-title" content="Addy Cat Chat">
 
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="css/style.css?v=1.6.0">
+    <link rel="stylesheet" href="css/style.css?v=1.9.0">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -61,7 +61,6 @@
                 <div class="leaderboard-tabs">
                     <button class="tab-btn active" data-tab="leaderboard-tab">Live Leaderboard</button>
                     <button class="tab-btn pets-tab-btn" data-tab="pets-tab">Meet the Pets</button>
-                    <button class="tab-btn veterans-tab-btn" data-tab="veterans-tab">Meet the Veterans</button>
                 </div>
 
                 <div id="leaderboard-tab" class="tab-content active">
@@ -84,16 +83,6 @@
                     </div>
                 </div>
 
-                <div id="veterans-tab" class="tab-content">
-                    <div class="veterans-intro">
-                        <p>Forever in our hearts. These legends have crossed the rainbow bridge but will always be remembered.</p>
-                    </div>
-                    <div class="search-box">
-                        <input type="text" id="veterans-search" placeholder="Search veterans..." autocomplete="off">
-                    </div>
-                    <div class="veterans-list" id="veterans-list">
-                    </div>
-                </div>
             </section>
 
             <!-- Chat Section -->
@@ -127,21 +116,6 @@
             </div>
         </section>
 
-        <!-- Catty-verse Section -->
-        <section class="cattyverse-section">
-            <h2>The Catty-verse</h2>
-            <p class="cattyverse-subtitle">Dispatches from the pet underworld. The stories are absurd. The drama is real.</p>
-            <div class="cattyverse-story" id="cattyverse-story">
-                <div class="story-loading">
-                    <span class="loading-spinner"></span>
-                    <p>Loading dispatches...</p>
-                </div>
-            </div>
-            <div class="cattyverse-archive" id="cattyverse-archive">
-                <h4>Previous Dispatches</h4>
-                <div class="archive-list" id="archive-list"></div>
-            </div>
-        </section>
 
         <!-- Pet Request Section -->
         <section class="pet-requests">
@@ -179,6 +153,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
-    <script src="js/app.js?v=1.6.0"></script>
+    <script src="js/app.js?v=1.9.0"></script>
 </body>
 </html>
