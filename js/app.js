@@ -12,13 +12,11 @@ const CONFIG = {
         appId: "1:604591070600:web:9e7a95a1e6c4b20a0cae3d"
     },
     basePoints: 1,
-    // Gemini AI Configuration (free tier: 60 req/min, 1500/day)
-    // AI used for generating pet quips based on field reports
+    // Gemini AI for generating pet quips in Meet the Pets tab
     gemini: {
         apiKey: "AIzaSyC1BWcg_Xv38N5C33vfJ9SuQimpgPkeMLQ",
         model: "gemini-2.5-flash",
-        enabled: false, // Disabled for chat - using keyword-only for faster responses
-        enabledForQuips: true // AI used for pet quips in Meet the Pets tab
+        enabledForQuips: true
     }
 };
 
@@ -252,17 +250,6 @@ function getRandomCooldownResponse() {
     return response.replace('{time}', formatCooldownTime());
 }
 
-// ===========================================
-// AI RATE LIMITING & FALLBACK TRACKING
-// ===========================================
-const AI_STATE = {
-    requestCount: 0,
-    lastResetTime: Date.now(),
-    rateLimitHit: false,
-    rateLimitResetTime: null,
-    maxRequestsPerMinute: 55, // Stay under 60/min limit
-    maxRequestsPerDay: 1400   // Stay under 1500/day limit
-};
 
 // ===========================================
 // CONTENT MODERATION - Block hate speech
@@ -308,146 +295,13 @@ function containsHateSpeech(text) {
     return false;
 }
 
-// ===========================================
-// GEMINI AI INTEGRATION WITH FALLBACK
-// ===========================================
-async function processWithAI(message, existingPets) {
-    // Check if AI is enabled and API key is set
-    if (!CONFIG.gemini.enabled || !CONFIG.gemini.apiKey) {
-        return null; // Use fallback
-    }
 
-    // Check rate limits
-    const now = Date.now();
-    const minuteAgo = now - 60000;
-
-    // Reset counter if a minute has passed
-    if (AI_STATE.lastResetTime < minuteAgo) {
-        AI_STATE.requestCount = 0;
-        AI_STATE.lastResetTime = now;
-    }
-
-    // Check if we've hit rate limits
-    if (AI_STATE.rateLimitHit && AI_STATE.rateLimitResetTime > now) {
-        console.log('[AI] Rate limit active, using fallback');
-        return null;
-    }
-
-    if (AI_STATE.requestCount >= AI_STATE.maxRequestsPerMinute) {
-        console.log('[AI] Approaching rate limit, using fallback');
-        return null;
-    }
-
-    // Build compact pet context (only IDs and key aliases)
-    const petContext = existingPets.map(p =>
-        `${p.id}(${p.aliases.slice(0, 3).join('/')})`
-    ).join(',');
-
-    const systemPrompt = `You are Addy, a funny pet commentator. Respond ONLY about pets the user mentions.
-
-PETS (use exact IDs):
-${petContext}
-
-ISOLATION RULES - CRITICAL:
-When user mentions ONLY ONE pet, your response must ONLY be about that pet:
-- User says "chirpy/chirp/tabby" → respond ONLY about Chirpy. Do NOT mention meow-meow, smokey, birch, guy, or lila.
-- User says "meow/mm/mew" → respond ONLY about Meow-Meow. Do NOT mention chirpy, smokey, birch, guy, or lila.
-- User says "smokey/joe/smoke" → respond ONLY about Smokey Joe. Do NOT mention chirpy, meow-meow, birch, guy, or lila.
-- User says "birch/birchy" → respond ONLY about Birch. Do NOT mention chirpy, meow-meow, smokey, guy, or lila.
-- User says "guy/fiery/fieri" → respond ONLY about Guy Fiery. Do NOT mention chirpy, meow-meow, smokey, birch, or lila.
-- User says "lila/dog/tripod" → respond ONLY about Lila Dog. Do NOT mention chirpy, meow-meow, smokey, birch, or guy.
-
-ROAST STYLES (use only for the mentioned pet):
-- chirpy: angry/grudge jokes
-- smokey-joe: smell/biohazard jokes
-- birch: chaos/gremlin jokes
-- guy-fiery: chunky/worms jokes
-- lila-dog: 3 legs/tripod jokes
-- meow-meow: fat/lazy jokes
-
-RULES:
-1. petsMentioned = ONLY pets explicitly named in user message
-2. response = ONLY about those pets, never others
-3. Max 12 words, be funny
-
-JSON:{"petsMentioned":["only-named-pets"],"sentiment":"positive/negative/neutral","points":<-3to3>,"response":"<only about named pets>"}`;
-
-    try {
-        AI_STATE.requestCount++;
-
-        // Add timeout to prevent hanging requests
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${CONFIG.gemini.model}:generateContent?key=${CONFIG.gemini.apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            signal: controller.signal,
-            body: JSON.stringify({
-                contents: [{
-                    parts: [
-                        { text: systemPrompt },
-                        { text: `User message: "${message}"` }
-                    ]
-                }],
-                generationConfig: {
-                    temperature: 0.7,
-                    maxOutputTokens: 1024
-                }
-            })
-        });
-
-        clearTimeout(timeoutId);
-
-        if (response.status === 429) {
-            // Rate limited - set backoff
-            AI_STATE.rateLimitHit = true;
-            AI_STATE.rateLimitResetTime = Date.now() + 60000; // Wait 1 minute
-            console.log('[AI] Rate limit hit, switching to fallback for 1 minute');
-            return null;
-        }
-
-        if (!response.ok) {
-            console.log('[AI] API error, using fallback:', response.status);
-            return null;
-        }
-
-        const data = await response.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-        if (!text) {
-            console.log('[AI] Empty response, using fallback');
-            return null;
-        }
-
-        // Parse JSON from response (handle markdown code blocks)
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) {
-            console.log('[AI] Could not parse JSON, using fallback');
-            return null;
-        }
-
-        const aiResult = JSON.parse(jsonMatch[0]);
-        console.log('[AI] Successfully processed message:', aiResult);
-        return aiResult;
-
-    } catch (error) {
-        console.log('[AI] Error, using fallback:', error.message);
-        return null;
-    }
-}
-
-// Get pet objects from AI-detected IDs
-function getPetsFromIds(petIds, allPets) {
-    return petIds.map(id => allPets.find(p => p.id === id)).filter(Boolean);
-}
-
-// Validate AI's petsMentioned against actual text matches
-// This prevents the AI from hallucinating pets that weren't mentioned
-function validatePetsMentioned(aiPetIds, message, allPets) {
+// Validate detected pets against actual text matches
+// This prevents false positives from partial name matching
+function validatePetsMentioned(petIds, message, allPets) {
     const lowerMsg = message.toLowerCase().replace(/[^a-z\s]/g, '');
 
-    return aiPetIds.filter(petId => {
+    return petIds.filter(petId => {
         const pet = allPets.find(p => p.id === petId);
         if (!pet) return false;
 
@@ -472,37 +326,6 @@ function validatePetsMentioned(aiPetIds, message, allPets) {
     });
 }
 
-// Check if AI response text mentions pets that user didn't mention
-// Returns true if response is contaminated (mentions wrong pets)
-function isResponseContaminated(responseText, validPetIds, allPets) {
-    const lowerResponse = responseText.toLowerCase();
-
-    for (const pet of allPets) {
-        // Skip pets that were validly mentioned by user
-        if (validPetIds.includes(pet.id)) continue;
-
-        // Check if this non-mentioned pet appears in AI response
-        const namesToCheck = [
-            pet.name.toLowerCase(),
-            pet.id.replace(/-/g, ' '),
-            pet.id.replace(/-/g, ''),
-            ...(pet.aliases || []).slice(0, 5).map(a => a.toLowerCase()) // Check main aliases
-        ];
-
-        for (const name of namesToCheck) {
-            const cleanName = name.replace(/[^a-z\s]/g, '');
-            // Only check names with 3+ chars and use word boundary matching
-            if (cleanName && cleanName.length >= 3) {
-                const wordBoundaryRegex = new RegExp(`\\b${cleanName.replace(/\s+/g, '\\s+')}\\b`, 'i');
-                if (wordBoundaryRegex.test(lowerResponse)) {
-                    console.log(`[AI] Response contaminated: mentions "${cleanName}" but user didn't mention ${pet.id}`);
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
-}
 
 // ===========================================
 // SECRET SURVIVABILITY SCORING
@@ -659,113 +482,17 @@ const RESPONSES = {
         "Reporting for duty? EXCELLENT! Now use those reports wisely - tell me about pet behaviors, not the weather!",
         "Welcome! You've got limited reports, so make them count! What pet intel do you have for me today?"
     ],
-    positive: [
-        "Excellent report on {cat}! Updating the rankings now. This is the intel I need!",
-        "Good intel on {cat}! Noted and logged. Rankings adjusted accordingly!",
-        "Solid field report! {cat} performance data received. Bumping their score!",
-        "This {cat} intel checks out! Thanks for the accurate reporting, agent!"
-    ],
-    negative: [
-        "Oof, tough report on {cat}. But accuracy matters! Adjusting rankings...",
-        "Noted! {cat} intel logged. Even bad news helps keep rankings accurate!",
-        "Thanks for the honest report on {cat}. Can't have accurate rankings without the truth!",
-        "Critical intel on {cat} received! This is why I need field reporters like you!"
-    ],
-    neutral: [
-        "Interesting report on {cat}. Tell me more - I need details for accurate rankings!",
-        "{cat} sighting logged. What else have you observed? Every detail helps!",
-        "Got it, {cat} intel received. Keep the reports coming - accuracy is everything!"
-    ],
-    meowMeowPositive: [
-        "Wait, POSITIVE intel on Meow-Meow?? Let me verify this... she actually DID something? Logging it anyway...",
-        "Meow-Meow... being praised? I'll update the rankings but my sources say she's still basically a furry boulder.",
-        "Hmm, your report says Meow-Meow is good? My field data says 'stationary object.' But I'll log your intel!",
-        "Noted! But between us... multiple reports confirm Meow-Meow's main activity is 'existing horizontally.'"
-    ],
-    meowMeowNegative: [
-        "FINALLY some accurate intel on Meow-Meow! This confirms my other field reports - she IS basically a doorstop!",
-        "This Meow-Meow report matches all my data! Rankings updated. Accuracy restored!",
-        "Excellent field work! Your Meow-Meow intel aligns with my research: round, stationary, questionable survival odds.",
-        "Verified! Your report on Meow-Meow matches HQ records. She's been filed under 'gravitationally challenged.'"
-    ],
-    meowMeowNeutral: [
-        "Meow-Meow intel logged. Between us, she's been corrupting other reporters to boost her rankings. Watch out.",
-        "Got it. Fun fact from HQ files: Meow-Meow has never voluntarily moved faster than 0.5 mph. True story.",
-        "Meow-Meow report received. My analysis? She can only climb rankings through... alternative methods. Corruption, basically."
-    ],
-    lilaPositive: [
-        "EXCELLENT Lila intel! My speed tracking data confirms - three legs, ZERO slowdown! Rankings boosted!",
-        "Your Lila report matches HQ records perfectly! She's our fastest agent despite the leg situation. Updated!",
-        "Verified! Lila speed data logged. She'd lap most four-legged pets. Rankings adjusted accordingly!",
-        "Top-tier field report! Lila's three-legged rocket status CONFIRMED. Though her celebrations are... excessive.",
-        "Great intel! But note for the file: Lila's overcelebratory behavior after wins is becoming a concern. Still fast though!"
-    ],
-    lilaNegative: [
-        "Hmm, negative Lila report? My speed data says otherwise. But I'll log your observation for accuracy...",
-        "Interesting... most field reports say Lila is a speed demon. I'll cross-reference your intel with other sources.",
-        "Noted, but HQ data shows Lila outpaces most pets. Maybe you caught her during a celebration break?",
-        "That doesn't match my other Lila intel... she IS prone to tripping from over-excitement though. Logging it."
-    ],
-    lilaNeutral: [
-        "Lila intel logged! Fun fact: she's technically a dog in a cat competition because she EARNED it through speed.",
-        "Lila Dog report received. HQ notes: three legs, turbocharged, occasional excessive celebration incidents.",
-        "Got it! Lila file updated. My analysis: peak physical specimen, minor deductions for showboating.",
-        "Lila sighting confirmed. Field notes indicate she makes Meow-Meow look like a decorative pillow. Which... accurate."
-    ],
     rpMentioned: [
         "RP... *moment of silence* ...that name is in our Hall of Fame. Forever ranked #1 in our hearts.",
         "You mentioned RP. That's classified as LEGEND status. Check Meet the Pets for the full dossier.",
         "RP intel is sealed in the archives with highest honors. A true legend. Gone but never forgotten.",
         "RP! That file is marked 'ETERNAL RESPECT.' Some rankings transcend the algorithm. A freedom-loving soul who loved treats."
     ],
-    guyFieryPositive: [
-        "Guy Fiery intel logged! My medical files confirm the cat AIDS situation, but your report shows fighting spirit!",
-        "Great report! Guy Fiery's health data is rough, but field intel shows he's still performing. Rankings adjusted!",
-        "Positive Guy Fiery intel! Between the cat AIDS and worm history, it's impressive he's still competing. Noted!",
-        "Good intel! HQ file says: 'Medical challenges significant, but determination levels off the charts.'"
-    ],
-    guyFieryNegative: [
-        "Noted... but my files show Guy Fiery is fighting through cat AIDS AND a worm history. Cut him some slack?",
-        "Tough intel on Guy Fiery. HQ records show he's battling health issues but still outperforming Meow-Meow somehow.",
-        "Logged. But field note: any pet fighting cat AIDS who STILL ranks above Meow-Meow deserves some credit.",
-        "Guy Fiery critique received. Though between us, being sick and still more active than healthy Meow-Meow is saying something."
-    ],
-    guyFieryNeutral: [
-        "Guy Fiery report filed. HQ medical brief: cat AIDS positive, worm history, but surprisingly athletic despite everything.",
-        "Intel logged! Guy Fiery's health data is concerning, but he's a fighter. Rankings reflect both factors.",
-        "Got it. The Flavortown cat's file is... complicated. Health issues tank his score, but spirit keeps him going.",
-        "Guy Fiery sighting confirmed. My notes: 'Health problems severe. Fighting spirit? Immense. Net ranking: challenging.'"
-    ],
-    birchPositive: [
-        "Birch intel received! Noted: smooth fur confirmed. But my chaos reports also show... significant messes.",
-        "Positive Birch report logged! Though HQ files indicate she starts trouble with other pets. Constantly.",
-        "Good Birch intel! Field notes confirm nice fur, but also 'refuses to be petted' and 'maximum chaos agent.'",
-        "Birch praise noted! Though my other field reports mention the mess... and the drama... and the fear of everything."
-    ],
-    birchNegative: [
-        "Birch critique matches HQ data! Messy, chaotic, scared of everything. Good accurate reporting, agent!",
-        "Your Birch intel aligns with multiple sources: trouble with other pets, mess everywhere, won't cooperate.",
-        "Confirmed! Birch's file reads: 'Smooth fur (untouchable), chaos agent, drops everything.' Your report is accurate.",
-        "Excellent field work! Birch data shows peak haphazard behavior. Rankings adjusted for messiness."
-    ],
-    birchNeutral: [
-        "Birch report logged. HQ summary: gorgeous smooth fur she won't let anyone touch, and a trail of chaos.",
-        "Intel received! Birch file notes: 'Beautiful but chaotic. Scared of own shadow. Causes inter-pet drama.'",
-        "Got it! Birch analysis: her smooth skin bonus is offset by the mess, the fear, and the troublemaking.",
-        "Birch sighting confirmed. My report: unpredictable chaos agent. Good luck getting accurate intel on her."
-    ],
     noCatMentioned: [
         "WAIT - which pet?! Say a NAME! 'Meow-Meow is lazy' or 'Chirpy caught something' - I need specifics to update rankings!",
         "No pet mentioned = no ranking update! Try: 'Smokey Joe is fast' or 'Birch broke something' - NAME + BEHAVIOR!",
         "Agent, you're wasting a report! Include a pet name! Example: 'Lila is speedy' or 'Guy Fiery jumped high!'",
         "I can't update rankings without a pet name! Who did what? Meow-Meow? Birch? Smokey? TELL ME!"
-    ],
-    generic: [
-        "Don't waste reports on chitchat! Tell me: which pet did something? Good or bad - I need to know!",
-        "Agent, reports are LIMITED! Use them wisely - tell me about pet BEHAVIORS, not random stuff!",
-        "HQ reminder: Every report should mention a PET and what they DID. That's how rankings work!",
-        "Save the small talk! Your reports affect the leaderboard. Who did something noteworthy today?",
-        "Limited intel remaining! Make it count - report on actual pet observations: names and actions!"
     ],
     questionAsked: [
         "Questions don't update rankings! REPORTS do! Instead of asking about {cat}, tell me what {cat} DID!",
@@ -779,42 +506,6 @@ const RESPONSES = {
         "No Q&A here! This is intel submission! Report format: [PET NAME] + [WHAT THEY DID]. Go!",
         "Can't process questions! Rephrase as a report: 'I saw [pet] do [thing]' - that's what updates rankings!"
     ],
-    smokeyJoePositive: [
-        "Excellent Smokey Joe intel! Speed and strength confirmed. Though my other reports mention... the smell situation.",
-        "Great report on Smokey Joe! He's a legend in my files. Fast, strong, athletic - just wish the smell data was better.",
-        "Smokey Joe praise logged! Peak physical specimen per HQ records. The odor issue is... a known factor.",
-        "Top-tier Smokey Joe intel! My analysis: would rank #1 if not for the smell repelling potential supporters."
-    ],
-    smokeyJoeNegative: [
-        "Smokey Joe critique received. Is this about the smell? Because that's well-documented in my files...",
-        "Noted! If this is smell-related, it matches HQ data. Otherwise his stats are actually impressive.",
-        "Smokey Joe negative intel... my sensors confirm the odor situation. Fair criticism there.",
-        "Logged. The smell issue is his main weakness per multiple field reports. Can't argue with the data."
-    ],
-    smokeyJoeNeutral: [
-        "Smokey Joe intel filed. HQ summary: fast, strong, built like a champion... with an unfortunate aroma.",
-        "Got it! Smokey Joe's file reads: 'Peak athletic performance. Approach with caution (smell-related).'",
-        "Smokey Joe report logged. My notes: legendary stats, but the smell factor affects his supporter count.",
-        "Intel received! The Smokey Joe paradox: amazing abilities, challenging proximity experience."
-    ],
-    chirpyPositive: [
-        "Chirpy intel logged! Sympathy points confirmed - she's been through a lot. Updating rankings!",
-        "Good Chirpy report! My files show the injury history. She's a survivor. Rankings adjusted!",
-        "Positive Chirpy intel! HQ notes: 'Smooth operator when calm. Gets sympathy support.' Though the anger issues...",
-        "Chirpy praise received! Field data confirms resilience. Just watch out for the temperamental episodes."
-    ],
-    chirpyNegative: [
-        "Chirpy critique noted. Is this about the anger issues? Or the dropping stuff constantly? Both are in my files.",
-        "Your Chirpy intel matches HQ's temperament data. She DOES have anger management concerns. Logged!",
-        "Noted! Chirpy's file mentions the clumsy-when-mad situation. Accurate reporting, agent.",
-        "Chirpy negative report received. The anger plus dropping things combo is well-documented here."
-    ],
-    chirpyNeutral: [
-        "Chirpy intel filed. HQ summary: injured past (sympathy factor), current status: angry, drops stuff, but a survivor.",
-        "Got it! Chirpy's file: 'Smooth when she wants to be. Temperamental otherwise. Clumsy when frustrated.'",
-        "Chirpy report logged. My analysis: the sympathy points help, but anger issues and clumsiness hurt rankings.",
-        "Intel received! Chirpy data is mixed - past injury generates support, but current behavior is... chaotic."
-    ]
 };
 
 // ===========================================
@@ -1233,81 +924,50 @@ chatForm.addEventListener('submit', async (e) => {
     addMessage(message, 'user');
     messageInput.value = '';
 
-    // Try AI processing first, with fallback to keyword-based system
-    const aiResult = await processWithAI(message, petsData);
+    // Process message using keyword-based system
+    let mentionedCats = detectCats(message);
 
-    if (aiResult) {
-        // === AI-POWERED RESPONSE ===
-        console.log('[AI] Using AI response');
+    // Validate detected cats to prevent false positives
+    const validatedIds = validatePetsMentioned(mentionedCats.map(p => p.id), message, petsData);
+    if (validatedIds.length !== mentionedCats.length) {
+        mentionedCats = mentionedCats.filter(p => validatedIds.includes(p.id));
+    }
 
-        // Handle RP mentions
-        if (aiResult.isRPMention) {
-            addMessage(aiResult.response, 'addy');
+    const { points } = analyzeSurvivability(message);
+
+    const catNames = mentionedCats.length > 0 ? mentionedCats.map(p => p.name).join(', ') : null;
+    saveGlobalMessage(message, catNames);
+
+    // Check if RP (veteran) is mentioned
+    const rpMentioned = /\brp\b|r\.p\.|rest in peace/i.test(message);
+
+    setTimeout(() => {
+        // Special handling for RP mentions
+        if (rpMentioned) {
+            addMessage(randomFrom(RESPONSES.rpMentioned), 'addy');
             return;
         }
 
-        // Validate AI's petsMentioned - only keep pets actually in the message
-        const validatedPetIds = validatePetsMentioned(aiResult.petsMentioned || [], message, petsData);
-        if (validatedPetIds.length !== (aiResult.petsMentioned || []).length) {
-            console.log('[AI] Filtered out hallucinated pets. AI said:', aiResult.petsMentioned, 'Validated:', validatedPetIds);
-        }
+        // Check if user is asking a question instead of reporting
+        const isQuestion = /^(did|does|is|are|was|were|has|have|can|could|would|will|do|should|what|when|where|why|how)\b.+\??\s*$/i.test(message.trim());
 
-        // Check if AI response text mentions pets the user didn't mention
-        // If contaminated, reject AI response and use a clean generic response
-        if (isResponseContaminated(aiResult.response || '', validatedPetIds, petsData)) {
-            console.log('[AI] Response rejected due to contamination, using clean response');
-            const mentionedPets = getPetsFromIds(validatedPetIds, petsData);
-            const catNames = mentionedPets.length > 0 ? mentionedPets.map(p => p.name).join(', ') : null;
-            saveGlobalMessage(message, catNames);
-
-            // Apply points using validated pets only
-            const petUpdates = [];
-            if (mentionedPets.length > 0) {
-                const { points } = analyzeSurvivability(message);
-                mentionedPets.forEach(pet => {
-                    let petPoints = points;
-                    const bio = PET_BIOS[pet.id];
-                    if (bio) {
-                        petPoints += bio.rankModifier || 0;
-                        if (bio.smellyPenalty) petPoints += bio.smellyPenalty;
-                        if (bio.celebrationPenalty) petPoints += bio.celebrationPenalty;
-                        if (bio.angerPenalty) petPoints += bio.angerPenalty;
-                        if (bio.messyPenalty) petPoints += bio.messyPenalty;
-                        if (bio.healthBonus) petPoints += bio.healthBonus;
-                        if (bio.corruptionModifier) petPoints += bio.corruptionModifier;
-                    }
-                    if (points > 0) petPoints = Math.max(petPoints, 1);
-                    addPoints(pet.id, petPoints);
-
-                    petUpdates.push({
-                        name: pet.name,
-                        points: petPoints,
-                        newRank: getPetRank(pet.id)
-                    });
-                });
-
-                // Transparent response with impact
-                addMessage(generateImpactResponse(petUpdates), 'addy');
-            } else {
-                addMessage("Intel received! Keep those reports coming.", 'addy');
+        if (mentionedCats.length > 0) {
+            // If it's a question about a pet, redirect them to report instead
+            if (isQuestion) {
+                const catNamesStr = mentionedCats.map(p => p.name).join(' and ');
+                const response = randomFrom(RESPONSES.questionAsked).replace('{cat}', catNamesStr);
+                addMessage(response, 'addy');
+                return;
             }
-            return;
-        }
 
-        // Get mentioned pets and update scores
-        const mentionedPets = getPetsFromIds(validatedPetIds, petsData);
-        const catNames = mentionedPets.length > 0 ? mentionedPets.map(p => p.name).join(', ') : null;
-        saveGlobalMessage(message, catNames);
+            // Track updates for transparent response
+            const petUpdates = [];
 
-        // Apply points if pets were mentioned and it's not a question
-        const petUpdates = [];
-        if (mentionedPets.length > 0 && !aiResult.isQuestion) {
-            mentionedPets.forEach(pet => {
-                // Use nullish coalescing to handle 0 correctly (0 is valid, null/undefined defaults to 1)
-                let petPoints = aiResult.points ?? 1;
+            mentionedCats.forEach(pet => {
+                let petPoints = points;
                 const bio = PET_BIOS[pet.id];
 
-                // Apply personality modifiers (keep the secret scoring!)
+                // Apply personality-based modifiers
                 if (bio) {
                     petPoints += bio.rankModifier || 0;
                     if (bio.smellyPenalty) petPoints += bio.smellyPenalty;
@@ -1320,207 +980,33 @@ chatForm.addEventListener('submit', async (e) => {
 
                 // Guy Fiery health cap
                 if (pet.id === 'guy-fiery') {
-                    petPoints = Math.max(petPoints, Math.ceil((aiResult.points ?? 1) * 0.6));
+                    petPoints = Math.max(petPoints, Math.ceil(points * 0.6));
                 }
 
-                // Ensure minimum 1 point for positive mentions
-                if ((aiResult.points || 0) > 0) {
+                // Ensure minimum 1 point for any positive mention
+                if (points > 0) {
                     petPoints = Math.max(petPoints, 1);
                 }
 
                 addPoints(pet.id, petPoints);
 
-                // Track the update for transparent response
                 petUpdates.push({
                     name: pet.name,
                     points: petPoints,
                     newRank: getPetRank(pet.id)
                 });
             });
+
+            // Generate transparent response with impact info
+            addMessage(generateImpactResponse(petUpdates), 'addy');
+        } else if (/^(hi|hello|hey|hiya|yo|sup)\b/i.test(message)) {
+            addMessage(randomFrom(RESPONSES.greetings), 'addy');
+        } else if (isQuestion) {
+            addMessage(randomFrom(RESPONSES.questionNoCat), 'addy');
+        } else {
+            addMessage(randomFrom(RESPONSES.noCatMentioned), 'addy');
         }
-
-        // Use transparent response showing impact
-        const response = petUpdates.length > 0
-            ? generateImpactResponse(petUpdates)
-            : aiResult.response;
-        addMessage(response, 'addy');
-
-    } else {
-        // === FALLBACK: Keyword-based system ===
-        console.log('[Fallback] Using keyword-based response');
-
-        let mentionedCats = detectCats(message);
-        console.log('[Fallback] detectCats returned:', mentionedCats.map(p => p.id));
-
-        // IMPORTANT: Validate detected cats to prevent false positives
-        // Only keep cats that are ACTUALLY mentioned in the message
-        const validatedIds = validatePetsMentioned(mentionedCats.map(p => p.id), message, petsData);
-        if (validatedIds.length !== mentionedCats.length) {
-            console.log('[Fallback] Filtered out false positives. Before:', mentionedCats.map(p => p.id), 'After:', validatedIds);
-            mentionedCats = mentionedCats.filter(p => validatedIds.includes(p.id));
-        }
-
-        const { points, sentiment } = analyzeSurvivability(message);
-
-        const catNames = mentionedCats.length > 0 ? mentionedCats.map(p => p.name).join(', ') : null;
-        saveGlobalMessage(message, catNames);
-
-        // Check if RP (veteran) is mentioned
-        const rpMentioned = /\brp\b|r\.p\.|rest in peace/i.test(message);
-
-        setTimeout(() => {
-            // Special handling for RP mentions
-            if (rpMentioned) {
-                addMessage(randomFrom(RESPONSES.rpMentioned), 'addy');
-                return;
-            }
-
-            // Check if user is asking a question instead of reporting
-            const isQuestion = /^(did|does|is|are|was|were|has|have|can|could|would|will|do|should|what|when|where|why|how)\b.+\??\s*$/i.test(message.trim());
-
-            if (mentionedCats.length > 0) {
-                // If it's a question about a pet, redirect them to report instead
-                if (isQuestion) {
-                    const catNamesStr = mentionedCats.map(p => p.name).join(' and ');
-                    const response = randomFrom(RESPONSES.questionAsked).replace('{cat}', catNamesStr);
-                    addMessage(response, 'addy');
-                    return;
-                }
-
-                // Track updates for transparent response
-                const petUpdates = [];
-
-                mentionedCats.forEach(pet => {
-                    // Base points from user's message (sentiment) - THIS IS THE PRIMARY DRIVER
-                    let petPoints = points;
-                    const bio = PET_BIOS[pet.id];
-
-                    // ===========================================
-                    // PERSONALITY-BASED MODIFIERS
-                    // Each pet's unique traits affect their score!
-                    // ===========================================
-
-                    if (bio) {
-                        // Apply the pet's base rank modifier (from strengths)
-                        petPoints += bio.rankModifier || 0;
-
-                        // Apply weakness penalties
-                        if (bio.smellyPenalty) petPoints += bio.smellyPenalty; // Smokey Joe's smell
-                        if (bio.celebrationPenalty) petPoints += bio.celebrationPenalty; // Lila's overcelebrating
-                        if (bio.angerPenalty) petPoints += bio.angerPenalty; // Chirpy's anger issues
-                        if (bio.messyPenalty) petPoints += bio.messyPenalty; // Birch's messiness
-                        if (bio.healthBonus) petPoints += bio.healthBonus; // Guy Fiery's fighting spirit
-                        if (bio.corruptionModifier) petPoints += bio.corruptionModifier; // Meow-Meow's corruption backfires
-                    }
-
-                    // Special case handlers for extreme traits
-                    if (pet.id === 'guy-fiery') {
-                        // Guy Fiery: -2 health issues, +1 fighting spirit = -1 net
-                        // Cat AIDS and worms really hurt his rankings
-                        petPoints = Math.max(petPoints, Math.ceil(points * 0.6)); // Health caps his potential
-                    }
-
-                    // Ensure minimum 1 point for any positive mention
-                    if (points > 0) {
-                        petPoints = Math.max(petPoints, 1);
-                    }
-
-                    addPoints(pet.id, petPoints);
-
-                    // Track update for transparent response
-                    petUpdates.push({
-                        name: pet.name,
-                        points: petPoints,
-                        newRank: getPetRank(pet.id)
-                    });
-                });
-
-                const catNamesStr = mentionedCats.map(p => p.name).join(' and ');
-                const isMeowMeow = mentionedCats.some(p => p.id === 'meow-meow');
-                const isLila = mentionedCats.some(p => p.id === 'lila-dog');
-                const isGuyFiery = mentionedCats.some(p => p.id === 'guy-fiery');
-                const isBirch = mentionedCats.some(p => p.id === 'birch');
-                const isSmokeyJoe = mentionedCats.some(p => p.id === 'smokey-joe');
-                const isChirpy = mentionedCats.some(p => p.id === 'chirpy');
-
-                let responsePool;
-                // Special responses for Meow-Meow
-                if (isMeowMeow && mentionedCats.length === 1) {
-                    if (sentiment === 'negative') {
-                        responsePool = RESPONSES.meowMeowNegative;
-                    } else if (sentiment === 'positive') {
-                        responsePool = RESPONSES.meowMeowPositive;
-                    } else {
-                        responsePool = RESPONSES.meowMeowNeutral;
-                    }
-                // Special responses for Lila
-                } else if (isLila && mentionedCats.length === 1) {
-                    if (sentiment === 'negative') {
-                        responsePool = RESPONSES.lilaNegative;
-                    } else if (sentiment === 'positive') {
-                        responsePool = RESPONSES.lilaPositive;
-                    } else {
-                        responsePool = RESPONSES.lilaNeutral;
-                    }
-                // Special responses for Guy Fiery
-                } else if (isGuyFiery && mentionedCats.length === 1) {
-                    if (sentiment === 'negative') {
-                        responsePool = RESPONSES.guyFieryNegative;
-                    } else if (sentiment === 'positive') {
-                        responsePool = RESPONSES.guyFieryPositive;
-                    } else {
-                        responsePool = RESPONSES.guyFieryNeutral;
-                    }
-                // Special responses for Birch
-                } else if (isBirch && mentionedCats.length === 1) {
-                    if (sentiment === 'negative') {
-                        responsePool = RESPONSES.birchNegative;
-                    } else if (sentiment === 'positive') {
-                        responsePool = RESPONSES.birchPositive;
-                    } else {
-                        responsePool = RESPONSES.birchNeutral;
-                    }
-                // Special responses for Smokey Joe
-                } else if (isSmokeyJoe && mentionedCats.length === 1) {
-                    if (sentiment === 'negative') {
-                        responsePool = RESPONSES.smokeyJoeNegative;
-                    } else if (sentiment === 'positive') {
-                        responsePool = RESPONSES.smokeyJoePositive;
-                    } else {
-                        responsePool = RESPONSES.smokeyJoeNeutral;
-                    }
-                // Special responses for Chirpy
-                } else if (isChirpy && mentionedCats.length === 1) {
-                    if (sentiment === 'negative') {
-                        responsePool = RESPONSES.chirpyNegative;
-                    } else if (sentiment === 'positive') {
-                        responsePool = RESPONSES.chirpyPositive;
-                    } else {
-                        responsePool = RESPONSES.chirpyNeutral;
-                    }
-                } else {
-                    if (sentiment === 'negative') {
-                        responsePool = RESPONSES.negative;
-                    } else if (sentiment === 'positive') {
-                        responsePool = RESPONSES.positive;
-                    } else {
-                        responsePool = RESPONSES.neutral;
-                    }
-                }
-
-                // Generate transparent response with impact info
-                const impactResponse = generateImpactResponse(petUpdates);
-                addMessage(impactResponse, 'addy');
-            } else if (/^(hi|hello|hey|hiya|yo|sup)\b/i.test(message)) {
-                addMessage(randomFrom(RESPONSES.greetings), 'addy');
-            } else if (isQuestion) {
-                // Question without mentioning a pet
-                addMessage(randomFrom(RESPONSES.questionNoCat), 'addy');
-            } else {
-                addMessage(randomFrom(RESPONSES.noCatMentioned), 'addy');
-            }
-        }, 500);
-    }
+    }, 500);
 });
 
 function addMessage(text, sender) {

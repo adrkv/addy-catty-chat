@@ -1,16 +1,34 @@
 # Addy Catty Catty Cat Chat
 
-A fun real-time leaderboard and chat website where users chat about cats and upload pictures! Every mention boosts a cat's score!
+A fun real-time pet ranking website where users submit "field reports" to influence the leaderboard! Report on pet behaviors and watch the rankings update live.
 
 ## Features
 
 - **Live Leaderboard**: Real-time score updates across all users
-- **Auto-Scoring**: Mention a cat → they get points!
-- **Image Uploads**: Share cat pics for bonus points
-- **Auto Cat Detection**: AI-powered identification of which cat is in your photo!
-- **Photo Gallery**: Recent uploads displayed for everyone
-- **Chat with Addy**: Fun chatbot responses
-- **Global Chat**: See what everyone is saying about the cats
+- **Field Reports**: Submit intel about pets to affect their rankings
+- **Smart Scoring**: Keywords in your reports determine point values (positive traits like "fast" vs negative traits like "lazy")
+- **Pet Personalities**: Each pet has unique strengths and weaknesses that modify their scores
+- **Meet the Pets**: Detailed dossiers on each pet with AI-generated quips
+- **Global Chat**: See field reports from all agents worldwide
+- **Pet Requests**: Vote for new pets to be added to the leaderboard
+- **Report Limits**: 20 reports per day with 15-minute cooldowns to prevent spam
+
+## How Scoring Works
+
+The scoring system analyzes your message for keywords:
+
+**Positive traits** (+2 points): fast, strong, athletic, hunter, smart, clever, etc.
+**Negative traits** (-2 points): fat, lazy, slow, clumsy, smelly, etc.
+**Cute mentions** (+1 point): cute, adorable, fluffy, precious, etc.
+
+Each pet also has personality modifiers:
+- **Smokey Joe**: Speed bonus, but smell penalty
+- **Lila Dog**: Three-legged speed demon, overcelebration penalty
+- **Chirpy**: Sympathy bonus for past injury, anger issues penalty
+- **Birch**: Smooth fur, but chaos/messiness penalty
+- **Guy Fiery**: Fighting spirit, but health issues penalty
+- **Meow-Meow**: No bonuses - relies on "alternative methods"
+- **RP**: Forever #1 (veteran memorial)
 
 ## Quick Setup
 
@@ -20,39 +38,30 @@ A fun real-time leaderboard and chat website where users chat about cats and upl
 2. Click "Create a project"
 3. Name it anything (e.g., "addy-catty-chat")
 4. Disable Google Analytics (not needed)
-5. Click "Create project"
 
 ### 2. Setup Realtime Database
 
 1. In Firebase Console, go to **Build → Realtime Database**
 2. Click "Create Database"
 3. Choose any location
-4. Start in **Test mode** (we'll secure it later)
-5. Copy your database URL (looks like: `https://your-project.firebaseio.com`)
+4. Start in **Test mode**
 
 ### 3. Get Firebase Config
 
 1. Go to **Project Settings** (gear icon)
 2. Scroll to "Your apps" → Click web icon `</>`
 3. Register app with any name
-4. Copy the `firebaseConfig` object
+4. Copy the config values
 
-### 4. Get ImgBB API Key (Free)
+### 4. (Optional) Get Gemini API Key for Pet Quips
 
-1. Go to [https://api.imgbb.com/](https://api.imgbb.com/)
-2. Sign up for free
-3. Copy your API key
+1. Go to [Google AI Studio](https://aistudio.google.com/app/apikey)
+2. Create an API key
+3. This enables AI-generated personality quips in Meet the Pets tab
 
-### 5. (Optional) Get Hugging Face API Key for Auto Cat Detection
+### 5. Add Config to Code
 
-1. Go to [https://huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
-2. Sign up for free
-3. Create a new access token (read access is enough)
-4. This enables automatic cat identification from uploaded photos!
-
-### 6. Add Config to Code
-
-Edit `js/app.js` and fill in your credentials:
+Edit `js/app.js`:
 
 ```javascript
 const CONFIG = {
@@ -65,60 +74,56 @@ const CONFIG = {
         messagingSenderId: "123456789",
         appId: "your-app-id"
     },
-    imgbbApiKey: "your-imgbb-api-key",
-    huggingFaceApiKey: "your-huggingface-api-key", // Optional: enables auto cat detection
     basePoints: 1,
-    imagePoints: 3
+    gemini: {
+        apiKey: "your-gemini-api-key",
+        model: "gemini-2.5-flash",
+        enabledForQuips: true
+    }
 };
 ```
 
-### 7. Deploy to GitHub Pages
+### 6. Deploy to GitHub Pages
 
 1. Push to GitHub
 2. Go to repo Settings → Pages
 3. Select "main" branch → Save
 4. Your site is live!
 
-## Adding New Cats/Dogs
+## Adding New Pets
 
 Edit the `DEFAULT_PETS` array in `js/app.js`:
 
 ```javascript
 const DEFAULT_PETS = [
-    { id: "meow-meow", name: "Meow-Meow", type: "cat", score: 0, emoji: "😺", aliases: [] },
-    { id: "buddy", name: "Buddy", type: "dog", score: 0, emoji: "🐕", aliases: ["bud"] },
-    // Add more here!
+    {
+        id: "new-pet",
+        name: "New Pet",
+        type: "cat",
+        score: 0,
+        aliases: ["nickname", "other-name"],
+        image: "assets/cats/new-pet.jpg"
+    },
 ];
 ```
 
-Or add directly in Firebase Console under the `pets` node.
+Add a bio in `PET_BIOS`:
 
-## Securing Your Database (Optional)
-
-After testing, update Firebase Realtime Database rules:
-
-```json
-{
-  "rules": {
-    ".read": true,
-    ".write": true
-  }
+```javascript
+"new-pet": {
+    bio: "Description of the pet",
+    strengths: ["Strength 1", "Strength 2"],
+    weaknesses: ["Weakness 1"],
+    rankModifier: 0
 }
 ```
 
-For production, you might want more restrictive rules.
-
-## How Scoring Works
-
-- **+1 point**: Each cat mentioned in a message
-- **+3 points**: Uploading a picture of a cat
-- Scores update in real-time for everyone!
-
 ## Customization
 
-- **Points**: Change `pointsPerMention` and `pointsPerImage` in CONFIG
+- **Points**: Adjust values in `SURVIVABILITY` object
 - **Responses**: Edit the `RESPONSES` object for custom Addy messages
-- **Styling**: Modify `css/style.css` for different colors/themes
+- **Styling**: Modify `css/style.css` (pink theme by default)
+- **Report Limits**: Change `DAILY_REPORT_LIMIT` and `REPORT_COOLDOWN_MINUTES`
 
 ## Local Testing
 
