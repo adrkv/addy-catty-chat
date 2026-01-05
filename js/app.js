@@ -336,6 +336,7 @@ const SURVIVABILITY = {
         'fit', 'healthy', 'strong', 'fast', 'agile', 'athletic', 'muscular',
         'lean', 'active', 'energetic', 'quick', 'nimble', 'alert', 'smart',
         'clever', 'hunter', 'fierce', 'brave', 'tough', 'survivor', 'wild',
+        'confident', 'bold', 'courageous', 'fearless', 'daring', 'adventurous',
         'sleek', 'swift', 'powerful', 'sharp', 'stealthy', 'cunning', 'skinny',
         'thin', 'slim', 'lithe', 'graceful', 'spy', 'ninja', 'predator',
         // Pet-specific positive traits
@@ -347,7 +348,9 @@ const SURVIVABILITY = {
         'shared', 'cuddled', 'snuggled', 'purred', 'played', 'friendly',
         'gentle', 'careful', 'obedient', 'listened', 'behaved', 'good boy',
         'good girl', 'good kitty', 'well behaved', 'trained', 'loyal',
-        'cleaned', 'groomed', 'used litter', 'used scratching post'
+        'cleaned', 'groomed', 'used litter', 'used scratching post',
+        // Positive emotional states
+        'happy', 'content', 'calm', 'relaxed', 'peaceful', 'chill'
     ],
     positivePoints: 2,
 
@@ -375,7 +378,14 @@ const SURVIVABILITY = {
         'vomited', 'threw up', 'hissed', 'growled', 'fought', 'bullied',
         'escaped', 'ran away', 'ignored', 'disobedient', 'misbehaved', 'bad boy',
         'bad girl', 'bad kitty', 'naughty', 'mean', 'evil', 'terrible', 'awful',
-        'annoying', 'scratched furniture', 'ate my food', 'woke me up'
+        'annoying', 'scratched furniture', 'ate my food', 'woke me up',
+        // Fear & anxiety traits - not good for survival
+        'scared', 'scary', 'fearful', 'afraid', 'frightened', 'timid', 'cowardly',
+        'coward', 'nervous', 'anxious', 'skittish', 'shy', 'hiding',
+        'trembling', 'shaking', 'panicked', 'terrified', 'wimpy', 'wimp',
+        // Negative emotional states
+        'sad', 'depressed', 'unhappy', 'miserable', 'stressed', 'upset', 'moody',
+        'aggressive', 'hostile', 'violent', 'crazy', 'insane', 'unhinged'
     ],
     negativePoints: -2,
 
