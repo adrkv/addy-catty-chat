@@ -1874,41 +1874,28 @@ function generateImpactResponse(petUpdates, baseResponse) {
     return responseStyles[Math.floor(Math.random() * responseStyles.length)];
 }
 
-// Generate AI-enhanced response showing sentiment analysis
+// Generate response showing final score and rank
 function generateAIImpactResponse(petUpdates) {
     if (!petUpdates || petUpdates.length === 0) {
         return "Intel received! Keep those reports coming.";
     }
 
-    // Build detailed impact summary with AI sentiment info
+    // Build simple impact summary with just score and rank
     const impactLines = petUpdates.map(update => {
         const pointsStr = formatPointsChange(update.points);
-        const sentimentEmoji = update.sentiment === 'positive' ? '📈' :
-                              update.sentiment === 'negative' ? '📉' : '➖';
-        const sentimentLabel = update.sentiment.toUpperCase();
-
-        // Show breakdown: AI score + modifier = final
-        let breakdown = '';
-        if (update.usedAI) {
-            const baseStr = formatPointsChange(update.baseScore);
-            const modStr = update.modifier !== 0 ? ` ${update.modifier >= 0 ? '+' : ''}${update.modifier} modifier` : '';
-            breakdown = `(AI: ${baseStr}${modStr})`;
-        } else {
-            breakdown = '(keyword fallback)';
-        }
-
-        return `${sentimentEmoji} ${update.name}: ${sentimentLabel} → ${pointsStr} pts ${breakdown}`;
+        const rankStr = update.newRank ? `#${update.newRank}` : '';
+        return `${update.name}: ${pointsStr} pts ${rankStr}`;
     });
 
-    // Create response with AI analysis info
-    const impactSummary = impactLines.join('\n');
+    const impactSummary = impactLines.join(' | ');
 
     // Pick a response style
     const responseStyles = [
-        `Analysis complete!\n${impactSummary}`,
-        `Intel analyzed!\n${impactSummary}`,
-        `Sentiment detected!\n${impactSummary}`,
-        `Report processed!\n${impactSummary}`
+        `Report logged! ${impactSummary}`,
+        `Intel received! ${impactSummary}`,
+        `Rankings updated! ${impactSummary}`,
+        `Got it! ${impactSummary}`,
+        `Report processed! ${impactSummary}`
     ];
 
     return responseStyles[Math.floor(Math.random() * responseStyles.length)];
