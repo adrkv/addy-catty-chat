@@ -6,7 +6,7 @@ A fun real-time pet ranking website where users submit "field reports" to influe
 
 - **Live Leaderboard**: Real-time score updates across all users
 - **Field Reports**: Submit intel about pets to affect their rankings
-- **Smart Scoring**: Keywords in your reports determine point values (positive traits like "fast" vs negative traits like "lazy")
+- **AI Sentiment Analysis**: Gemini AI analyzes your reports to understand context and determine sentiment scores (-5 to +5)
 - **Pet Personalities**: Each pet has unique strengths and weaknesses that modify their scores
 - **Meet the Pets**: Detailed dossiers on each pet with AI-generated quips
 - **Global Chat**: See field reports from all agents worldwide
@@ -15,13 +15,21 @@ A fun real-time pet ranking website where users submit "field reports" to influe
 
 ## How Scoring Works
 
-The scoring system analyzes your message for keywords:
+The scoring system uses **Gemini AI** to analyze the sentiment of your message:
 
-**Positive traits** (+2 points): fast, strong, athletic, hunter, smart, clever, etc.
-**Negative traits** (-2 points): fat, lazy, slow, clumsy, smelly, etc.
-**Cute mentions** (+1 point): cute, adorable, fluffy, precious, etc.
+| Score | Sentiment | Example |
+|-------|-----------|---------|
+| +5 | Extremely positive | "Smokey Joe saved a kitten from a tree!" |
+| +3 to +4 | Very positive | "Lila Dog caught a squirrel today!" |
+| +1 to +2 | Mildly positive | "Meow-Meow looked cute sleeping" |
+| 0 | Neutral | "I saw Chirpy in the backyard" |
+| -1 to -2 | Mildly negative | "Birch knocked over a plant" |
+| -3 to -4 | Very negative | "Guy Fiery destroyed the couch" |
+| -5 | Extremely negative | "Meow-Meow attacked the neighbor's dog" |
 
-Each pet also has personality modifiers:
+**Fallback**: If the AI is unavailable, keyword-based analysis is used instead.
+
+Each pet also has personality modifiers applied on top of the AI score:
 - **Smokey Joe**: Speed bonus, but smell penalty
 - **Lila Dog**: Three-legged speed demon, overcelebration penalty
 - **Chirpy**: Sympathy bonus for past injury, anger issues penalty
@@ -53,11 +61,13 @@ Each pet also has personality modifiers:
 3. Register app with any name
 4. Copy the config values
 
-### 4. (Optional) Get Gemini API Key for Pet Quips
+### 4. Get Gemini API Key (Required for AI Features)
 
 1. Go to [Google AI Studio](https://aistudio.google.com/app/apikey)
 2. Create an API key
-3. This enables AI-generated personality quips in Meet the Pets tab
+3. This enables:
+   - **AI Sentiment Analysis** for field reports (scores -5 to +5)
+   - **AI-generated personality quips** in Meet the Pets tab
 
 ### 5. Add Config to Code
 
@@ -120,10 +130,11 @@ Add a bio in `PET_BIOS`:
 
 ## Customization
 
-- **Points**: Adjust values in `SURVIVABILITY` object
+- **Pet Modifiers**: Adjust `rankModifier` and penalty values in `PET_BIOS` object
 - **Responses**: Edit the `RESPONSES` object for custom Addy messages
 - **Styling**: Modify `css/style.css` (pink theme by default)
 - **Report Limits**: Change `DAILY_REPORT_LIMIT` and `REPORT_COOLDOWN_MINUTES`
+- **Fallback Keywords**: Edit `SURVIVABILITY` object (used when AI is unavailable)
 
 ## Local Testing
 

@@ -934,7 +934,7 @@ chatForm.addEventListener('submit', async (e) => {
     addMessage(message, 'user');
     messageInput.value = '';
 
-    // Process message using keyword-based system
+    // Process message - detect pets mentioned
     let mentionedCats = detectCats(message);
 
     // Validate detected cats to prevent false positives
@@ -943,15 +943,14 @@ chatForm.addEventListener('submit', async (e) => {
         mentionedCats = mentionedCats.filter(p => validatedIds.includes(p.id));
     }
 
-    const { points } = analyzeSurvivability(message);
-
     const catNames = mentionedCats.length > 0 ? mentionedCats.map(p => p.name).join(', ') : null;
     saveGlobalMessage(message, catNames);
 
     // Check if RP (veteran) is mentioned
     const rpMentioned = /\brp\b|r\.p\.|rest in peace/i.test(message);
 
-    setTimeout(() => {
+    // Use async processing for AI sentiment analysis
+    setTimeout(async () => {
         // Special handling for RP mentions
         if (rpMentioned) {
             addMessage(randomFrom(RESPONSES.rpMentioned), 'addy');
@@ -973,42 +972,73 @@ chatForm.addEventListener('submit', async (e) => {
             // Track updates for transparent response
             const petUpdates = [];
 
-            mentionedCats.forEach(pet => {
-                let petPoints = points;
+            // Process each pet with AI sentiment analysis
+            for (const pet of mentionedCats) {
+                // Try AI sentiment analysis first
+                let aiResult = await analyzeMessageSentiment(message, pet.name);
+                let baseScore, sentiment, usedAI;
+
+                if (aiResult) {
+                    // AI analysis succeeded
+                    baseScore = aiResult.score;
+                    sentiment = aiResult.sentiment;
+                    usedAI = true;
+                } else {
+                    // Fallback to keyword-based analysis
+                    const keywordResult = analyzeSurvivability(message);
+                    baseScore = keywordResult.points;
+                    sentiment = keywordResult.sentiment;
+                    usedAI = false;
+                }
+
+                let petPoints = baseScore;
                 const bio = PET_BIOS[pet.id];
+                let modifierTotal = 0;
 
                 // Apply personality-based modifiers
                 if (bio) {
-                    petPoints += bio.rankModifier || 0;
-                    if (bio.smellyPenalty) petPoints += bio.smellyPenalty;
-                    if (bio.celebrationPenalty) petPoints += bio.celebrationPenalty;
-                    if (bio.angerPenalty) petPoints += bio.angerPenalty;
-                    if (bio.messyPenalty) petPoints += bio.messyPenalty;
-                    if (bio.healthBonus) petPoints += bio.healthBonus;
-                    if (bio.corruptionModifier) petPoints += bio.corruptionModifier;
+                    modifierTotal += bio.rankModifier || 0;
+                    if (bio.smellyPenalty) modifierTotal += bio.smellyPenalty;
+                    if (bio.celebrationPenalty) modifierTotal += bio.celebrationPenalty;
+                    if (bio.angerPenalty) modifierTotal += bio.angerPenalty;
+                    if (bio.messyPenalty) modifierTotal += bio.messyPenalty;
+                    if (bio.healthBonus) modifierTotal += bio.healthBonus;
+                    if (bio.corruptionModifier) modifierTotal += bio.corruptionModifier;
+                    petPoints += modifierTotal;
                 }
 
                 // Guy Fiery health cap
                 if (pet.id === 'guy-fiery') {
-                    petPoints = Math.max(petPoints, Math.ceil(points * 0.6));
+                    petPoints = Math.max(petPoints, Math.ceil(baseScore * 0.6));
                 }
 
-                // Ensure minimum 1 point for any positive mention
-                if (points > 0) {
+                // For neutral sentiment (score 0), don't award points but still log
+                if (baseScore === 0) {
+                    petPoints = 0;
+                } else if (baseScore > 0) {
+                    // Ensure minimum 1 point for any positive mention
                     petPoints = Math.max(petPoints, 1);
                 }
 
-                addPoints(pet.id, petPoints);
+                // Only update points if not neutral
+                if (petPoints !== 0) {
+                    addPoints(pet.id, petPoints);
+                }
 
                 petUpdates.push({
                     name: pet.name,
                     points: petPoints,
+                    baseScore: baseScore,
+                    modifier: modifierTotal,
+                    sentiment: sentiment,
+                    usedAI: usedAI,
+                    reasoning: aiResult?.reasoning || '',
                     newRank: getPetRank(pet.id)
                 });
-            });
+            }
 
-            // Generate transparent response with impact info
-            addMessage(generateImpactResponse(petUpdates), 'addy');
+            // Generate transparent response with AI sentiment info
+            addMessage(generateAIImpactResponse(petUpdates), 'addy');
         } else if (/^(hi|hello|hey|hiya|yo|sup)\b/i.test(message)) {
             addMessage(randomFrom(RESPONSES.greetings), 'addy');
         } else if (isQuestion) {
@@ -1701,6 +1731,86 @@ Return ONLY the quip text, no quotes, no explanation.`;
     return getFallbackQuip(petId);
 }
 
+// ===========================================
+// AI SENTIMENT ANALYSIS FOR REPORTS
+// ===========================================
+async function analyzeMessageSentiment(message, petName) {
+    // Truncate long messages to save tokens
+    const truncatedMessage = message.length > 500 ? message.substring(0, 500) + '...' : message;
+
+    const prompt = `Analyze the sentiment of this message about the pet "${petName}".
+
+Message: "${truncatedMessage}"
+
+Return ONLY valid JSON (no markdown, no code blocks) in this exact format:
+{"score": <integer from -5 to 5>, "sentiment": "<positive|negative|neutral>", "reasoning": "<10 words max>"}
+
+Scoring guide:
+- +5: Extremely positive (heroic act, major achievement)
+- +3 to +4: Very positive (good behavior, impressive action)
+- +1 to +2: Mildly positive (cute, nice, pleasant)
+- 0: Neutral (just an observation, no judgment)
+- -1 to -2: Mildly negative (minor mischief, small problem)
+- -3 to -4: Very negative (bad behavior, caused trouble)
+- -5: Extremely negative (dangerous, destructive, harmful)
+
+Consider: Did the pet do something good or bad? Is the user praising or complaining? What's the overall tone?`;
+
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${CONFIG.gemini.model}:generateContent?key=${CONFIG.gemini.apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            signal: controller.signal,
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    temperature: 0.3, // Lower temperature for more consistent scoring
+                    maxOutputTokens: 100
+                }
+            })
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            throw new Error(`API request failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+
+        if (!rawText) {
+            throw new Error('Empty response from AI');
+        }
+
+        // Parse JSON response (handle potential markdown code blocks)
+        let jsonStr = rawText;
+        if (rawText.includes('```')) {
+            jsonStr = rawText.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
+        }
+
+        const result = JSON.parse(jsonStr);
+
+        // Validate the response
+        if (typeof result.score !== 'number' || result.score < -5 || result.score > 5) {
+            throw new Error('Invalid score from AI');
+        }
+
+        return {
+            score: Math.round(result.score), // Ensure integer
+            sentiment: result.sentiment || (result.score > 0 ? 'positive' : result.score < 0 ? 'negative' : 'neutral'),
+            reasoning: result.reasoning || '',
+            usedAI: true
+        };
+    } catch (error) {
+        console.warn('[AI Sentiment] Analysis failed, falling back to keywords:', error.message);
+        return null; // Signals to use fallback
+    }
+}
+
 // Fallback quips when AI is unavailable
 function getFallbackQuip(petId) {
     const fallbacks = {
@@ -1759,6 +1869,46 @@ function generateImpactResponse(petUpdates, baseResponse) {
         `Intel received! ${impactSummary}`,
         `Rankings updated! ${impactSummary}`,
         `Got it! ${impactSummary}`
+    ];
+
+    return responseStyles[Math.floor(Math.random() * responseStyles.length)];
+}
+
+// Generate AI-enhanced response showing sentiment analysis
+function generateAIImpactResponse(petUpdates) {
+    if (!petUpdates || petUpdates.length === 0) {
+        return "Intel received! Keep those reports coming.";
+    }
+
+    // Build detailed impact summary with AI sentiment info
+    const impactLines = petUpdates.map(update => {
+        const pointsStr = formatPointsChange(update.points);
+        const sentimentEmoji = update.sentiment === 'positive' ? '📈' :
+                              update.sentiment === 'negative' ? '📉' : '➖';
+        const sentimentLabel = update.sentiment.toUpperCase();
+
+        // Show breakdown: AI score + modifier = final
+        let breakdown = '';
+        if (update.usedAI) {
+            const baseStr = formatPointsChange(update.baseScore);
+            const modStr = update.modifier !== 0 ? ` ${update.modifier >= 0 ? '+' : ''}${update.modifier} modifier` : '';
+            breakdown = `(AI: ${baseStr}${modStr})`;
+        } else {
+            breakdown = '(keyword fallback)';
+        }
+
+        return `${sentimentEmoji} ${update.name}: ${sentimentLabel} → ${pointsStr} pts ${breakdown}`;
+    });
+
+    // Create response with AI analysis info
+    const impactSummary = impactLines.join('\n');
+
+    // Pick a response style
+    const responseStyles = [
+        `Analysis complete!\n${impactSummary}`,
+        `Intel analyzed!\n${impactSummary}`,
+        `Sentiment detected!\n${impactSummary}`,
+        `Report processed!\n${impactSummary}`
     ];
 
     return responseStyles[Math.floor(Math.random() * responseStyles.length)];
