@@ -1713,25 +1713,25 @@ header .user-info span {
    =========================================== */
 
 .pets-tab-btn {
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    background: linear-gradient(135deg, var(--bg-light) 0%, #ffe4ec 100%);
 }
 
 .pets-tab-btn.active {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
 }
 
 .pets-intro {
     text-align: center;
-    padding: 16px;
+    padding: 12px 16px;
     margin-bottom: 16px;
-    background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);
+    background: linear-gradient(135deg, rgba(255,107,157,0.1) 0%, rgba(255,217,61,0.1) 100%);
     border-radius: 4px;
-    border: 2px solid #f59e0b;
+    border-left: 3px solid var(--primary);
 }
 
 .pets-intro p {
-    color: #92400e;
-    font-size: 0.9rem;
+    color: var(--text-light);
+    font-size: 0.85rem;
     line-height: 1.5;
 }
 
@@ -1743,7 +1743,7 @@ header .user-info span {
 .search-box input {
     width: 100%;
     padding: 12px 16px;
-    border: 3px solid #333;
+    border: 2px solid #555;
     border-radius: 4px;
     font-family: inherit;
     font-size: 1rem;
@@ -1762,31 +1762,31 @@ header .user-info span {
 }
 
 #pets-search {
-    border-color: #f59e0b;
+    border-color: #555;
 }
 
 #pets-search:focus {
-    border-color: #d97706;
-    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px var(--shadow);
 }
 
 .pets-bio-list {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
 }
 
 .pet-bio-card {
-    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    background: white;
     border-radius: 4px;
-    border: 3px solid #f59e0b;
+    border: 2px solid #555;
     padding: 16px;
     transition: all 0.3s ease;
 }
 
 .pet-bio-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(245, 158, 11, 0.3);
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px var(--shadow);
 }
 
 /* Veteran Memorial Card Styling */
@@ -1848,19 +1848,19 @@ header .user-info span {
 .pet-bio-header {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
     margin-bottom: 12px;
     flex-wrap: wrap;
 }
 
 .pet-bio-avatar {
-    width: 70px;
-    height: 70px;
+    width: 60px;
+    height: 60px;
     border-radius: 4px;
     overflow: hidden;
     position: relative;
     flex-shrink: 0;
-    border: 3px solid #333;
+    border: 2px solid #555;
     background: linear-gradient(135deg, #fff5f8 0%, #ffe4ec 100%);
 }
 
@@ -1890,15 +1890,16 @@ header .user-info span {
 
 .pet-bio-name {
     font-family: 'Press Start 2P', monospace;
-    font-size: 0.8rem;
-    color: #92400e;
+    font-size: 0.75rem;
+    color: var(--text-dark);
     margin-bottom: 4px;
 }
 
 .pet-bio-type {
     font-size: 0.8rem;
-    color: #b45309;
+    color: var(--text-light);
     margin-bottom: 4px;
+    text-transform: capitalize;
 }
 
 .pet-bio-score {
@@ -1911,26 +1912,29 @@ header .user-info span {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 8px 12px;
+    padding: 6px 10px;
     border-radius: 4px;
-    border: 2px solid #333;
-    min-width: 80px;
+    border: 2px solid #555;
+    min-width: 70px;
+    background: #f5f5f5;
 }
 
 .pet-bio-modifier.positive {
-    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    border-color: #10b981;
+    background: #f0fdf4;
 }
 
 .pet-bio-modifier.negative {
-    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border-color: var(--primary);
+    background: #fff5f8;
 }
 
 .pet-bio-modifier.neutral {
-    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    background: #f5f5f5;
 }
 
 .modifier-label {
-    font-size: 0.55rem;
+    font-size: 0.5rem;
     color: var(--text-light);
     text-transform: uppercase;
     font-family: 'Press Start 2P', monospace;
@@ -1938,69 +1942,70 @@ header .user-info span {
 
 .modifier-value {
     font-family: 'Press Start 2P', monospace;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     font-weight: 700;
 }
 
 .pet-bio-modifier.positive .modifier-value {
-    color: #059669;
+    color: #10b981;
 }
 
 .pet-bio-modifier.negative .modifier-value {
-    color: #dc2626;
+    color: var(--primary);
 }
 
 .pet-bio-modifier.neutral .modifier-value {
-    color: #6b7280;
+    color: var(--text-light);
 }
 
 .pet-bio-description {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: var(--text-dark);
     line-height: 1.5;
     margin-bottom: 12px;
-    padding: 12px;
-    background: rgba(255, 255, 255, 0.6);
+    padding: 10px 12px;
+    background: #f0f0f0;
     border-radius: 4px;
-    border: 1px solid #fcd34d;
+    border-left: 3px solid var(--primary);
 }
 
 .pet-bio-traits {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap: 10px;
     margin-bottom: 12px;
 }
 
 .pet-bio-strengths,
 .pet-bio-weaknesses {
-    padding: 12px;
+    padding: 10px 12px;
     border-radius: 4px;
-    border: 2px solid #333;
+    border: 2px solid #555;
+    background: #fafafa;
 }
 
 .pet-bio-strengths {
-    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    border-left: 3px solid #10b981;
 }
 
 .pet-bio-weaknesses {
-    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border-left: 3px solid var(--primary);
 }
 
 .pet-bio-strengths h4,
 .pet-bio-weaknesses h4 {
     font-family: 'Press Start 2P', monospace;
-    font-size: 0.5rem;
+    font-size: 0.45rem;
     margin-bottom: 8px;
     text-transform: uppercase;
 }
 
 .pet-bio-strengths h4 {
-    color: #059669;
+    color: #10b981;
 }
 
 .pet-bio-weaknesses h4 {
-    color: #dc2626;
+    color: var(--primary);
 }
 
 .pet-bio-strengths ul,
@@ -2013,16 +2018,17 @@ header .user-info span {
 .pet-bio-strengths li,
 .pet-bio-weaknesses li {
     font-size: 0.8rem;
-    padding: 4px 0;
-    padding-left: 16px;
+    padding: 3px 0;
+    padding-left: 14px;
     position: relative;
+    color: var(--text-dark);
 }
 
 .pet-bio-strengths li::before {
     content: '+';
     position: absolute;
     left: 0;
-    color: #059669;
+    color: #10b981;
     font-weight: 700;
 }
 
@@ -2030,22 +2036,23 @@ header .user-info span {
     content: '-';
     position: absolute;
     left: 0;
-    color: #dc2626;
+    color: var(--primary);
     font-weight: 700;
 }
 
 .pet-bio-tip {
     font-size: 0.8rem;
-    padding: 10px 12px;
-    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+    padding: 8px 12px;
+    background: #f0f0f0;
     border-radius: 4px;
-    border: 2px solid #6366f1;
-    color: #4338ca;
+    border: 2px solid #555;
+    color: var(--text-light);
 }
 
 .pet-bio-tip strong {
     font-family: 'Press Start 2P', monospace;
-    font-size: 0.5rem;
+    font-size: 0.45rem;
+    color: var(--text-dark);
 }
 
 /* Mobile adjustments for pet bios */
@@ -2066,12 +2073,12 @@ header .user-info span {
     }
 
     .pet-bio-avatar {
-        width: 60px;
-        height: 60px;
+        width: 50px;
+        height: 50px;
     }
 
     .pet-bio-name {
-        font-size: 0.7rem;
+        font-size: 0.65rem;
     }
 }
 
@@ -2081,13 +2088,13 @@ header .user-info span {
     }
 
     .pet-bio-description {
-        font-size: 0.85rem;
-        padding: 10px;
+        font-size: 0.8rem;
+        padding: 8px 10px;
     }
 
     .pet-bio-strengths,
     .pet-bio-weaknesses {
-        padding: 10px;
+        padding: 8px 10px;
     }
 
     .pet-bio-strengths li,
@@ -2097,7 +2104,7 @@ header .user-info span {
 
     .pet-bio-tip {
         font-size: 0.75rem;
-        padding: 8px 10px;
+        padding: 6px 10px;
     }
 }
 
