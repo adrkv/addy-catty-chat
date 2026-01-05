@@ -12,10 +12,11 @@ const CONFIG = {
         appId: "1:604591070600:web:9e7a95a1e6c4b20a0cae3d"
     },
     basePoints: 1,
-    // Gemini AI for generating pet quips in Meet the Pets tab
+    // Gemini AI for sentiment analysis and pet quips
     gemini: {
         apiKey: "AIzaSyC1BWcg_Xv38N5C33vfJ9SuQimpgPkeMLQ",
         model: "gemini-2.5-flash",
+        enabledForSentiment: true,
         enabledForQuips: true
     }
 };
@@ -1735,6 +1736,11 @@ Return ONLY the quip text, no quotes, no explanation.`;
 // AI SENTIMENT ANALYSIS FOR REPORTS
 // ===========================================
 async function analyzeMessageSentiment(message, petName) {
+    // Check if sentiment analysis is enabled
+    if (!CONFIG.gemini.enabledForSentiment || !CONFIG.gemini.apiKey) {
+        return null; // Use keyword fallback
+    }
+
     // Truncate long messages to save tokens
     const truncatedMessage = message.length > 500 ? message.substring(0, 500) + '...' : message;
 
