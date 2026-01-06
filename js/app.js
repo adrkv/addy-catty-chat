@@ -16,7 +16,7 @@ const CONFIG = {
     // Gemini AI for sentiment analysis and pet quips
     gemini: {
         apiKey: "AIzaSyBqkeDHUBrseNTBvaFzUcOHI8NDvcGAxiE",
-        model: "gemini-1.5-flash-latest",
+        model: "gemini-2.5-flash",
         enabledForSentiment: true,
         enabledForQuips: true,
         maxRetries: 3 // Retry attempts for AI calls
