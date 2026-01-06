@@ -121,10 +121,11 @@ python -m http.server 8000
 
 ## Technical Notes
 
-- Uses Google's Gemini AI for natural language understanding
-- Multi-layer fallback system ensures reliability
+- Uses Google's Gemini AI (gemini-2.5-flash-lite) for natural language understanding
+- Multi-layer fallback system ensures reliability when AI is unavailable
+- Graceful handling of API rate limits (free tier: ~20 requests/minute)
 - Firebase Realtime Database for live synchronization
-- Works offline with graceful degradation
+- Works offline with keyword-based fallback
 
 ## Live Demo
 
