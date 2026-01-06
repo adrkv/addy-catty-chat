@@ -1845,9 +1845,13 @@ Return ONLY the quip text, no quotes, no explanation.`;
 // ===========================================
 // AI SENTIMENT ANALYSIS FOR REPORTS
 // ===========================================
+// Track last AI error for debugging (test users only)
+let lastAIError = null;
+
 async function analyzeMessageSentiment(message, petName) {
     // Check if sentiment analysis is enabled
     if (!CONFIG.gemini.enabledForSentiment || !CONFIG.gemini.apiKey) {
+        lastAIError = 'AI sentiment disabled or no API key';
         return null; // Use keyword fallback
     }
 
@@ -1951,6 +1955,7 @@ KEY PRINCIPLE: Judge the ACTION, not the phrasing. Gross = negative, always.`;
         };
     } catch (error) {
         console.warn('[AI Sentiment] Analysis failed, falling back to keywords:', error.message);
+        lastAIError = error.message; // Track error for test user debugging
         return null; // Signals to use fallback
     }
 }
@@ -1959,6 +1964,8 @@ KEY PRINCIPLE: Judge the ACTION, not the phrasing. Gross = negative, always.`;
 // AI RETRY WRAPPER - Makes AI calls more reliable
 // ===========================================
 async function analyzeMessageSentimentWithRetry(message, petName, maxRetries = CONFIG.gemini.maxRetries) {
+    lastAIError = null; // Reset error tracking
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         const result = await analyzeMessageSentiment(message, petName);
         if (result !== null) {
@@ -2052,6 +2059,7 @@ Reply ONLY: {"score": NUMBER, "sentiment": "positive/negative/neutral"}`;
         };
     } catch (error) {
         console.warn('[AI Sentiment Simple] Analysis failed:', error.message);
+        lastAIError = error.message; // Track error for test user debugging
         return null;
     }
 }
@@ -2181,8 +2189,9 @@ function generateAIImpactResponse(petUpdates) {
                 `Base Score: ${update.baseScore}`,
                 `Personality Modifier: ${update.modifier >= 0 ? '+' : ''}${update.modifier}`,
                 `Final Points: ${update.points}`,
-                `Rank: #${update.newRank || '?'}`
-            ].join('\n');
+                `Rank: #${update.newRank || '?'}`,
+                update.usedAI ? '' : `AI Error: ${lastAIError || 'Unknown'}`
+            ].filter(line => line).join('\n');
         });
 
         const testModeInfo = [
