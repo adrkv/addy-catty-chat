@@ -1957,6 +1957,10 @@ KEY PRINCIPLE: Judge the ACTION, not the phrasing. Gross = negative, always.`;
         clearTimeout(timeoutId);
 
         if (!response.ok) {
+            // Special handling for rate limit errors
+            if (response.status === 429) {
+                throw new Error(`RATE_LIMITED`);
+            }
             throw new Error(`API request failed: ${response.status}`);
         }
 
@@ -2004,6 +2008,13 @@ async function analyzeMessageSentimentWithRetry(message, petName, maxRetries = C
         if (result !== null) {
             console.log(`[AI Sentiment] Primary AI succeeded on attempt ${attempt}`);
             return result;
+        }
+
+        // If rate limited, don't retry - fall back to keywords immediately
+        if (lastAIError && lastAIError.includes('RATE_LIMITED')) {
+            console.warn('[AI Sentiment] Rate limited - falling back to keywords');
+            lastAIError = 'Rate limited (try again in 60s)';
+            return null;
         }
 
         if (attempt < maxRetries) {
@@ -2061,6 +2072,10 @@ Reply ONLY: {"score": NUMBER, "sentiment": "positive/negative/neutral"}`;
         clearTimeout(timeoutId);
 
         if (!response.ok) {
+            // Special handling for rate limit errors
+            if (response.status === 429) {
+                throw new Error(`RATE_LIMITED`);
+            }
             throw new Error(`API request failed: ${response.status}`);
         }
 
@@ -2104,6 +2119,13 @@ async function analyzeMessageSentimentSimpleWithRetry(message, petName, maxRetri
         if (result !== null) {
             console.log(`[AI Sentiment Simple] Succeeded on attempt ${attempt}`);
             return result;
+        }
+
+        // If rate limited, don't retry - fall back to keywords immediately
+        if (lastAIError && lastAIError.includes('RATE_LIMITED')) {
+            console.warn('[AI Sentiment Simple] Rate limited - falling back to keywords');
+            lastAIError = 'Rate limited (try again in 60s)';
+            return null;
         }
 
         if (attempt < maxRetries) {
