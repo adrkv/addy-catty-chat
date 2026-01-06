@@ -15,7 +15,7 @@ const CONFIG = {
     maxReportLength: 500, // Character limit for field reports
     // Gemini AI for sentiment analysis and pet quips
     gemini: {
-        apiKey: "AIzaSyC1BWcg_Xv38N5C33vfJ9SuQimpgPkeMLQ",
+        apiKey: "AIzaSyDxW0ZT3yyLU_570CF-x4oVSck2Gi7DxmY",
         model: "gemini-2.5-flash",
         enabledForSentiment: true,
         enabledForQuips: true,
