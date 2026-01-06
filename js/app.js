@@ -994,6 +994,34 @@ function analyzeSurvivability(message) {
 const chatMessages = document.getElementById('chat-messages');
 const chatForm = document.getElementById('chat-form');
 const messageInput = document.getElementById('message-input');
+const charCounter = document.getElementById('char-counter');
+
+// Update character counter as user types
+function updateCharCounter() {
+    const remaining = CONFIG.maxReportLength - messageInput.value.length;
+    charCounter.textContent = `${remaining} characters left`;
+
+    // Visual warning when getting close to limit
+    if (remaining <= 50) {
+        charCounter.classList.add('warning');
+    } else {
+        charCounter.classList.remove('warning');
+    }
+    if (remaining <= 0) {
+        charCounter.classList.add('limit');
+    } else {
+        charCounter.classList.remove('limit');
+    }
+}
+
+// Listen for input changes
+messageInput.addEventListener('input', updateCharCounter);
+
+// Set maxlength attribute dynamically from config
+messageInput.setAttribute('maxlength', CONFIG.maxReportLength);
+
+// Initialize counter
+updateCharCounter();
 
 chatForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -1004,12 +1032,14 @@ chatForm.addEventListener('submit', async (e) => {
     // Check cooldown first, then daily report limit
     if (isOnCooldown()) {
         messageInput.value = '';
+        updateCharCounter();
         addMessage(getRandomCooldownResponse(), 'addy');
         return;
     }
 
     if (getRemainingReports() <= 0) {
         messageInput.value = '';
+        updateCharCounter();
         addMessage(getRandomRateLimitResponse(), 'addy');
         return;
     }
@@ -1017,13 +1047,15 @@ chatForm.addEventListener('submit', async (e) => {
     // Block hate speech
     if (containsHateSpeech(message)) {
         messageInput.value = '';
+        updateCharCounter();
         addMessage("I can't process that message. Please keep it respectful.", 'addy');
         return;
     }
 
-    // Check character limit
+    // Check character limit (shouldn't happen due to maxlength, but just in case)
     if (message.length > CONFIG.maxReportLength) {
         messageInput.value = '';
+        updateCharCounter();
         addMessage(`Your report is too long! Please keep it under ${CONFIG.maxReportLength} characters. You wrote ${message.length} characters.`, 'addy');
         return;
     }
@@ -1034,6 +1066,7 @@ chatForm.addEventListener('submit', async (e) => {
 
     addMessage(message, 'user');
     messageInput.value = '';
+    updateCharCounter();
 
     // Process message - detect pets mentioned
     let mentionedCats = detectCats(message);
@@ -2170,7 +2203,8 @@ function generateAIImpactResponse(petUpdates) {
         `Report processed! ${impactSummary}`
     ];
 
-    let response = responseStyles[Math.floor(Math.random() * responseStyles.length)];
+    const regularUserResponse = responseStyles[Math.floor(Math.random() * responseStyles.length)];
+    let response = regularUserResponse;
 
     // TEST USER: Show detailed debug info
     if (isTestUser()) {
@@ -2197,6 +2231,8 @@ function generateAIImpactResponse(petUpdates) {
         const testModeInfo = [
             '',
             '═══ TEST MODE DEBUG ═══',
+            `Regular users see: "${regularUserResponse}"`,
+            '',
             `Leaderboard Updated: NO (test mode)`,
             `Rate Limit: DISABLED`,
             `Cooldown: DISABLED`,
@@ -2206,7 +2242,7 @@ function generateAIImpactResponse(petUpdates) {
             '═══════════════════════'
         ].join('\n');
 
-        response += testModeInfo;
+        response = testModeInfo;
     }
 
     return response;

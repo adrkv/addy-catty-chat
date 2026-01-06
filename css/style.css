@@ -419,15 +419,37 @@ section h2::before {
     transform: scale(0.98);
 }
 
-/* Report Counter */
-.report-counter {
-    text-align: center;
+/* Input Info Container */
+.input-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    margin-top: 5px;
     font-size: 0.8rem;
     color: var(--text-light);
-    padding: 8px;
-    margin-top: 5px;
     font-family: 'Nunito', sans-serif;
     opacity: 0.8;
+}
+
+/* Character Counter */
+.char-counter {
+    font-size: 0.75rem;
+}
+
+.char-counter.warning {
+    color: #f59e0b;
+    font-weight: 600;
+}
+
+.char-counter.limit {
+    color: #ef4444;
+    font-weight: 700;
+}
+
+/* Report Counter */
+.report-counter {
+    font-size: 0.75rem;
 }
 
 .report-counter.low {
