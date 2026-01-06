@@ -1939,7 +1939,7 @@ KEY PRINCIPLE: Judge the ACTION, not the phrasing. Gross = negative, always.`;
 
     try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout for gemini-2.5
 
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${CONFIG.gemini.model}:generateContent?key=${CONFIG.gemini.apiKey}`, {
             method: 'POST',
@@ -1987,7 +1987,26 @@ KEY PRINCIPLE: Judge the ACTION, not the phrasing. Gross = negative, always.`;
             jsonStr = rawText.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
         }
 
-        const result = JSON.parse(jsonStr);
+        let result;
+        try {
+            result = JSON.parse(jsonStr);
+        } catch (parseError) {
+            // Try to extract score from malformed JSON using regex
+            console.warn('[AI Sentiment] JSON parse failed, trying regex extraction:', rawText);
+            const scoreMatch = rawText.match(/"score"\s*:\s*(-?\d+)/);
+            const sentimentMatch = rawText.match(/"sentiment"\s*:\s*"(positive|negative|neutral)"/);
+            const reasoningMatch = rawText.match(/"reasoning"\s*:\s*"([^"]+)"/);
+
+            if (scoreMatch) {
+                result = {
+                    score: parseInt(scoreMatch[1], 10),
+                    sentiment: sentimentMatch ? sentimentMatch[1] : null,
+                    reasoning: reasoningMatch ? reasoningMatch[1] : 'Extracted from partial response'
+                };
+            } else {
+                throw new Error(`JSON parse failed: ${parseError.message}`);
+            }
+        }
 
         // Validate the response
         if (typeof result.score !== 'number' || result.score < -5 || result.score > 5) {
@@ -2063,7 +2082,7 @@ Reply ONLY: {"score": NUMBER, "sentiment": "positive/negative/neutral"}`;
 
     try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${CONFIG.gemini.model}:generateContent?key=${CONFIG.gemini.apiKey}`, {
             method: 'POST',
@@ -2111,7 +2130,24 @@ Reply ONLY: {"score": NUMBER, "sentiment": "positive/negative/neutral"}`;
             jsonStr = rawText.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
         }
 
-        const result = JSON.parse(jsonStr);
+        let result;
+        try {
+            result = JSON.parse(jsonStr);
+        } catch (parseError) {
+            // Try to extract score from malformed JSON using regex
+            console.warn('[AI Sentiment Simple] JSON parse failed, trying regex:', rawText);
+            const scoreMatch = rawText.match(/"score"\s*:\s*(-?\d+)/);
+            const sentimentMatch = rawText.match(/"sentiment"\s*:\s*"(positive|negative|neutral)"/);
+
+            if (scoreMatch) {
+                result = {
+                    score: parseInt(scoreMatch[1], 10),
+                    sentiment: sentimentMatch ? sentimentMatch[1] : null
+                };
+            } else {
+                throw new Error(`JSON parse failed: ${parseError.message}`);
+            }
+        }
 
         if (typeof result.score !== 'number' || result.score < -5 || result.score > 5) {
             throw new Error('Invalid score from simple AI');
