@@ -1957,11 +1957,21 @@ KEY PRINCIPLE: Judge the ACTION, not the phrasing. Gross = negative, always.`;
         clearTimeout(timeoutId);
 
         if (!response.ok) {
+            // Get error details from response
+            let errorDetail = '';
+            try {
+                const errorData = await response.json();
+                errorDetail = errorData.error?.message || JSON.stringify(errorData);
+            } catch (e) {
+                errorDetail = 'Could not parse error response';
+            }
+            console.error(`[AI Sentiment] API Error ${response.status}: ${errorDetail}`);
+
             // Special handling for rate limit errors
             if (response.status === 429) {
-                throw new Error(`RATE_LIMITED`);
+                throw new Error(`RATE_LIMITED: ${errorDetail}`);
             }
-            throw new Error(`API request failed: ${response.status}`);
+            throw new Error(`API ${response.status}: ${errorDetail}`);
         }
 
         const data = await response.json();
@@ -2013,7 +2023,6 @@ async function analyzeMessageSentimentWithRetry(message, petName, maxRetries = C
         // If rate limited, don't retry - fall back to keywords immediately
         if (lastAIError && lastAIError.includes('RATE_LIMITED')) {
             console.warn('[AI Sentiment] Rate limited - falling back to keywords');
-            lastAIError = 'Rate limited (try again in 60s)';
             return null;
         }
 
@@ -2072,11 +2081,21 @@ Reply ONLY: {"score": NUMBER, "sentiment": "positive/negative/neutral"}`;
         clearTimeout(timeoutId);
 
         if (!response.ok) {
+            // Get error details from response
+            let errorDetail = '';
+            try {
+                const errorData = await response.json();
+                errorDetail = errorData.error?.message || JSON.stringify(errorData);
+            } catch (e) {
+                errorDetail = 'Could not parse error response';
+            }
+            console.error(`[AI Sentiment Simple] API Error ${response.status}: ${errorDetail}`);
+
             // Special handling for rate limit errors
             if (response.status === 429) {
-                throw new Error(`RATE_LIMITED`);
+                throw new Error(`RATE_LIMITED: ${errorDetail}`);
             }
-            throw new Error(`API request failed: ${response.status}`);
+            throw new Error(`API ${response.status}: ${errorDetail}`);
         }
 
         const data = await response.json();
@@ -2124,7 +2143,6 @@ async function analyzeMessageSentimentSimpleWithRetry(message, petName, maxRetri
         // If rate limited, don't retry - fall back to keywords immediately
         if (lastAIError && lastAIError.includes('RATE_LIMITED')) {
             console.warn('[AI Sentiment Simple] Rate limited - falling back to keywords');
-            lastAIError = 'Rate limited (try again in 60s)';
             return null;
         }
 
