@@ -12,12 +12,14 @@ const CONFIG = {
         appId: "1:604591070600:web:9e7a95a1e6c4b20a0cae3d"
     },
     basePoints: 1,
+    maxReportLength: 500, // Character limit for field reports
     // Gemini AI for sentiment analysis and pet quips
     gemini: {
         apiKey: "AIzaSyC1BWcg_Xv38N5C33vfJ9SuQimpgPkeMLQ",
         model: "gemini-2.5-flash",
         enabledForSentiment: true,
-        enabledForQuips: true
+        enabledForQuips: true,
+        maxRetries: 3 // Retry attempts for AI calls
     }
 };
 
@@ -54,6 +56,9 @@ function saveUserReportData(data) {
 }
 
 function getRemainingReports() {
+    // Test users have unlimited reports
+    if (isTestUser()) return DAILY_REPORT_LIMIT;
+
     const data = getUserReportData();
     const today = new Date().toDateString();
 
@@ -67,6 +72,9 @@ function getRemainingReports() {
 }
 
 function incrementReportCount() {
+    // Test users don't increment report count
+    if (isTestUser()) return;
+
     const data = getUserReportData();
     const today = new Date().toDateString();
 
@@ -120,6 +128,8 @@ function getLastReportTime() {
 }
 
 function setLastReportTime() {
+    // Test users don't have cooldowns
+    if (isTestUser()) return;
     localStorage.setItem(getCooldownKey(), Date.now().toString());
     startCooldownTimer();
 }
@@ -136,6 +146,8 @@ function getCooldownRemaining() {
 }
 
 function isOnCooldown() {
+    // Test users have no cooldown
+    if (isTestUser()) return false;
     return getCooldownRemaining() > 0;
 }
 
@@ -390,6 +402,34 @@ const SURVIVABILITY = {
     ],
     negativePoints: -2,
 
+    // SEVERE NEGATIVE - Gross/disgusting behaviors deserve harsher penalties
+    severeNegative: [
+        // Vomiting/barfing - all variations
+        'barf', 'barfs', 'barfed', 'barfing',
+        'puke', 'pukes', 'puked', 'puking',
+        'vomit', 'vomits', 'vomited', 'vomiting',
+        'threw up', 'throwing up', 'throws up',
+        'retch', 'retched', 'retching',
+        'gag', 'gagged', 'gagging',
+        'hairball', 'hairballs', 'hacked up', 'coughed up', 'upchuck',
+        // Bathroom accidents - all variations
+        'peed', 'pees', 'peeing', 'piss', 'pissed', 'pissing',
+        'pooped', 'poops', 'pooping', 'poo', 'pooed',
+        'shat', 'defecated', 'defecating',
+        'diarrhea', 'wet the bed', 'soiled', 'sprayed',
+        'accident on', 'had an accident',
+        // Destruction - severe property damage
+        'destroyed', 'shredded', 'demolished', 'wrecked', 'obliterated',
+        'tore up', 'tore apart', 'ripped up', 'ripped apart',
+        // Other gross behaviors
+        'ate poop', 'eats poop', 'eating poop',
+        'rolled in poop', 'covered in poop',
+        'dead animal', 'dead bird', 'dead mouse', 'dead rat',
+        'brought in dead', 'dragged in',
+        'fart', 'farts', 'farted', 'farting', 'flatulence', 'gas'
+    ],
+    severeNegativePoints: -4,
+
     cute: [
         'cute', 'adorable', 'sweet', 'lovely', 'pretty', 'beautiful', 'fluffy',
         'cuddly', 'precious', 'baby', 'love', 'favorite', 'best', 'amazing'
@@ -539,9 +579,20 @@ const usernameInput = document.getElementById('username-input');
 // Blocked names list
 const BLOCKED_NAMES = ['addy', 'aditya', 'aditya rao', 'aditya rao kaveti'];
 
+// Test user configuration
+const TEST_USER = {
+    names: ['test'],
+    password: '12345'
+};
+
 function isBlockedName(name) {
     const normalizedName = name.toLowerCase().trim();
     return BLOCKED_NAMES.some(blocked => normalizedName === blocked);
+}
+
+// Check if current session is a test user (no limits, no leaderboard impact)
+function isTestUser() {
+    return localStorage.getItem('catChatIsTestUser') === 'true';
 }
 
 // Generate a unique persistent user ID (can't be changed - prevents fraud)
@@ -573,6 +624,21 @@ usernameForm.addEventListener('submit', (e) => {
         alert('This name is not allowed. Please choose a different codename.');
         return;
     }
+
+    // Check if this is a test user
+    if (TEST_USER.names.includes(name.toLowerCase())) {
+        const password = prompt('Enter test user password:');
+        if (password !== TEST_USER.password) {
+            alert('Incorrect password. Access denied.');
+            return;
+        }
+        // Mark as test user - no limits, no leaderboard impact
+        localStorage.setItem('catChatIsTestUser', 'true');
+    } else {
+        // Regular user - clear any test user flag
+        localStorage.removeItem('catChatIsTestUser');
+    }
+
     if (name.length >= 2) {
         currentUser = name;
         localStorage.setItem('catChatUsername', name);
@@ -760,6 +826,13 @@ function animateScore(petId) {
 // Update pet score
 // ===========================================
 function addPoints(petId, points) {
+    // Test users don't affect the actual leaderboard
+    if (isTestUser()) {
+        // Still show animation for visual feedback, but don't save
+        animateScore(petId);
+        return;
+    }
+
     if (petsRef) {
         petsRef.child(petId).child('score').transaction((current) => {
             return (current || 0) + points;
@@ -867,6 +940,19 @@ function analyzeSurvivability(message) {
         }
     }
 
+    // Check for SEVERE negative keywords (gross behaviors - higher penalty)
+    let severeNegativeCount = 0;
+    let negatedSevereCount = 0;
+    for (const word of SURVIVABILITY.severeNegative) {
+        if (wordMatches(word)) {
+            if (isNegated(word)) {
+                negatedSevereCount++; // "didn't barf" is actually good
+            } else {
+                severeNegativeCount++;
+            }
+        }
+    }
+
     let cuteCount = 0;
     for (const word of SURVIVABILITY.cute) {
         if (wordMatches(word)) {
@@ -883,10 +969,17 @@ function analyzeSurvivability(message) {
     points += negatedNegativeCount * SURVIVABILITY.positivePoints; // "not fat" = positive
     points += cuteCount * SURVIVABILITY.cutePoints;
 
-    const effectivePositive = positiveCount + negatedNegativeCount + cuteCount;
-    const effectiveNegative = negativeCount + negatedPositiveCount;
+    // SEVERE negatives get heavier penalty (-4 instead of -2)
+    points += severeNegativeCount * SURVIVABILITY.severeNegativePoints;
+    points += negatedSevereCount * SURVIVABILITY.positivePoints; // "didn't barf" = positive
 
-    if (effectiveNegative > effectivePositive) {
+    const effectivePositive = positiveCount + negatedNegativeCount + negatedSevereCount + cuteCount;
+    const effectiveNegative = negativeCount + negatedPositiveCount + severeNegativeCount;
+
+    // Severe negatives always force negative sentiment (gross behaviors dominate)
+    if (severeNegativeCount > 0) {
+        sentiment = 'negative';
+    } else if (effectiveNegative > effectivePositive) {
         sentiment = 'negative';
     } else if (effectivePositive > 0) {
         sentiment = 'positive';
@@ -925,6 +1018,13 @@ chatForm.addEventListener('submit', async (e) => {
     if (containsHateSpeech(message)) {
         messageInput.value = '';
         addMessage("I can't process that message. Please keep it respectful.", 'addy');
+        return;
+    }
+
+    // Check character limit
+    if (message.length > CONFIG.maxReportLength) {
+        messageInput.value = '';
+        addMessage(`Your report is too long! Please keep it under ${CONFIG.maxReportLength} characters. You wrote ${message.length} characters.`, 'addy');
         return;
     }
 
@@ -973,19 +1073,28 @@ chatForm.addEventListener('submit', async (e) => {
             // Track updates for transparent response
             const petUpdates = [];
 
-            // Process each pet with AI sentiment analysis
+            // Process each pet with THREE-LAYER AI sentiment analysis
             for (const pet of mentionedCats) {
-                // Try AI sentiment analysis first
-                let aiResult = await analyzeMessageSentiment(message, pet.name);
-                let baseScore, sentiment, usedAI;
+                let baseScore, sentiment, usedAI, usedSimpleAI = false;
+
+                // Layer 1: Primary AI with retries
+                let aiResult = await analyzeMessageSentimentWithRetry(message, pet.name);
+
+                // Layer 2: Simple AI fallback with retries (if primary failed)
+                if (!aiResult) {
+                    console.log('[AI Sentiment] Trying simple AI fallback...');
+                    aiResult = await analyzeMessageSentimentSimpleWithRetry(message, pet.name);
+                    if (aiResult) usedSimpleAI = true;
+                }
 
                 if (aiResult) {
-                    // AI analysis succeeded
+                    // AI analysis succeeded (either primary or simple)
                     baseScore = aiResult.score;
                     sentiment = aiResult.sentiment;
                     usedAI = true;
                 } else {
-                    // Fallback to keyword-based analysis
+                    // Layer 3: Keyword fallback (last resort - should be rare)
+                    console.log('[AI Sentiment] All AI attempts failed, using keyword fallback');
                     const keywordResult = analyzeSurvivability(message);
                     baseScore = keywordResult.points;
                     sentiment = keywordResult.sentiment;
@@ -1033,6 +1142,7 @@ chatForm.addEventListener('submit', async (e) => {
                     modifier: modifierTotal,
                     sentiment: sentiment,
                     usedAI: usedAI,
+                    usedSimpleAI: usedSimpleAI,
                     reasoning: aiResult?.reasoning || '',
                     newRank: getPetRank(pet.id)
                 });
@@ -1744,23 +1854,51 @@ async function analyzeMessageSentiment(message, petName) {
     // Truncate long messages to save tokens
     const truncatedMessage = message.length > 500 ? message.substring(0, 500) + '...' : message;
 
-    const prompt = `Analyze the sentiment of this message about the pet "${petName}".
+    const prompt = `Analyze this message about the pet "${petName}" and score based on WHAT THE PET DID.
 
 Message: "${truncatedMessage}"
 
-Return ONLY valid JSON (no markdown, no code blocks) in this exact format:
-{"score": <integer from -5 to 5>, "sentiment": "<positive|negative|neutral>", "reasoning": "<10 words max>"}
+Return ONLY valid JSON: {"score": <-5 to 5>, "sentiment": "<positive|negative|neutral>", "reasoning": "<10 words max>"}
 
-Scoring guide:
-- +5: Extremely positive (heroic act, major achievement)
-- +3 to +4: Very positive (good behavior, impressive action)
-- +1 to +2: Mildly positive (cute, nice, pleasant)
-- 0: Neutral (just an observation, no judgment)
-- -1 to -2: Mildly negative (minor mischief, small problem)
-- -3 to -4: Very negative (bad behavior, caused trouble)
-- -5: Extremely negative (dangerous, destructive, harmful)
+CRITICAL SCORING RULES - Focus on the pet's ACTIONS:
 
-Consider: Did the pet do something good or bad? Is the user praising or complaining? What's the overall tone?`;
+SEVERELY NEGATIVE (-4 to -5) - Gross/disgusting behaviors:
+- Vomiting, barfing, throwing up, hairballs, puking
+- Bathroom accidents: peeing, pooping outside litter box, diarrhea
+- Destroying property, shredding furniture, breaking things
+- Bringing dead animals inside
+Examples: "barfed on carpet"=-5, "pooped on bed"=-5, "destroyed couch"=-4
+
+NEGATIVE (-2 to -3) - Bad behaviors:
+- Biting, scratching, attacking, hissing, being aggressive
+- Stealing food, knocking things over, being mean
+- Fighting with other pets, bullying
+Examples: "scratched me"=-3, "stole my food"=-2, "knocked over vase"=-2
+
+MILDLY NEGATIVE (-1) - Minor issues:
+- Being lazy, sleeping too much, ignoring owner
+- Minor mischief, being annoying
+Examples: "won't get off couch"=-1, "keeps meowing at 3am"=-1
+
+NEUTRAL (0) - Just observations:
+- Factual statements with no positive/negative action
+Examples: "is sleeping", "is a tabby cat", "has orange fur"
+
+MILDLY POSITIVE (+1 to +2) - Nice behaviors:
+- Being cute, cuddling, purring, being affectionate
+- Playing nicely, being friendly
+Examples: "cuddled with me"=+2, "looks adorable"=+1
+
+POSITIVE (+3 to +4) - Good behaviors:
+- Catching mice/pests, protecting home, being well-behaved
+- Using litter box properly, using scratching post
+Examples: "caught a mouse"=+4, "used scratching post"=+3
+
+EXTREMELY POSITIVE (+5) - Exceptional:
+- Heroic acts, saving someone, extraordinary good behavior
+Examples: "alerted us to fire"=+5, "saved baby from falling"=+5
+
+KEY PRINCIPLE: Judge the ACTION, not the phrasing. Gross = negative, always.`;
 
     try {
         const controller = new AbortController();
@@ -1815,6 +1953,126 @@ Consider: Did the pet do something good or bad? Is the user praising or complain
         console.warn('[AI Sentiment] Analysis failed, falling back to keywords:', error.message);
         return null; // Signals to use fallback
     }
+}
+
+// ===========================================
+// AI RETRY WRAPPER - Makes AI calls more reliable
+// ===========================================
+async function analyzeMessageSentimentWithRetry(message, petName, maxRetries = CONFIG.gemini.maxRetries) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        const result = await analyzeMessageSentiment(message, petName);
+        if (result !== null) {
+            console.log(`[AI Sentiment] Primary AI succeeded on attempt ${attempt}`);
+            return result;
+        }
+
+        if (attempt < maxRetries) {
+            // Exponential backoff: 1s, 2s
+            const delay = attempt * 1000;
+            console.log(`[AI Sentiment] Retry ${attempt}/${maxRetries}, waiting ${delay}ms...`);
+            await new Promise(r => setTimeout(r, delay));
+        }
+    }
+    console.warn('[AI Sentiment] All primary AI retries exhausted');
+    return null; // All retries failed
+}
+
+// ===========================================
+// SIMPLIFIED AI FALLBACK - Simpler prompt, more reliable
+// ===========================================
+async function analyzeMessageSentimentSimple(message, petName) {
+    // Check if sentiment analysis is enabled
+    if (!CONFIG.gemini.enabledForSentiment || !CONFIG.gemini.apiKey) {
+        return null;
+    }
+
+    // Truncate message
+    const truncatedMessage = message.length > 300 ? message.substring(0, 300) + '...' : message;
+
+    // Much simpler prompt - less likely to fail
+    const prompt = `Rate this about pet "${petName}": "${truncatedMessage}"
+
+Score from -5 to +5:
+- Gross (barf/poop/vomit/destroy): -4 to -5
+- Bad (bite/scratch/steal): -2 to -3
+- Neutral: 0
+- Good (cuddle/play): +1 to +3
+- Great (catch mouse/protect): +4 to +5
+
+Reply ONLY: {"score": NUMBER, "sentiment": "positive/negative/neutral"}`;
+
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${CONFIG.gemini.model}:generateContent?key=${CONFIG.gemini.apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            signal: controller.signal,
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    temperature: 0.1, // Even lower temperature for simple fallback
+                    maxOutputTokens: 50
+                }
+            })
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            throw new Error(`API request failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+
+        if (!rawText) {
+            throw new Error('Empty response from simple AI');
+        }
+
+        // Parse JSON response
+        let jsonStr = rawText;
+        if (rawText.includes('```')) {
+            jsonStr = rawText.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
+        }
+
+        const result = JSON.parse(jsonStr);
+
+        if (typeof result.score !== 'number' || result.score < -5 || result.score > 5) {
+            throw new Error('Invalid score from simple AI');
+        }
+
+        return {
+            score: Math.round(result.score),
+            sentiment: result.sentiment || (result.score > 0 ? 'positive' : result.score < 0 ? 'negative' : 'neutral'),
+            reasoning: 'Simple AI fallback',
+            usedAI: true,
+            usedSimpleAI: true
+        };
+    } catch (error) {
+        console.warn('[AI Sentiment Simple] Analysis failed:', error.message);
+        return null;
+    }
+}
+
+// Retry wrapper for simple AI
+async function analyzeMessageSentimentSimpleWithRetry(message, petName, maxRetries = CONFIG.gemini.maxRetries) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        const result = await analyzeMessageSentimentSimple(message, petName);
+        if (result !== null) {
+            console.log(`[AI Sentiment Simple] Succeeded on attempt ${attempt}`);
+            return result;
+        }
+
+        if (attempt < maxRetries) {
+            const delay = attempt * 1000;
+            console.log(`[AI Sentiment Simple] Retry ${attempt}/${maxRetries}, waiting ${delay}ms...`);
+            await new Promise(r => setTimeout(r, delay));
+        }
+    }
+    console.warn('[AI Sentiment Simple] All retries exhausted, falling back to keywords');
+    return null;
 }
 
 // Fallback quips when AI is unavailable
@@ -1895,7 +2153,7 @@ function generateAIImpactResponse(petUpdates) {
 
     const impactSummary = impactLines.join(' | ');
 
-    // Pick a response style
+    // Pick a response style for regular users
     const responseStyles = [
         `Report logged! ${impactSummary}`,
         `Intel received! ${impactSummary}`,
@@ -1904,7 +2162,45 @@ function generateAIImpactResponse(petUpdates) {
         `Report processed! ${impactSummary}`
     ];
 
-    return responseStyles[Math.floor(Math.random() * responseStyles.length)];
+    let response = responseStyles[Math.floor(Math.random() * responseStyles.length)];
+
+    // TEST USER: Show detailed debug info
+    if (isTestUser()) {
+        const debugLines = petUpdates.map(update => {
+            // Determine which mechanism was used
+            let mechanism = 'Keywords (fallback)';
+            if (update.usedAI) {
+                mechanism = update.usedSimpleAI ? 'Simple AI (fallback)' : 'Primary AI';
+            }
+
+            return [
+                `--- ${update.name} Debug ---`,
+                `Mechanism: ${mechanism}`,
+                `Sentiment: ${update.sentiment}`,
+                `AI Reasoning: ${update.reasoning || 'N/A'}`,
+                `Base Score: ${update.baseScore}`,
+                `Personality Modifier: ${update.modifier >= 0 ? '+' : ''}${update.modifier}`,
+                `Final Points: ${update.points}`,
+                `Rank: #${update.newRank || '?'}`
+            ].join('\n');
+        });
+
+        const testModeInfo = [
+            '',
+            '═══ TEST MODE DEBUG ═══',
+            `Leaderboard Updated: NO (test mode)`,
+            `Rate Limit: DISABLED`,
+            `Cooldown: DISABLED`,
+            `Reports Remaining: UNLIMITED`,
+            '',
+            ...debugLines,
+            '═══════════════════════'
+        ].join('\n');
+
+        response += testModeInfo;
+    }
+
+    return response;
 }
 
 // Update version display on page load

@@ -6,37 +6,36 @@ A fun real-time pet ranking website where users submit "field reports" to influe
 
 - **Live Leaderboard**: Real-time score updates across all users
 - **Field Reports**: Submit intel about pets to affect their rankings
-- **AI Sentiment Analysis**: Gemini AI analyzes your reports to understand context and determine sentiment scores (-5 to +5)
-- **Pet Personalities**: Each pet has unique strengths and weaknesses that modify their scores
-- **Meet the Pets**: Detailed dossiers on each pet with AI-generated quips
+- **Smart Sentiment Analysis**: AI-powered analysis understands the context and meaning of your reports
+- **Pet Personalities**: Each pet has unique traits that influence how reports affect them
+- **Meet the Pets**: Detailed dossiers on each pet with personality-driven quips
 - **Global Chat**: See field reports from all agents worldwide
 - **Pet Requests**: Vote for new pets to be added to the leaderboard
-- **Report Limits**: 20 reports per day with 15-minute cooldowns to prevent spam
+- **Fair Usage Limits**: Daily limits and cooldowns to keep things balanced
 
-## How Scoring Works
+## How It Works
 
-The scoring system uses **Gemini AI** to analyze the sentiment of your message:
+When you submit a field report, our system analyzes what you wrote and determines how it should affect the pet's ranking:
 
-| Score | Sentiment | Example |
-|-------|-----------|---------|
-| +5 | Extremely positive | "Smokey Joe saved a kitten from a tree!" |
-| +3 to +4 | Very positive | "Lila Dog caught a squirrel today!" |
-| +1 to +2 | Mildly positive | "Meow-Meow looked cute sleeping" |
-| 0 | Neutral | "I saw Chirpy in the backyard" |
-| -1 to -2 | Mildly negative | "Birch knocked over a plant" |
-| -3 to -4 | Very negative | "Guy Fiery destroyed the couch" |
-| -5 | Extremely negative | "Meow-Meow attacked the neighbor's dog" |
+- **Good behaviors** (helping, being cute, catching pests, etc.) will **boost** a pet's score
+- **Bad behaviors** (causing trouble, making messes, being destructive) will **lower** a pet's score
+- **Neutral observations** (just facts, no judgment) won't change scores
 
-**Fallback**: If the AI is unavailable, keyword-based analysis is used instead.
+The system is smart enough to understand context and meaning - it's not just looking for keywords! Whether you say "barfed," "threw up," or "made a mess on the carpet," it understands what happened.
 
-Each pet also has personality modifiers applied on top of the AI score:
-- **Smokey Joe**: Speed bonus, but smell penalty
-- **Lila Dog**: Three-legged speed demon, overcelebration penalty
-- **Chirpy**: Sympathy bonus for past injury, anger issues penalty
-- **Birch**: Smooth fur, but chaos/messiness penalty
-- **Guy Fiery**: Fighting spirit, but health issues penalty
-- **Meow-Meow**: No bonuses - relies on "alternative methods"
-- **RP**: Forever #1 (veteran memorial)
+### Pet Personalities
+
+Each pet has their own personality traits that can modify how reports affect them:
+
+| Pet | Personality |
+|-----|-------------|
+| **Smokey Joe** | The legendary athlete with... a distinctive aroma |
+| **Lila Dog** | Three-legged speed demon who celebrates a bit too hard |
+| **Chirpy** | Sympathetic underdog with some anger management issues |
+| **Birch** | Silky smooth fur, chaotic energy |
+| **Guy Fiery** | Fighting spirit despite health challenges |
+| **Meow-Meow** | The mysterious one who plays by her own rules |
+| **RP** | Forever #1 - our beloved veteran |
 
 ## Quick Setup
 
@@ -65,33 +64,11 @@ Each pet also has personality modifiers applied on top of the AI score:
 
 1. Go to [Google AI Studio](https://aistudio.google.com/app/apikey)
 2. Create an API key
-3. This enables:
-   - **AI Sentiment Analysis** for field reports (scores -5 to +5)
-   - **AI-generated personality quips** in Meet the Pets tab
+3. This enables AI-powered sentiment analysis and pet quips
 
 ### 5. Add Config to Code
 
-Edit `js/app.js`:
-
-```javascript
-const CONFIG = {
-    firebase: {
-        apiKey: "your-api-key",
-        authDomain: "your-project.firebaseapp.com",
-        databaseURL: "https://your-project-default-rtdb.firebaseio.com",
-        projectId: "your-project",
-        storageBucket: "your-project.appspot.com",
-        messagingSenderId: "123456789",
-        appId: "your-app-id"
-    },
-    basePoints: 1,
-    gemini: {
-        apiKey: "your-gemini-api-key",
-        model: "gemini-2.5-flash",
-        enabledForQuips: true
-    }
-};
-```
+Edit `js/app.js` and add your API keys to the CONFIG object.
 
 ### 6. Deploy to GitHub Pages
 
@@ -130,11 +107,10 @@ Add a bio in `PET_BIOS`:
 
 ## Customization
 
-- **Pet Modifiers**: Adjust `rankModifier` and penalty values in `PET_BIOS` object
-- **Responses**: Edit the `RESPONSES` object for custom Addy messages
+- **Pet Personalities**: Adjust modifiers in `PET_BIOS` object
+- **Responses**: Edit the `RESPONSES` object for custom messages
 - **Styling**: Modify `css/style.css` (pink theme by default)
-- **Report Limits**: Change `DAILY_REPORT_LIMIT` and `REPORT_COOLDOWN_MINUTES`
-- **Fallback Keywords**: Edit `SURVIVABILITY` object (used when AI is unavailable)
+- **Usage Limits**: Configurable daily limits and cooldowns
 
 ## Local Testing
 
@@ -142,6 +118,13 @@ Add a bio in `PET_BIOS`:
 python -m http.server 8000
 # Open http://localhost:8000
 ```
+
+## Technical Notes
+
+- Uses Google's Gemini AI for natural language understanding
+- Multi-layer fallback system ensures reliability
+- Firebase Realtime Database for live synchronization
+- Works offline with graceful degradation
 
 ## Live Demo
 
