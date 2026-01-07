@@ -37,14 +37,27 @@ Each pet has their own personality traits that can modify how reports affect the
 | **Meow-Meow** | The mysterious one who plays by her own rules |
 | **RP** | Forever #1 - our beloved veteran |
 
-## Quick Setup
+## Architecture
 
-### 1. Create Firebase Project (Free)
+This app uses a secure architecture with Firebase Cloud Functions to protect API keys:
+
+```
+Browser → Cloud Function → Gemini API
+              ↓
+         (API key stored
+          as Firebase Secret)
+```
+
+The Gemini API key is never exposed to the client - it's stored securely as a Firebase Secret and accessed only by server-side Cloud Functions.
+
+## Quick Setup (For Your Own Deployment)
+
+### 1. Create Firebase Project
 
 1. Go to [Firebase Console](https://console.firebase.google.com/)
 2. Click "Create a project"
-3. Name it anything (e.g., "addy-catty-chat")
-4. Disable Google Analytics (not needed)
+3. Name it anything (e.g., "my-pet-chat")
+4. Upgrade to **Blaze plan** (required for Cloud Functions - has generous free tier)
 
 ### 2. Setup Realtime Database
 
@@ -53,22 +66,32 @@ Each pet has their own personality traits that can modify how reports affect the
 3. Choose any location
 4. Start in **Test mode**
 
-### 3. Get Firebase Config
+### 3. Get Gemini API Key
 
-1. Go to **Project Settings** (gear icon)
-2. Scroll to "Your apps" → Click web icon `</>`
-3. Register app with any name
-4. Copy the config values
-
-### 4. Get Gemini API Key (Required for AI Features)
-
-1. Go to [Google AI Studio](https://aistudio.google.com/app/apikey)
+1. Go to [Google AI Studio](https://aistudio.google.com/apikey)
 2. Create an API key
-3. This enables AI-powered sentiment analysis and pet quips
+3. Store it as a Firebase secret:
+   ```bash
+   npx firebase functions:secrets:set GEMINI_API_KEY
+   ```
 
-### 5. Add Config to Code
+### 4. Deploy Cloud Functions
 
-Edit `js/app.js` and add your API keys to the CONFIG object.
+```bash
+npm install
+cd functions && npm install && cd ..
+npx firebase deploy --only functions
+```
+
+### 5. Update Frontend Config
+
+Edit `js/app.js` and update the Cloud Function URLs to match your project:
+```javascript
+gemini: {
+    sentimentFunctionUrl: "https://us-central1-YOUR-PROJECT.cloudfunctions.net/analyzeSentiment",
+    quipFunctionUrl: "https://us-central1-YOUR-PROJECT.cloudfunctions.net/generateQuip",
+}
+```
 
 ### 6. Deploy to GitHub Pages
 
@@ -121,11 +144,12 @@ python -m http.server 8000
 
 ## Technical Notes
 
-- Uses Google's Gemini AI (gemini-2.5-flash-lite) for natural language understanding
-- Multi-layer fallback system ensures reliability when AI is unavailable
-- Graceful handling of API rate limits (free tier: ~20 requests/minute)
-- Firebase Realtime Database for live synchronization
-- Works offline with keyword-based fallback
+- **Secure API Architecture**: Gemini API key stored as Firebase Secret, accessed via Cloud Functions
+- **AI Model**: Google's Gemini 2.5 Flash Lite for natural language understanding
+- **Multi-layer Fallback**: Keyword-based analysis when AI is unavailable
+- **Real-time Sync**: Firebase Realtime Database for live leaderboard updates
+- **Rate Limit Handling**: Graceful degradation with fallback system
+- **Cost Protection**: Budget alerts configured to prevent unexpected charges
 
 ## Live Demo
 
