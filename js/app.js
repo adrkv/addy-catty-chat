@@ -13,11 +13,11 @@ const CONFIG = {
     },
     basePoints: 1,
     maxReportLength: 500, // Character limit for field reports
-    // Gemini AI for sentiment analysis and pet quips
+    // Gemini AI for sentiment analysis and pet quips (via Cloud Functions for security)
     gemini: {
-        // API key loaded from js/config.js (gitignored for security)
-        apiKey: typeof PRIVATE_CONFIG !== 'undefined' ? PRIVATE_CONFIG.geminiApiKey : null,
-        model: "gemini-2.5-flash-lite",  // Lite model - may have higher free tier limits
+        // Cloud Functions URLs (API key stored securely on server)
+        sentimentFunctionUrl: "https://us-central1-addy-catty-chat.cloudfunctions.net/analyzeSentiment",
+        quipFunctionUrl: "https://us-central1-addy-catty-chat.cloudfunctions.net/generateQuip",
         enabledForSentiment: true,
         enabledForQuips: true,
         maxRetries: 1 // Reduced to conserve API quota
@@ -1816,7 +1816,7 @@ async function generatePetQuip(petId, petName) {
         return cached.quip;
     }
 
-    if (!CONFIG.gemini.enabledForQuips || !CONFIG.gemini.apiKey) {
+    if (!CONFIG.gemini.enabledForQuips || !CONFIG.gemini.quipFunctionUrl) {
         return getFallbackQuip(petId);
     }
 
@@ -1845,16 +1845,10 @@ Write a SHORT (15-25 words max), funny first-person quip reacting to what people
 Return ONLY the quip text, no quotes, no explanation.`;
 
     try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${CONFIG.gemini.model}:generateContent?key=${CONFIG.gemini.apiKey}`, {
+        const response = await fetch(CONFIG.gemini.quipFunctionUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: {
-                    temperature: 0.9,
-                    maxOutputTokens: 100
-                }
-            })
+            body: JSON.stringify({ prompt })
         });
 
         if (!response.ok) {
@@ -1884,8 +1878,8 @@ let lastAIError = null;
 
 async function analyzeMessageSentiment(message, petName) {
     // Check if sentiment analysis is enabled
-    if (!CONFIG.gemini.enabledForSentiment || !CONFIG.gemini.apiKey) {
-        lastAIError = 'AI sentiment disabled or no API key';
+    if (!CONFIG.gemini.enabledForSentiment || !CONFIG.gemini.sentimentFunctionUrl) {
+        lastAIError = 'AI sentiment disabled or no function URL';
         return null; // Use keyword fallback
     }
 
@@ -1940,19 +1934,13 @@ KEY PRINCIPLE: Judge the ACTION, not the phrasing. Gross = negative, always.`;
 
     try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout for gemini-2.5
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${CONFIG.gemini.model}:generateContent?key=${CONFIG.gemini.apiKey}`, {
+        const response = await fetch(CONFIG.gemini.sentimentFunctionUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             signal: controller.signal,
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: {
-                    temperature: 0.3, // Lower temperature for more consistent scoring
-                    maxOutputTokens: 100
-                }
-            })
+            body: JSON.stringify({ prompt })
         });
 
         clearTimeout(timeoutId);
@@ -2062,7 +2050,7 @@ async function analyzeMessageSentimentWithRetry(message, petName, maxRetries = C
 // ===========================================
 async function analyzeMessageSentimentSimple(message, petName) {
     // Check if sentiment analysis is enabled
-    if (!CONFIG.gemini.enabledForSentiment || !CONFIG.gemini.apiKey) {
+    if (!CONFIG.gemini.enabledForSentiment || !CONFIG.gemini.sentimentFunctionUrl) {
         return null;
     }
 
@@ -2085,17 +2073,11 @@ Reply ONLY: {"score": NUMBER, "sentiment": "positive/negative/neutral"}`;
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${CONFIG.gemini.model}:generateContent?key=${CONFIG.gemini.apiKey}`, {
+        const response = await fetch(CONFIG.gemini.sentimentFunctionUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             signal: controller.signal,
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: {
-                    temperature: 0.1, // Even lower temperature for simple fallback
-                    maxOutputTokens: 50
-                }
-            })
+            body: JSON.stringify({ prompt })
         });
 
         clearTimeout(timeoutId);

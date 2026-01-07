@@ -1,0 +1,24 @@
+{
+  "name": "addy-catty-chat",
+  "version": "1.0.0",
+  "description": "A fun real-time pet ranking website where users submit \"field reports\" to influence the leaderboard! Report on pet behaviors and watch the rankings update live.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adrkv/addy-catty-chat.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/adrkv/addy-catty-chat/issues"
+  },
+  "homepage": "https://github.com/adrkv/addy-catty-chat#readme",
+  "dependencies": {
+    "firebase-tools": "^15.1.0"
+  }
+}

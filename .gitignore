@@ -16,3 +16,10 @@ Thumbs.db
 
 # Claude Code
 .claude/
+
+# Node modules
+node_modules/
+functions/node_modules/
+
+# Firebase
+.firebase/
