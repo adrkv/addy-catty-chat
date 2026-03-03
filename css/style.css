@@ -60,6 +60,59 @@ header h1 {
     font-size: 1.1rem;
 }
 
+/* Paused/Maintenance Banner */
+.paused-banner {
+    display: none; /* Shown via JS when CONFIG.REPORTS_PAUSED is true */
+    align-items: center;
+    gap: 16px;
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border: 3px solid #f0c040;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(240, 192, 64, 0.3);
+}
+
+.paused-banner-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.paused-banner-text strong {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.7rem;
+    color: #856404;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.paused-banner-text p {
+    color: #856404;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Disabled form states */
+.chat-input input:disabled,
+.chat-input button:disabled,
+.request-form input:disabled,
+.request-form button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.chat-input button:disabled {
+    background: #ccc;
+    border-color: #999;
+}
+
+.request-form button:disabled {
+    background: #ccc;
+    border-color: #999;
+}
+
 /* Main Layout */
 main {
     display: grid;

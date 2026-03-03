@@ -2,6 +2,8 @@
 // CONFIGURATION
 // ===========================================
 const CONFIG = {
+    // Set to true to pause all new report submissions (keeps existing data visible)
+    REPORTS_PAUSED: true,
     firebase: {
         apiKey: "AIzaSyCuuH01cKY8JK_4UGRKEa-ZwqjlLx3oryM",
         authDomain: "addy-catty-chat.firebaseapp.com",
@@ -18,8 +20,8 @@ const CONFIG = {
         // Cloud Functions URLs (API key stored securely on server)
         sentimentFunctionUrl: "https://us-central1-addy-catty-chat.cloudfunctions.net/analyzeSentiment",
         quipFunctionUrl: "https://us-central1-addy-catty-chat.cloudfunctions.net/generateQuip",
-        enabledForSentiment: true,
-        enabledForQuips: true,
+        enabledForSentiment: false,  // Disabled: API key expired
+        enabledForQuips: false,      // Disabled: API key expired
         maxRetries: 1 // Reduced to conserve API quota
     }
 };
@@ -1027,6 +1029,12 @@ updateCharCounter();
 chatForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    // Block submissions when reports are paused
+    if (CONFIG.REPORTS_PAUSED) {
+        addMessage("HQ is temporarily closed for maintenance! The rankings are frozen while we upgrade our systems. Check back soon, agent!", 'addy');
+        return;
+    }
+
     const message = messageInput.value.trim();
     if (!message) return;
 
@@ -1656,6 +1664,11 @@ function renderPetRequests(requests) {
 function submitPetRequest(e) {
     e.preventDefault();
 
+    if (CONFIG.REPORTS_PAUSED) {
+        alert('Pet requests are temporarily paused during maintenance. Check back soon!');
+        return;
+    }
+
     if (!petRequestsRef || !currentUser) {
         alert('Please enter your name first!');
         return;
@@ -1701,6 +1714,11 @@ function submitPetRequest(e) {
 function votePetRequest(requestId) {
     if (!petRequestsRef) return;
 
+    if (CONFIG.REPORTS_PAUSED) {
+        alert('Voting is temporarily paused during maintenance. Check back soon!');
+        return;
+    }
+
     // Check if user already voted for this pet request
     const votedRequests = JSON.parse(localStorage.getItem('votedPetRequests') || '[]');
     if (votedRequests.includes(requestId)) {
@@ -1743,6 +1761,39 @@ setTimeout(() => {
         requestForm.addEventListener('submit', submitPetRequest);
     }
 }, 1000);
+
+// Apply paused state to UI
+if (CONFIG.REPORTS_PAUSED) {
+    // Disable chat form
+    messageInput.disabled = true;
+    messageInput.placeholder = "Reports are temporarily paused...";
+    const submitBtn = chatForm.querySelector('button');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Paused";
+    }
+    // Hide char counter and report counter
+    const inputInfo = document.querySelector('.input-info');
+    if (inputInfo) inputInfo.style.display = 'none';
+
+    // Disable pet request form
+    const reqForm = document.getElementById('pet-request-form');
+    if (reqForm) {
+        reqForm.querySelectorAll('input, button').forEach(el => {
+            el.disabled = true;
+        });
+        const reqBtn = reqForm.querySelector('button');
+        if (reqBtn) reqBtn.textContent = "Paused";
+    }
+
+    // Show paused banner
+    const banner = document.getElementById('paused-banner');
+    if (banner) banner.style.display = 'flex';
+} else {
+    // Hide paused banner when not paused
+    const banner = document.getElementById('paused-banner');
+    if (banner) banner.style.display = 'none';
+}
 
 // ===========================================
 // PET QUIPS: AI-Generated Personality Quips
