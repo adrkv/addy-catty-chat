@@ -1031,7 +1031,7 @@ chatForm.addEventListener('submit', async (e) => {
 
     // Block submissions when reports are paused
     if (CONFIG.REPORTS_PAUSED) {
-        addMessage("HQ is temporarily closed for maintenance! The rankings are frozen while we upgrade our systems. Check back soon, agent!", 'addy');
+        addMessage("Thanks for all the intel, agent. The official rankings are out, so field reports are now closed. You can still browse the final leaderboard and past reports.", 'addy');
         return;
     }
 
@@ -1665,7 +1665,7 @@ function submitPetRequest(e) {
     e.preventDefault();
 
     if (CONFIG.REPORTS_PAUSED) {
-        alert('Pet requests are temporarily paused during maintenance. Check back soon!');
+        alert('Thanks for the suggestion. Pet requests are closed now that the official rankings are out.');
         return;
     }
 
@@ -1715,7 +1715,7 @@ function votePetRequest(requestId) {
     if (!petRequestsRef) return;
 
     if (CONFIG.REPORTS_PAUSED) {
-        alert('Voting is temporarily paused during maintenance. Check back soon!');
+        alert('Thanks for voting, but voting is closed now that the official rankings are out.');
         return;
     }
 
@@ -1766,11 +1766,11 @@ setTimeout(() => {
 if (CONFIG.REPORTS_PAUSED) {
     // Disable chat form
     messageInput.disabled = true;
-    messageInput.placeholder = "Reports are temporarily paused...";
+    messageInput.placeholder = "Thanks for the intel. Official rankings are out.";
     const submitBtn = chatForm.querySelector('button');
     if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.textContent = "Paused";
+        submitBtn.textContent = "Rankings Final";
     }
     // Hide char counter and report counter
     const inputInfo = document.querySelector('.input-info');
@@ -1783,7 +1783,7 @@ if (CONFIG.REPORTS_PAUSED) {
             el.disabled = true;
         });
         const reqBtn = reqForm.querySelector('button');
-        if (reqBtn) reqBtn.textContent = "Paused";
+        if (reqBtn) reqBtn.textContent = "Rankings Final";
     }
 
     // Show paused banner
